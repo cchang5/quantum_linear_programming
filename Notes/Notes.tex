@@ -2,9 +2,11 @@
 
 \usepackage{amsmath}
 \usepackage{bbm}
+\usepackage{xcolor}
 
 \newcommand{\argmax}[1]{\text{arg}\hspace{-2pt}\max\limits_{#1}}
 \newcommand{\bvec}[1]{\boldsymbol{#1}}
+\newcommand{\assumption}[1]{{\color{red}#1}} 
 
 \author{}
 
@@ -29,37 +31,47 @@ I'm worried that $y_a$ has nonlinear dependence with $y$ as we walk along the de
 
 \section{Implementation}
 
-So I have been following up on @CCChen's notes and added a bit software to it.
+So I have been following up on @CCChen's notes and extended the software a bit.
+The software is a Python module which converts a set of inequalities to the matrix we want to have on the quantum computer.
+I was wondering about the details of the derivation and if there are assumptions which may have consequences for the parameter space.
+Assumptions are defined by constraints which potentially make our approach not true given only \eqref{max-x} and \eqref{condition-x}.
+I have highlighted assumptions with the \assumption{green text}.
 
-It's is basically the same thing minor two differences.
+A little bit different to @CCChen's, I have introduced a matrix $Q$ which maps bit vectors to integer vectors.
+This helps the software a bit to stay general---and me to mimic the physics I am used to.
+
+Let me know if you have any questions.
 
 \subsection{Integer problem optimization}
-What we eventually want to solve is an inequality of the form
+What we eventually want to solve a maximization problem
 \begin{equation}\label{max-x}
 	\vec x_0 = \argmax{\vec x} \left( \vec c \cdot \vec x\right) \, ,
 \end{equation}
-for
+where $\vec x_0$ is the $\vec x$ which maximizes the above gradient under a set of inequalities
 \begin{align}\label{condition-x}
 	A \vec x - \vec b &\leq \vec 0 \, , &
 	A &\in \text{Mat}(\mathbbm R, (N_x, N_e)) \, , &
 	\vec b &\in \mathbbm{R}^{N_e} \, &
 	\vec c &\in \mathbbm{R}^{N_x} \, , &
-	\vec x &\in \mathbbm{N}^{N_x}\, ,
+	\vec x &\in \mathbbm{N}^{N_x}\, .
 \end{align}
-where the additional dimension $N_e$ is the number of inequalities we have.
-Note that the inequality in the above equation is almost completely sufficient to characterize all problems because, for example a $\geq$ in a certain row can be obtained by multiplying the row with minus one and a $<$ can be obtained by an infinitesimal shift in $\vec b$.
-Equalities are different, but, when we introduce the slack variable, we can also take care this.
-For example, we know that for
-\begin{equation}\label{slack-optimization}
-	p >  \max\limits_{\vec x}\left(\vec c \cdot \vec x\right) \, , \qquad
-	\vec x_0 = \argmax{\vec x} \left( \vec c \cdot \vec x - p f(\vec x) \right)
-\end{equation}
-for constrained $\vec x$ and
-\begin{align}
+In this definition, the set of natural numbers $\mathbbm{N}$ includes zero (but no negative numbers).
+The additional dimension $N_e$ is the number of inequalities we have.
+
+In principle, one could also have inequalities of the form $A_{ij} x_j - b_j \geq 0$ or any other relations.
+But equation \eqref{condition-x} completely sufficient to characterize all problems with, because, for example a $\geq$ in a certain row can be obtained by multiplying the row with $-1$ and a $<$ can be obtained by an infinitesimal shift in $\vec b$.
+Equalities are a little bit different, in principle they can be brought to this form by combining $A_{ij} x_j - b_j \geq 0$ with $A_{ij} x_j - b_j \leq 0$, but this introduces two constraints.
+
+When introducing the slack variable, we can summarize the constraints in a single equation
+\begin{align}\label{slack-optimization}
+	\vec x_0 &= \argmax{\vec x} \left( \vec c \cdot \vec x - p f(\vec x) \right) \, , \\
 	f(\vec x) &= \min\limits_{\vec s}\left[
 		\left(\tilde A \vec x - \vec{\tilde{b}} + D \vec s\right) \cdot \left(\tilde A \vec x - \vec{\tilde{b}} + D \vec s\right)
-	\right]
-	\, , \\
+	\right] \, , &
+	p &\gg \max\limits_{\vec x}\left(\vec c \cdot \vec x\right) \, .
+\end{align}
+The quantities introduced in this equation are defined by
+\begin{align}
 	\vec s &\in \mathbbm{N}^{N_e} \, , \qquad
 	D \in \text{Mat}(\{0, 1\}, (N_e, N_e)) \, .
 \end{align}
@@ -69,18 +81,29 @@ The entries
 	\tilde A = (10^{m} A) & \in \text{Mat}(\mathbbm Z, (N_x, N_e)) \, , &
 	\vec{\tilde{b}} &= (10^m \vec{b}) \in \mathbbm{Z}^{N_e}
 \end{align}
-are rescaled with a factor such that they are integer valued.
-This assumes that $A$ and $\vec b$ are given for finite precision.
-Because they are integer valued, one can find a vector $\vec s$, such that $\forall \vec x \, \exists \vec s \, : \, \tilde A \vec x - \vec{\tilde{b}} + D \vec s = 0$.
+are rescaled with a factor $10^m$ such that all entries of $\tilde A_{ij}$ and $\tilde b_{i}$ are integer valued.
+\assumption{This assumes that $A$ and $\vec b$ are given for finite precision.}
+
+Note that \assumption{for this particular condition we need that $x$ is constrained} and in principle \assumption{$p > \max\limits_{\vec x}\left(\vec c \cdot \vec x\right)$} would be suffice.
+However, this would require solving the problem.
+
+
+\subsubsection{Proof}
+Because $\tilde A$ and $\vec{\tilde{b}}$ are integer valued, one can find a vector $\vec s$, such that 
+\begin{equation}
+	\forall \vec x \quad \exists \vec s \in \mathbbm{N}^{N_e} \, : \, \tilde A \vec x - \vec{\tilde{b}} + D \vec s = 0 \, .
+\end{equation}
 Thus $f(\vec x) \geq 0$ and furthermore
 \begin{equation}
-	f(\vec x_s) = 0 \iff A \vec x - \vec{b} \leq 0 \, .
+	f(\vec x_s) = 0 \iff A \vec x - \vec{b} \leq \vec 0 \, .
 \end{equation}
-From left to right is true because each component $s_i \geq 0$ thus $\tilde A \vec x - \vec{\tilde{b}}$ must be $\leq \vec 0$ and this is invariant under scaling with a positive number.
-From right to left is true because if $A \vec x - \vec b$, this is true for their integer version as well.
+From $f(\vec x_s) = 0 \Rightarrow A \vec x - \vec{b} \leq \vec 0$ is true because each component of $\vec s$ is $\geq 0$ and thus $\tilde A \vec x - \vec{\tilde{b}} \leq \vec 0$.
+This is invariant under scaling with $10^{-m}$.
+
+Also, $A \vec x - \vec{b} \leq \vec 0 \Rightarrow f(\vec x_s) =  0  $ is true because if $A \vec x - \vec b \leq 0 \Rightarrow \tilde A \vec x - \vec{\tilde{b}} \leq \vec 0$.
 And since $- \vec m = \tilde A \vec x - \vec{\tilde{b}} \leq \vec 0$ for a vector $\vec m \in \mathbbm{N}^{N_e}$, we can pick $\vec m = \vec s$.
 
-Therefore, if $p$ is sufficiently large we know that the \eqref{slack-optimization} is maximal if $f(\vec x) = 0$ and the maximum of \eqref{slack-optimization} is thus equal to $\max\limits_{\vec x}(\vec c \cdot \vec x)$ under the specified constraints.
+Therefore, if $p$ is sufficiently large we know that the \eqref{slack-optimization} is maximal if $f(\vec x) = 0$ and the maximum of \eqref{slack-optimization} is thus equal to $\max\limits_{\vec x}(\vec c \cdot \vec x)$ under the specified constraints at the same location $\vec x_0$.
 
 
 \subsection{Map to bits}
@@ -88,7 +111,10 @@ Next we want to code up $\vec x$ and $\vec s$ as bit vectors, e.g.,
 \begin{equation}
 	q = \sum_{n=0}^{N_b-1} 2^n \psi_n^{(q)} \, , \qquad \psi_n^{(q)} \in \{ 0, 1\}\, .
 \end{equation}
-Note that we in principle could have different $N_b$ for $x$ and $s$---I will discuss the reasoning behind that later.
+Here, \assumption{the number of bits reduces the available number space to finite numbers}.
+This could potentially mean, if $N_b$ for $\vec x$ is not large enough, we do not probe $\vec x _0$.
+Also if the constrained space needs be extensively probed, e.g., if the optimal value $\vec x_0$ is far away from the boundary, we might need large $N_b$ to have large $\vec s$.
+One may even think about having different numbers of bits for $\vec x$ and $\vec s$.
 
 With this definition, we can introduce a new basis and map between integers and bits such that
 \begin{align}
@@ -119,35 +145,44 @@ With these definition we have that
 \end{align}
 in other words $Q$ is a $(N_e + N_x) \times N_b(N_e + N_x)$ matrix.
 
+To separate spaces, if introduced the notation that
+\begin{itemize}
+	\item greek vectors like $\vec \xi$ denote combined $\vec x$ and $\vec s$ space,
+	\item specifically the greek letter $\psi = 0, 1$ denotes bits,
+	\item the bold face vectors like $\bvec \psi^{\left( \vec \xi \right)}$ denote vectors in the bit basis (which do not necessarily have to be $0,1$).
+\end{itemize}
+
+
 \subsection{Integer problem optimization using bits}
 Now we can map \eqref{slack-optimization} to the new basis
 \begin{align}
 	\vec x_0 
-	&= \argmax{\vec x}
-	\left( \bvec \gamma \cdot \bvec \psi^{\left( \vec \xi \right)} - p \phi\left(\bvec \psi^{\left( \vec \xi \right)}\right)\right) \, , &
+	&= \argmax{\vec x}\left(\min\limits_{\vec s}
+	\left( \bvec \gamma \cdot \bvec \psi^{\left( \vec \xi \right)} - p \phi\left(\bvec \psi^{\left( \vec \xi \right)}\right)\right)\right) \, , &
 	\bvec \gamma &= \begin{pmatrix}
 		\vec c \\ \vec 0
 	\end{pmatrix} \cdot Q \in \mathbbm{R}^{(N_x + N_e )N_b} \, , 
 \end{align}
-which is in principle independent of the $\vec s$ pars and
+where I have pulled out the $\min$ over $\vec s$ which is irrelevant for the $\bvec \gamma$ dot product since the $s$-component vanishes.
+The constrained $f \mapsto \phi$ is now given by
 \begin{align}\label{bit-penalty}
 	\phi\left(\bvec \psi^{\left( \vec \xi \right)}\right)
 	&=
-	\min\limits_{\vec s}\left[
-	\left(\tilde \alpha Q \bvec \psi^{\left( \vec \xi \right)} - \vec{\tilde{\beta}}\right) 
-		\cdot \left(\tilde \alpha Q \bvec \psi^{\left( \vec \xi \right)} - \vec{\tilde{\beta}}\right)\right]
-	\, , &
-	 \vec{\tilde{\beta}} &= \begin{pmatrix}\vec{\tilde{b}}\\\vec 0 \end{pmatrix}
-	\,,&
-	\tilde \alpha &= \begin{pmatrix}
-		\tilde A & 0 \\ 0  & D
-	\end{pmatrix} \, , &
+	\left[
+	\left(
+		\tilde{\alpha} Q \bvec \psi^{\left( \vec \xi \right)} - \vec{\tilde{b}}\right) 
+		\cdot \left({\tilde{\alpha}} Q \bvec \psi^{\left( \vec \xi \right)} - \vec{\tilde{b}}\right)\right]
+	\, , \\
+	{\tilde{\alpha}} &= \left(\tilde{A},  D \right) \in \text{Mat}(\mathbbm{Z}, (N_x + N_e, N_e))\, ,
 \end{align}
 where the above quantities are split up in $\vec x$ and $\vec s$ space.
 
-In the following context we use that the components of the bit vector are either one or zero and thus $\psi^{\left( \vec \xi \right)}_i = \psi^{\left( \vec \xi \right)}_i \psi^{\left( \vec \xi \right)}_i$.
+In the following context we use that the components of the bit vector are either one or zero and thus $\psi^{\left( \vec \xi \right)}_\nu = \psi^{\left( \vec \xi \right)}_\nu \psi^{\left( \vec \xi \right)}_\nu$.
+Also, to simplify notation, indices to bit-space vectors are given by $\mu, \nu$, indices to $(\vec x, \vec s)$-space vectors are given by $i, j, k$ and it is summed over repeated entries.
 The argument of equation \eqref{bit-penalty} simplifies to
 \begin{equation}
+	\phi\left(\bvec \psi^{\left( \vec \xi \right)}\right)
+	=
 	\psi^{\left( \vec \xi \right)}_\nu
 	\left[
 		(\tilde \alpha Q)_{i\nu} (\tilde \alpha Q)_{i\mu}
@@ -166,7 +201,9 @@ This results in
 	\argmax{\psi^{\left( \vec \xi \right)}}\left( 
 		\bvec \psi^{\left( \vec \xi \right)} \cdot \Omega \bvec \psi^{\left( \vec \xi \right)}
 	\right)
-	\, , \\
+	\, , \qquad
+	\vec x_0 =  (\mathbbm 1, 0) Q \bvec \psi^{\left( \vec \xi \right)}_{0} 
+	\\
 	\Omega_{\nu\mu}
 	&=
 	\delta_{\nu\mu} \gamma_i Q_{i\nu}
