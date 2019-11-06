@@ -6,8 +6,9 @@ from decimal import Decimal
 
 from numpy import array, ndarray, arange, zeros
 
-from sympy import symbols, Matrix, Symbol
+from sympy import Matrix, Symbol
 from sympy.matrices import zeros as ZeroMatrix
+from sympy.matrices import diag
 from sympy.core import relational
 
 
@@ -16,13 +17,13 @@ def eqns_to_matrix(
 ) -> Tuple[Matrix, Matrix, Matrix]:
     """Converts list of relations to slack variable matrix and vector formalism.
 
-    The result relates to the original eqn such that ``m.deps + v + s = 0``
+    The result relates to the original eqn such that ``m.deps + b + c.s = 0``
 
-    For example ``[a1 * x <= b1, a2 * x >= b2]`` becomes
+    For example ``[a1 * x <= b1, Eq(a2 * x, b2)]`` becomes
 
     Code:
-        m = | a1 |  and v = | b1 | s = | - s1 |
-            | a2 |          | b2 |     | + s2 |
+        a = | a1 |  and b = | b1 | c = | +1    0 |
+            | a2 |          | b2 |     |  0    0 |
 
     Arguments:
         eqns:
@@ -46,21 +47,14 @@ def eqns_to_matrix(
     n_deps = len(dependents)
     n_eqns = len(eqns)
 
-    s_vars = symbols(f"s(1:{n_eqns+1})")
-
-    v = Matrix([[-eqn.rhs] for eqn in eqns])
-    s = Matrix(
-        [
-            [s if isinstance(eqn, relational.LessThan) else -s]
-            for s, eqn in zip(s_vars, eqns)
-        ]
-    )
+    b = Matrix([[-eqn.rhs] for eqn in eqns])
+    c = diag(*[1 if isinstance(eqn, relational.LessThan) else 0 for eqn in eqns])
     m = ZeroMatrix(rows=n_eqns, cols=n_deps)
     for ne, eqn in enumerate(eqns):
         for nd, dep in enumerate(dependents):
             m[ne, nd] = eqn.lhs.coeff(dep)
 
-    return m, v, s
+    return m, b, c
 
 
 def rescale_expressions(expr: Symbol, subs: Dict[str, str]) -> Symbol:
