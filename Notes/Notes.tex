@@ -1,5 +1,13 @@
 \documentclass[]{article}
 
+\usepackage{amsmath}
+\usepackage{bbm}
+
+\newcommand{\argmax}[1]{\text{arg}\hspace{-2pt}\max\limits_{#1}}
+\newcommand{\bvec}[1]{\boldsymbol{#1}}
+
+\author{}
+
 %opening
 \title{Notes}
 
@@ -18,5 +26,153 @@ Following https://arxiv.org/abs/1812.06917 we know 1) how to encode fixed-precis
 To encode an inequality of the form $A < y < B$ we can introduce an auxiliary qubit $y_a$ such that the logical qubit is $Y = (y, y_a)$ (where $y$ and $y_a$ are logical qubits representing fixed-precision numbers encoded by $n$ qubits). The inequality is then encoded as minimizing the following $C_1 Y^4 - C_2 Y^2 + C_3$ such that we get a mexican-hat potential. Basically this was inspired from spontaneous symmetry breaking. I'm sure this can be connected to solving scalar phi-4 theory if we reallllly want to go there. But tuning the $C$s will tune the radius of the degeneracy and therefore change the range of $A$ and $B$.  Also $C_3$ shifts the minimum to zero, which is useful if we want to keep the energy positive, and interpret it as the squared-residual. Travis suggested that this might be connected to ``slack variables'' (see https://arxiv.org/abs/1811.11538 that I haven't read yet).
 
 I'm worried that $y_a$ has nonlinear dependence with $y$ as we walk along the degeneracy though, which in practice may be an issue. Though increasing the number of qubits used to represent a fixed-precision decimal solves this problem exponentially quickly.
+
+\section{Implementation}
+
+So I have been following up on @CCChen's notes and added a bit software to it.
+
+It's is basically the same thing minor two differences.
+
+\subsection{Integer problem optimization}
+What we eventually want to solve is an inequality of the form
+\begin{equation}\label{max-x}
+	\vec x_0 = \argmax{\vec x} \left( \vec c \cdot \vec x\right) \, ,
+\end{equation}
+for
+\begin{align}\label{condition-x}
+	A \vec x - \vec b &\leq \vec 0 \, , &
+	A &\in \text{Mat}(\mathbbm R, (N_x, N_e)) \, , &
+	\vec b &\in \mathbbm{R}^{N_e} \, &
+	\vec c &\in \mathbbm{R}^{N_x} \, , &
+	\vec x &\in \mathbbm{N}^{N_x}\, ,
+\end{align}
+where the additional dimension $N_e$ is the number of inequalities we have.
+Note that the inequality in the above equation is almost completely sufficient to characterize all problems because, for example a $\geq$ in a certain row can be obtained by multiplying the row with minus one and a $<$ can be obtained by an infinitesimal shift in $\vec b$.
+Equalities are different, but, when we introduce the slack variable, we can also take care this.
+For example, we know that for
+\begin{equation}\label{slack-optimization}
+	p >  \max\limits_{\vec x}\left(\vec c \cdot \vec x\right) \, , \qquad
+	\vec x_0 = \argmax{\vec x} \left( \vec c \cdot \vec x - p f(\vec x) \right)
+\end{equation}
+for constrained $\vec x$ and
+\begin{align}
+	f(\vec x) &= \min\limits_{\vec s}\left[
+		\left(\tilde A \vec x - \vec{\tilde{b}} + D \vec s\right) \cdot \left(\tilde A \vec x - \vec{\tilde{b}} + D \vec s\right)
+	\right]
+	\, , \\
+	\vec s &\in \mathbbm{N}^{N_e} \, , \qquad
+	D \in \text{Mat}(\{0, 1\}, (N_e, N_e)) \, .
+\end{align}
+More specifically $D$ is diagonal and it's entries are either one or zero (they are zero when we have an equality instead of an inequality).
+The entries 
+\begin{align}
+	\tilde A = (10^{m} A) & \in \text{Mat}(\mathbbm Z, (N_x, N_e)) \, , &
+	\vec{\tilde{b}} &= (10^m \vec{b}) \in \mathbbm{Z}^{N_e}
+\end{align}
+are rescaled with a factor such that they are integer valued.
+This assumes that $A$ and $\vec b$ are given for finite precision.
+Because they are integer valued, one can find a vector $\vec s$, such that $\forall \vec x \, \exists \vec s \, : \, \tilde A \vec x - \vec{\tilde{b}} + D \vec s = 0$.
+Thus $f(\vec x) \geq 0$ and furthermore
+\begin{equation}
+	f(\vec x_s) = 0 \iff A \vec x - \vec{b} \leq 0 \, .
+\end{equation}
+From left to right is true because each component $s_i \geq 0$ thus $\tilde A \vec x - \vec{\tilde{b}}$ must be $\leq \vec 0$ and this is invariant under scaling with a positive number.
+From right to left is true because if $A \vec x - \vec b$, this is true for their integer version as well.
+And since $- \vec m = \tilde A \vec x - \vec{\tilde{b}} \leq \vec 0$ for a vector $\vec m \in \mathbbm{N}^{N_e}$, we can pick $\vec m = \vec s$.
+
+Therefore, if $p$ is sufficiently large we know that the \eqref{slack-optimization} is maximal if $f(\vec x) = 0$ and the maximum of \eqref{slack-optimization} is thus equal to $\max\limits_{\vec x}(\vec c \cdot \vec x)$ under the specified constraints.
+
+
+\subsection{Map to bits}
+Next we want to code up $\vec x$ and $\vec s$ as bit vectors, e.g.,
+\begin{equation}
+	q = \sum_{n=0}^{N_b-1} 2^n \psi_n^{(q)} \, , \qquad \psi_n^{(q)} \in \{ 0, 1\}\, .
+\end{equation}
+Note that we in principle could have different $N_b$ for $x$ and $s$---I will discuss the reasoning behind that later.
+
+With this definition, we can introduce a new basis and map between integers and bits such that
+\begin{align}
+	q &= \vec Q \cdot \bvec{\psi}^{(q)} \, , &
+	\bvec{\psi}^{(q)} &\in \{ 0, 1\}^{N_b} \,, &
+	\vec Q^T &= \left(1, 2, 2^2, \cdots,  2^{N_b -1} \right) \, .
+\end{align}
+
+With these definition we have that
+\begin{align}
+	\vec \xi 
+	&= 
+	\begin{pmatrix}
+		\vec x \\
+		\vec s 
+	\end{pmatrix}
+	= Q \bvec \psi^{\left( \vec \xi \right)} \, , &
+	Q 
+	&=
+	\begin{pmatrix}
+		\vec Q^T & \vec 0^T & \vec 0^T & \cdots & \vec 0^T \\
+		\vec 0^T & \vec Q^T & \vec 0^T & \cdots & \vec 0^T \\
+		\vdots   & \ddots   & \ddots   & \ddots & \vdots \\
+		\vec 0^T & \vec 0^T & \vec 0^T & \cdots & \vec Q^T
+	\end{pmatrix}\, .
+	\, , & 
+	\psi^{\left( \vec \xi \right)} & \in \left(\{0, 1\}^{N_b}\right)^{N_e + N_x} \, ,
+\end{align}
+in other words $Q$ is a $(N_e + N_x) \times N_b(N_e + N_x)$ matrix.
+
+\subsection{Integer problem optimization using bits}
+Now we can map \eqref{slack-optimization} to the new basis
+\begin{align}
+	\vec x_0 
+	&= \argmax{\vec x}
+	\left( \bvec \gamma \cdot \bvec \psi^{\left( \vec \xi \right)} - p \phi\left(\bvec \psi^{\left( \vec \xi \right)}\right)\right) \, , &
+	\bvec \gamma &= \begin{pmatrix}
+		\vec c \\ \vec 0
+	\end{pmatrix} \cdot Q \in \mathbbm{R}^{(N_x + N_e )N_b} \, , 
+\end{align}
+which is in principle independent of the $\vec s$ pars and
+\begin{align}\label{bit-penalty}
+	\phi\left(\bvec \psi^{\left( \vec \xi \right)}\right)
+	&=
+	\min\limits_{\vec s}\left[
+	\left(\tilde \alpha Q \bvec \psi^{\left( \vec \xi \right)} - \vec{\tilde{\beta}}\right) 
+		\cdot \left(\tilde \alpha Q \bvec \psi^{\left( \vec \xi \right)} - \vec{\tilde{\beta}}\right)\right]
+	\, , &
+	 \vec{\tilde{\beta}} &= \begin{pmatrix}\vec{\tilde{b}}\\\vec 0 \end{pmatrix}
+	\,,&
+	\tilde \alpha &= \begin{pmatrix}
+		\tilde A & 0 \\ 0  & D
+	\end{pmatrix} \, , &
+\end{align}
+where the above quantities are split up in $\vec x$ and $\vec s$ space.
+
+In the following context we use that the components of the bit vector are either one or zero and thus $\psi^{\left( \vec \xi \right)}_i = \psi^{\left( \vec \xi \right)}_i \psi^{\left( \vec \xi \right)}_i$.
+The argument of equation \eqref{bit-penalty} simplifies to
+\begin{equation}
+	\psi^{\left( \vec \xi \right)}_\nu
+	\left[
+		(\tilde \alpha Q)_{i\nu} (\tilde \alpha Q)_{i\mu}
+		-  \delta_{\nu\mu}\tilde{\beta}_i (\tilde \alpha Q)_{i\mu}
+		- \delta_{\nu\mu} (\tilde \alpha Q)_{i\nu} \tilde{\beta}_i
+	\right]
+	\psi^{\left( \vec \xi \right)}_\mu
+	+ \tilde{\beta}_i \tilde{\beta}_i \, .
+\end{equation}
+Because the we compute the location of the optimal value, we can neglect the constant shift $\tilde{b}_i \tilde{b}_i$.
+Furthermore, we can combine the search for optimal $\vec x$ and $\vec s$ by a search for optimal $\vec \xi$ and hence optional $\bvec \psi^{\left( \vec \xi \right)}$.
+This results in
+\begin{align}
+	\bvec \psi^{\left( \vec \xi \right)}_{0} 
+	&=
+	\argmax{\psi^{\left( \vec \xi \right)}}\left( 
+		\bvec \psi^{\left( \vec \xi \right)} \cdot \Omega \bvec \psi^{\left( \vec \xi \right)}
+	\right)
+	\, , &
+	\Omega_{\nu\mu}
+	&=
+	\delta_{\nu\mu} \gamma_i Q_{i\nu}
+	- \tilde \alpha_{ij} Q_{j\nu} \tilde \alpha_{ik} Q_{k\mu}
+	+ 2 \delta_{\nu\mu}\tilde{\beta}_i \tilde \alpha_{ij} Q_{j\mu}
+\end{align}
+
 
 \end{document}
