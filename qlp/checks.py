@@ -1,6 +1,6 @@
 """Cross checks for integer map problems
 """
-from typing import List
+from typing import List, Tuple, Dict, Any
 
 from itertools import product
 
