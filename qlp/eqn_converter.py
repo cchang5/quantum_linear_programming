@@ -1,60 +1,157 @@
 """Converter for linear inequalities to matrices describing the quantum problem
 """
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 
 from decimal import Decimal
 
-from numpy import array, ndarray, arange, zeros
+import numpy as np
 
-from sympy import Matrix, Symbol
+from sympy import Matrix, Symbol, S
 from sympy.matrices import zeros as ZeroMatrix
 from sympy.matrices import diag
 from sympy.core import relational
 
 
-def eqns_to_matrix(
-    eqns: List[relational.Relational], dependents: List[Symbol]
-) -> Tuple[Matrix, Matrix, Matrix]:
-    """Converts list of relations to slack variable matrix and vector formalism.
-
-    The result relates to the original eqn such that ``m.deps + b + c.s = 0``
-
-    For example ``[a1 * x <= b1, Eq(a2 * x, b2)]`` becomes
-
-    Code:
-        a = | a1 |  and b = | b1 | c = | +1    0 |
-            | a2 |          | b2 |     |  0    0 |
+def get_basis(
+    dependents: List[Symbol], n_constraints: int
+) -> Tuple[Matrix, np.ndarray]:
+    """Converts dependent variables and number of constraints to a joined problem vector.
 
     Arguments:
-        eqns:
+        dependents: List of dependent variables. Will conserve the order.
+        n_constraints: Number of inequalities constraining the problem.
+
+    Returns:
+        xi:
+            The joined vector of dependent and slack variables
+        xi_to_x:
+            A matrix which converts xi to an x vector.
+            The vector has the same size as xi but the slack variable components are
+            zero.
+
+    Example:
+        ```
+        xi, xi_to_x = get_integer_basis(dependents=[x0, x1], n_constraints=1)
+
+        xi == [x0, x1, s0]
+        xi_to_x@xi == [x0, x1, 0]
+        ```
+    """
+    xi = Matrix(
+        [dep for dep in dependents] + [S(f"s_{i}") for i in range(n_constraints)]
+    )
+    xi_to_x = np.diag(
+        ([1 for i in range(len(dependents))] + [0 for i in range(n_constraints)])
+    )
+
+    return xi, xi_to_x
+
+
+def constraints_to_matrix(
+    inequalities: List[relational.GreaterThan], dependents: List[Symbol]
+) -> Tuple[Matrix, Matrix]:
+    """Converts list of linear inequalities to slack variable matrix-vector equations.
+
+    The result relates to the original eqn such that ``m@(deps, s) + b = 0``
+
+    Arguments:
+        inequalities:
             List of relational equations. LHS must be linear in dependents, RHS constant.
         dependents:
             List of dependent variables.
 
-
     Returns:
         m and v, here m is the Matrix and v the vector containing the slack variable
 
-    """
-    dependents = set(dependents)
+    Example:
+        For example ``[a1 * x - b1 <= 0, a2 * x - b2 >= 0)]`` becomes
 
-    mat_coeffs = set()
-    vec_coeffs = set()
-    for eqn in eqns:
-        mat_coeffs = mat_coeffs.union(eqn.lhs.free_symbols.difference(set(dependents)))
-        vec_coeffs = vec_coeffs.union(eqn.rhs.free_symbols.difference(set(dependents)))
+        ```
+        a = | +a1  s1  0  |  and b = | +b1 |
+            | -a2  0   s2 |          | -b2 |
+        ```
+    """
+    for ieqn in inequalities:
+        if not ieqn.rhs == 0:
+            raise TypeError("RHS of inequality must be zero. Received %s" % ieqn.rhs)
 
     n_deps = len(dependents)
-    n_eqns = len(eqns)
+    n_eqns = len(inequalities)
 
-    b = Matrix([[-eqn.rhs] for eqn in eqns])
-    c = diag(*[1 if isinstance(eqn, relational.LessThan) else 0 for eqn in eqns])
-    m = ZeroMatrix(rows=n_eqns, cols=n_deps)
-    for ne, eqn in enumerate(eqns):
+    a = ZeroMatrix(rows=n_eqns, cols=(n_deps + n_eqns))
+    b = ZeroMatrix(rows=n_eqns, cols=1)
+
+    for ne, ieqn in enumerate(inequalities):
+
+        if isinstance(ieqn, relational.LessThan):
+            ieqn = ieqn.lhs * (-1) >= 0
+        elif isinstance(ieqn, relational.GreaterThan):
+            pass
+        else:
+            raise TypeError(
+                "All inequalities must be either of form '>=' or '<='. Received %s."
+                % type(ieqn)
+            )
+
         for nd, dep in enumerate(dependents):
-            m[ne, nd] = eqn.lhs.coeff(dep)
+            a[ne, nd] = ieqn.lhs.coeff(dep)
+        a[ne, n_deps + ne] = -1
+        b[ne, 0] = ieqn.lhs.subs({dep: 0 for dep in dependents})
 
-    return m, b, c
+    return a, b
+
+
+def get_bit_map(nvars: int, nbits: int) -> np.ndarray:
+    """Creates a map from bit vectors to integers.
+
+    Arguments:
+        nvars: Number of vector entries to convert to integers (rows).
+        nb: Number of bits for bit vector components (columns = nb * nvar)
+    """
+    bitmap = 2 ** np.arange(nbits)
+    q = np.zeros([nvars, nbits * nvars], dtype=int)
+    for n in range(nvars):
+        q[n, n * nbits : ((n + 1) * nbits)] = bitmap
+
+    return q
+
+
+def get_bit_vector(n_vars: int, n_bits: int) -> Matrix:
+    """Constructs a vector of bits ``psi_ij`` for input space.
+
+    Vector is of size ``n_vars x n_bits``.
+
+    Arguments:
+        n_vars: Number of variables (first index).
+        n_bits: Number of bits. The maximal value of the variable is ``2**n_bits - 1``.
+    """
+    return Matrix([f"psi_{i}{j}" for i in range(n_vars) for j in range(n_bits)])
+
+
+def get_constrained_matrix(  # pylint: disable=C0103
+    q: Matrix, a: Matrix, b: Optional[Matrix] = None, as_numeric: bool = False
+) -> Tuple[Matrix, np.ndarray]:
+    """Computes the linear constrained in a bit basis.
+
+    The constrained term is assumed to be of the form
+    ```
+    constraint = (a @ xi + b).T @ (a @ xi + b)
+    ```
+
+    Arguments:
+        q: The bit to constraint vector map.
+        a: The linear component of the constraint.
+        b: The constant term of the component.
+        as_numeric: Convert sympy matrix to float if possible.
+
+    Returns:
+        Matrix ``m`` such that ``psi.T @ m @ psi + b.T @ b = constraint`` where
+        ``xi = q @ psi``.
+    """
+    mat = q.T @ a.T @ a @ q
+    if b is not None:
+        mat += diag(*b.T @ a @ q) + diag(*q.T @ a.T @ b)
+    return np.array(mat) if as_numeric else mat
 
 
 def rescale_expressions(expr: Symbol, subs: Dict[str, str]) -> Symbol:
@@ -81,34 +178,3 @@ def rescale_expressions(expr: Symbol, subs: Dict[str, str]) -> Symbol:
     rescaled_subs = {par: int(Decimal(val) * fact) for par, val in subs.items()}
 
     return expr.subs(rescaled_subs)
-
-
-def int_to_bitarray(i: int, bits: int = 8) -> ndarray:
-    """Converts an integer to an array where each value corresponds to a bit
-
-    Arguments:
-        i: The integer
-        bits: The available bits for the substitutin.
-
-    Returns:
-        An array of ones and zeros. First element is smallest number
-    """
-    bit_string = (f"{{0:0{bits}b}}").format(i)
-    if len(bit_string) > bits:
-        raise ValueError(f"{i} is too large to be represented by {bits} bits")
-    return array([int(ii) for ii in bit_string[::-1]])
-
-
-def get_bit_map(nvars: int, nbits: int) -> ndarray:
-    """Creates a map from bit vectors to integers.
-
-    Arguments:
-        nvars: Number of vector entries to convert to integers (rows).
-        nb: Number of bits for bit vector components (columns = nb * nvar)
-    """
-    bitmap = 2 ** arange(nbits)
-    q = zeros([nvars, nbits * nvars], dtype=int)
-    for n in range(nvars):
-        q[n, n * nbits : ((n + 1) * nbits)] = bitmap
-
-    return q
