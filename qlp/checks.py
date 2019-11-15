@@ -12,39 +12,6 @@ from pandas import DataFrame, Series
 import qlp.eqn_converter as qec
 
 
-def generate_constrained_table(
-    inequalities: List[Relational], dependents: List[Symbol], n_bits: int
-) -> DataFrame:
-    """Evaluates the constrained for all allowed bit vectors in the matrix basis
-
-    Arguments:
-        inequalities: All inequalities constraining the problem.
-        dependents: The variable expressions within the constraints.
-        n_bits: The number of bits to represent the variables.
-
-    Returns:
-        DataFrame with a column for each variabe the constrained value as
-        ``psi.T @ constrained @ psi`` (missing a constant shift) and a column with this
-        value shifted.
-    """
-    xi, _ = qec.get_basis(dependents, n_constraints=len(inequalities))
-    alpha, beta = qec.constraints_to_matrix(inequalities, dependents)
-    q = qec.get_bit_map(len(xi), n_bits)
-    constrained_mat = qec.get_constrained_matrix(q, alpha, beta)
-
-    data = []
-    for psi_vec in product(*[range(2)] * q.shape[1]):
-        psi_vec = Matrix(psi_vec)
-        xi_vec = q @ psi_vec
-        constrained = psi_vec.T @ constrained_mat @ psi_vec
-        info = {expr: val for expr, val in zip(xi, xi_vec)}
-        info["constrained"] = constrained[0]
-        info["shifted_constrained"] = (constrained + beta.T @ beta)[0]
-        data.append(info)
-
-    return DataFrame(data).sort_values("shifted_constrained", ascending=True)
-
-
 def check_inequalities(
     data: Tuple[Dict[Any, Any], Series], inequalities: List[Relational]
 ) -> bool:
