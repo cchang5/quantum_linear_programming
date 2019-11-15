@@ -196,7 +196,9 @@ def generate_table(
     dependents: List[relational.Relational],
     n_bits: int,
 ) -> DataFrame:
-    """Evaluates the matrix equation for all allowed bit vectors in the matrix basis
+    """Evaluates the matrix equation for all allowed bit vectors in the matrix basis.
+
+    Table is sorted by the value column in descending order.
 
     Arguments:
         matrix: The matrix.

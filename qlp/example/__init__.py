@@ -1,3 +1,4 @@
+# pylint: disable=C0103
 """Helper function for plotting
 """
 from typing import List
@@ -11,15 +12,15 @@ import qlp.eqn_converter as qe
 DEPENDENTS = [S("x_0"), S("x_1")]
 
 
-def f(x1: float, x2: float) -> float:
+def f(x0: float, x1: float) -> float:
     r"""Hyperbole function
 
     Implements
     $$
-        f(x_1, x_2) = 8 -(x_1 - 2)^2 - (x_2 - 2)^2
+        f(x_0, x_1) = 8 -(x_0 - 2)^2 - (x_1 - 2)^2
     $$
     """
-    return 8 - (x1 - 2) ** 2 - (x2 - 2) ** 2
+    return 8 - (x0 - 2) ** 2 - (x1 - 2) ** 2
 
 
 def get_omega_0(n_bits: int, as_numeric: bool = False) -> Matrix:
@@ -27,19 +28,27 @@ def get_omega_0(n_bits: int, as_numeric: bool = False) -> Matrix:
 
     E.g.,
     $$
-        f(x_1, x_2) = \psi_\alpha M_{\alpha \beta} \psi_\beta
+        f(x_0, x_1) = \psi_\alpha M_{\alpha \beta} \psi_\beta
         \, , \qquad
         M_{\alpha \beta}
         =
+        - Q_{0\alpha}Q_{0\beta}
         - Q_{1\alpha}Q_{1\beta}
-        - Q_{2\alpha}Q_{2\beta}
+        + 4Q_{0\alpha}\delta_{\alpha\beta}
         + 4Q_{1\alpha}\delta_{\alpha\beta}
-        + 4Q_{2\alpha}\delta_{\alpha\beta}
     $$
-    where $\psi$ is a bit vector.
+    where $\psi$ is a bit vector and $Q$ is given by
+    $$
+    \begin{pmatrix}
+        x_0 \\ x_1
+    \end{pmatrix}
+    =
+    Q
+    \vec \psi \, ,
+    $$
 
     Arguments:
-        n_bits: Number of bits
+        n_bits: Number of bits.
         as_numeric: Return numpy array if True. Else sympy expression.
     """
     q = qe.get_bit_map(len(DEPENDENTS), n_bits)
