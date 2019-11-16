@@ -238,7 +238,7 @@ This repository contains the module \codeword{qlp} which provides functionality 
 	}
 \end{figure}
 
-In the bit basis, $f$ is implemented as
+In the bit basis, $g$ is implemented as
 \begin{equation}
 	M_{\alpha \beta}
         =
@@ -276,20 +276,21 @@ We implement the following three constraints (see also fig. \ref{fig:constraints
 		Contour plot of $g$ defined in eq.~\eqref{eq:g} with additional constraints (A), (B) and (C) defined in eq.~\eqref{eq:constrained}.
 		The shaded red area displays the excluded space.
 		Furthermore, $x_0, x_1 \geq 0$.
-		The green dots display the location of the maximal value under the constrained are obtained by running the \codeword{qlp} toy problem.
-		Thus (A) does not change the location of the maximum, (B) shifts it and (C) shifts it but is degenerate.
+		The green dots display the location of the maximal value under the constraints.
+		These values are obtained by running the \codeword{qlp} example problem.
+		The constraint (A) does not change the location of the maximum, (B) shifts the maximum to a new value and (C) shifts the maximum and is degenerate.
 	}
 \end{figure}
 The function \codeword{qlp.eqn_converter.constraints_to_matrix} converts a general list of inequalities to the matrix defined in eq.~\eqref{eq:constraint-matrix}.
 This matrix does not contain the constant term $\vec b^2$.
-Thus the vector-matrix-vector product can be negative and thus result in negative constraint values (increasing the total optimal maximization value).
+Thus the vector-matrix-vector product can be negative and thus results in negative constraint values (increasing the total optimal maximization value).
 However, for all bit vectors fulfilling the constraints, this negative value is the same and therefore does not influence the location of the optimal value.
 To check this, we have implemented the methods \codeword{qlp.eqn_converter.generate_constrained_table}  (generating a table of all vector-matrix-vector operation results for all allowed bit vectors) and \codeword{qlp.checks.run_checks} to check the consistency of the generated tables. 
  
-The full matrix adding including the constraints is obtained by running \codeword{qlp.example.get_omega}.
+The full matrix including the constraints is obtained by running \codeword{qlp.example.get_omega}~.
 Similar to the checks we run \codeword{qlp.eqn_converter.generate_table} to probe the full bit space and pick the maximal value (displayed in fig.~\ref{fig:constraints}).
 
-The example is run in the notebook \codeword{notebooks/example-problem.ipynb}.
+The example is presented in the notebook \codeword{notebooks/example-problem.ipynb}.
 To use this notebook, you have to run \codeword{pip install [--user] -e .} in the repo root directory first.
 
 \end{document}
