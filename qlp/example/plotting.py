@@ -67,7 +67,7 @@ F_DATA = _get_f_data()
 
 
 def get_constrained_data(inequalities: List[relational.Relational]):
-    """
+    """Plots shaded area for excluded regions.
     """
     x0, x1 = DEPENDENTS
 

@@ -59,7 +59,15 @@ def get_omega_0(n_bits: int, as_numeric: bool = False) -> Matrix:
 def get_omega(
     inequalities: List[Relational], n_bits: int, p: int = 10, as_numeric: bool = False
 ) -> Matrix:
-    """
+    """Computes `omega_0 - p * constraint**2` in the bit basis with slack variables.
+
+    Calls `qlp.eqn_converter.constraints_to_matrix` to compute the constrained matrix.
+
+    Arguments:
+        inequalities: The list of inequalities.
+        n_bits: The number of bits to represent integers.
+        p: The penalty term. Must be larger than the maximal value of the opt function.
+        as_numeric: Use numpy instead of sympy.
     """
     n_vars = len(DEPENDENTS) + len(inequalities)
     q = qe.get_bit_map(n_vars=n_vars, n_bits=n_bits)
