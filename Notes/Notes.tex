@@ -3,10 +3,15 @@
 \usepackage{amsmath}
 \usepackage{bbm}
 \usepackage{xcolor}
+\usepackage{graphicx}
+\graphicspath{ {./figs/} }
 
 \newcommand{\argmax}[1]{\text{arg}\hspace{-2pt}\max\limits_{#1}}
 \newcommand{\bvec}[1]{\boldsymbol{#1}}
 \newcommand{\assumption}[1]{{\color{red}#1}} 
+\usepackage{listings}
+\newcommand{\codeword}[1]{\texttt{\textcolor{blue}{\lstinline{#1}}}
+}
 
 \author{}
 
@@ -181,6 +186,7 @@ In the following context we use that the components of the bit vector are either
 Also, to simplify notation, indices to bit-space vectors are given by $\mu, \nu$, indices to $(\vec x, \vec s)$-space vectors are given by $i, j, k$ and it is summed over repeated entries.
 The argument of equation \eqref{bit-penalty} simplifies to
 \begin{equation}
+	\label{eq:constraint-matrix}
 	\phi\left(\bvec \psi^{\left( \vec \xi \right)}\right)
 	=
 	\psi^{\left( \vec \xi \right)}_\nu
@@ -211,5 +217,79 @@ This results in
 	+ 2 p \delta_{\nu\mu}\tilde{b}_i \tilde \alpha_{ij} Q_{j\mu}
 \end{align}
 
+\section{Example}
+In this section we present the optimization of
+\begin{equation}
+	\label{eq:g}
+	g(x_0, x_1) = 8 -(x_0 - 2)^2 - (x_1 - 2)^2 \, ,
+\end{equation}
+under different constraints.
+
+This repository contains the module \codeword{qlp} which provides functionality to implement the problem for bit operations.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.5\textwidth]{contour-opt}
+	\caption{
+		\label{fig:g}
+		Contour plot of $g$ defined in eq.~\eqref{eq:g}.
+		Darker colors denote larger values, lighter colors denote smaller values.
+		Values below $6$ are displayed as white.
+	}
+\end{figure}
+
+In the bit basis, $f$ is implemented as
+\begin{equation}
+	M_{\alpha \beta}
+        =
+        - Q_{0\alpha}Q_{0\beta}
+        - Q_{1\alpha}Q_{1\beta}
+        + 4Q_{0\alpha}\delta_{\alpha\beta}
+        + 4Q_{1\alpha}\delta_{\alpha\beta}
+   \, , \qquad
+   g(x_0, x_1) = \psi_\alpha M_{\alpha \beta} \psi_\beta + \vec b^2\, .
+\end{equation}
+This matrix is obtained by running \codeword{qlp.example.get_omega_0}.
+
+We implement the following three constraints (see also fig. \ref{fig:constraints})
+\begin{equation}
+	\label{eq:constrained}
+	0
+	\leq
+	f(\vec x)
+	=
+	\begin{cases}
+		4 - x_0 - x_1 & (A) \\ 
+		6 - x_0 - 3 x_1 & (B) \\
+		3 - x_0 - x_1 & (C)
+	\end{cases}
+	\, .
+\end{equation}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.32\textwidth]{contour-constraint-1}
+	\includegraphics[width=0.32\textwidth]{contour-constraint-2}
+	\includegraphics[width=0.32\textwidth]{contour-constraint-3}
+	\caption{
+		\label{fig:constraints}
+		Contour plot of $g$ defined in eq.~\eqref{eq:g} with additional constraints (A), (B) and (C) defined in eq.~\eqref{eq:constrained}.
+		The shaded red area displays the excluded space.
+		Furthermore, $x_0, x_1 \geq 0$.
+		The green dots display the location of the maximal value under the constrained are obtained by running the \codeword{qlp} toy problem.
+		Thus (A) does not change the location of the maximum, (B) shifts it and (C) shifts it but is degenerate.
+	}
+\end{figure}
+The function \codeword{qlp.eqn_converter.constraints_to_matrix} converts a general list of inequalities to the matrix defined in eq.~\eqref{eq:constraint-matrix}.
+This matrix does not contain the constant term $\vec b^2$.
+Thus the vector-matrix-vector product can be negative and thus result in negative constraint values (increasing the total optimal maximization value).
+However, for all bit vectors fulfilling the constraints, this negative value is the same and therefore does not influence the location of the optimal value.
+To check this, we have implemented the methods \codeword{qlp.eqn_converter.generate_constrained_table}  (generating a table of all vector-matrix-vector operation results for all allowed bit vectors) and \codeword{qlp.checks.run_checks} to check the consistency of the generated tables. 
+ 
+The full matrix adding including the constraints is obtained by running \codeword{qlp.example.get_omega}.
+Similar to the checks we run \codeword{qlp.eqn_converter.generate_table} to probe the full bit space and pick the maximal value (displayed in fig.~\ref{fig:constraints}).
+
+The example is run in the notebook \codeword{notebooks/example-problem.ipynb}.
+To use this notebook, you have to run \codeword{pip install [--user] -e .} in the repo root directory first.
 
 \end{document}
