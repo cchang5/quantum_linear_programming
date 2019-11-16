@@ -244,7 +244,7 @@ def generate_constrained_table(
     q = get_bit_map(len(xi), n_bits)
     constrained_mat = get_constrained_matrix(q, alpha, beta)
 
-    table = generate_table(constrained_mat, xi, n_bits)
+    table = generate_table(constrained_mat, dependents, n_bits)
     table["shifted_value"] = table["value"] + (beta.T @ beta)[0]
 
     return table.sort_values("shifted_value", ascending=True)

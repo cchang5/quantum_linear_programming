@@ -2,14 +2,9 @@
 """
 from typing import List, Tuple, Dict, Any
 
-from itertools import product
-
-from sympy import Matrix, Symbol
 from sympy.core.relational import Relational
 
 from pandas import DataFrame, Series
-
-import qlp.eqn_converter as qec
 
 
 def check_inequalities(
@@ -40,20 +35,21 @@ def run_checks(  # pylint: disable=C0103
 ) -> bool:
     """Runs the following checks on a constraints table
 
-    1. Checks if all shifted constrained are larger or equal to zero.
-    2. If all inequalities are true for shifted constrained == 0 parameters.
-    3. If any inequality is false for shifted constrained > 0 parameters.
+    1. Checks if all `shifted_value` are larger or equal to zero.
+    2. If all inequalities are true for `shifted_value` == 0 parameters.
+    3. If any inequality is false for `shifted_value` > 0 parameters.
 
     Raise:
         AssertionError error if not all checks are fulfilled
     """
-    if not all(df.shifted_constrained.unique() >= 0):
+    df = df.reset_index()
+    if not all(df.shifted_value.unique() >= 0):
         raise AssertionError(
             "Not all values of shifted constrained are larger or equal to zero."
         )
 
     if not (
-        df.query("shifted_constrained == 0")
+        df.query("shifted_value == 0")
         .apply(lambda row: check_inequalities(row, inequalities), axis=1,)
         .astype(bool)
         .all()
@@ -64,7 +60,7 @@ def run_checks(  # pylint: disable=C0103
         )
 
     if (
-        df.query("shifted_constrained > 0")
+        df.query("shifted_value > 0")
         .apply(lambda row: check_inequalities(row, inequalities), axis=1,)
         .astype(bool)
         .all()
