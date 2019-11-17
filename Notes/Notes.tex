@@ -162,13 +162,13 @@ To separate spaces, if introduced the notation that
 Now we can map \eqref{slack-optimization} to the new basis
 \begin{align}
 	\vec x_0 
-	&= \argmax{\vec x}\left(\min\limits_{\vec s}
+	&= \argmax{\vec x}\left(\max\limits_{\vec s}
 	\left( \bvec \gamma \cdot \bvec \psi^{\left( \vec \xi \right)} - p \phi\left(\bvec \psi^{\left( \vec \xi \right)}\right)\right)\right) \, , &
 	\bvec \gamma &= \begin{pmatrix}
 		\vec c \\ \vec 0
 	\end{pmatrix} \cdot Q \in \mathbbm{R}^{(N_x + N_e )N_b} \, , 
 \end{align}
-where I have pulled out the $\min$ over $\vec s$ which is irrelevant for the $\bvec \gamma$ dot product since the $s$-component vanishes.
+where I have pulled out the $\min$ over $\vec s$ (which becomes a $\max$ because of the minus sign) which is irrelevant for the $\bvec \gamma$ dot product since the $s$-component vanishes.
 The constrained $f \mapsto \phi$ is now given by
 \begin{align}\label{bit-penalty}
 	\phi\left(\bvec \psi^{\left( \vec \xi \right)}\right)
