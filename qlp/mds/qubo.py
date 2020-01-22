@@ -124,13 +124,26 @@ def get_mds_qubo(graph: Set[Tuple[int]]) -> dok_matrix:
 def main():  # pylint: disable=R0914
     """Generates a random graph
     """
+    from argparse import ArgumentParser
     import matplotlib.pylab as plt
     from qlp.mds.graph_tools import generate_graph, get_plot_mpl
     from qlp.mds.solver import classical_search
 
-    n_nodes = 5
-    n_edges = 6
-    n_edge_max = 3
+    parser = ArgumentParser(
+        "Generate random graph,"
+        " compute QUBO of minimal dominating set problem"
+        " and plot minimum solutions."
+    )
+    parser.add_argument("-n", "--n-nodes", type=int, help="Number of nodes.", default=5)
+    parser.add_argument("-e", "--n-edges", type=int, help="Number of edges.", default=5)
+    parser.add_argument(
+        "-m", "--n-edge-max", type=int, help="Max number of edges per node.", default=3
+    )
+    args = parser.parse_args()
+
+    n_nodes = args.n_nodes
+    n_edges = args.n_edges
+    n_edge_max = args.n_edge_max
 
     test_graph = generate_graph(n_nodes, n_edges, n_edge_max=n_edge_max)
     qubo = get_mds_qubo(test_graph)
@@ -141,13 +154,22 @@ def main():  # pylint: disable=R0914
     ### The number of constraints.
     e_min += (n_nodes + 1) * n_nodes
 
+    ## Check if constrained is violated, e.g., slacks contribute to energy
+    if any([len(sol) != e_min for sol in solutions]):
+        raise ValueError(
+            "Constraint not fulfilled for graph:"
+            f"\n{test_graph}"
+            "\nand solutions:"
+            f"\n{solutions}"
+        )
+
     # Plotting
     n_sols = len(solutions)
     col_wrap = 4
     n_rows = n_sols // col_wrap + 1
     n_cols = col_wrap if col_wrap < n_sols else n_sols
 
-    fig, axs = plt.subplots(ncols=n_cols, nrows=n_rows)
+    fig, axs = plt.subplots(ncols=n_cols, nrows=n_rows, squeeze=False)
     for ax in axs.flatten():
         ax.set_visible(False)
     for sol, ax in zip(solutions, axs.flatten()):
