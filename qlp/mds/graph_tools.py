@@ -91,7 +91,11 @@ def get_plot_mpl(
         fig = None
 
     G = nx.Graph(list(graph))
-    node_color = ["lightgreen" if node in color_nodes else "white" for node in G.nodes]
+    node_color = (
+        ["lightgreen" if node in color_nodes else "white" for node in G.nodes]
+        if color_nodes
+        else "white"
+    )
 
     nx.draw(
         G,
