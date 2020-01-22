@@ -13,7 +13,7 @@
 \newcommand{\codeword}[1]{\texttt{\textcolor{blue}{\lstinline{#1}}}
 }
 
-\author{}
+\author{C. C. Chang, C. C. Chen, C. K\"orber, T. Humble, J. Ostrowski}
 
 %opening
 \title{Notes}
@@ -293,32 +293,39 @@ Similar to the checks we run \codeword{qlp.eqn_converter.generate_table} to prob
 The example is presented in the notebook \codeword{notebooks/example-problem.ipynb}.
 To use this notebook, you have to run \codeword{pip install [--user] -e .} in the repo root directory first.
 
-\clearpage
-
 \section{Minimum Dominating Set Problem}
-We want to find a minimum dominating set $D_\text{min}$ for a given graph $G(V,E)$.
-A \textit{dominating~set} $D$ is a set of vertices $V$ such that all vertices in the graph which are not in $D$ are adjacent to at least one point in this set.
-In other words each vertex in this graph is either in the dominating set or in the neighborhood $\mathcal N_i$ of a vertex $i \in D$.
-When $x_i = 0, 1$ is a variable representing if vertex $i$ is in the dominating set ($x_i = 1$), this constrained can be written as $|V|$ (number of all vertices) inequalities
-\begin{equation}\label{eq:ms-constraint}
-	x_i + \sum_{j \in \mathcal N_i} x_j \geq 1 \, , \qquad x_i = 0, 1 \, , \qquad \forall_{i \in V} \, .
-\end{equation}
+We want to find a Minimum~Dominating~Set (MDS) for a given graph $G(V,E)$ (defined by it's vertices $V$ and edges $E$).
 
-A \textit{minimal~dominating~set} is a dominating set which cannot be reduced by taking out vertices---if you are able to remove a vertex of your dominating set and still have a dominating set, it was not minimal.
+\begin{itemize}
+\item A \textit{dominating~set} $D$ is a set of vertices $V$ such that all vertices in the graph which are not in $D$ are adjacent to at least one point in this set.
+In other words: each vertex $i \in V$ is either in the dominating set $i \in D$ or in the neighborhood of a vertex in the dominating set $i \in \mathcal N_j$ for $j \in D$ (see also eq.~\eqref{eq:ms-constraint}).
 
-Finally, a \textit{minimum~dominating~set} (note that \textbf{minimum} $\neq$  \textbf{minimal}) is the smallest minimal dominating set you can find.
-Thus a minimum~dominating~set is a minimal~dominating~set but not necessarily the other way around.
+\item A \textit{minimal~dominating~set} is a dominating set which cannot be reduced by taking out vertices---if you are able to remove a vertex from your dominating set and still have a dominating set, it was not minimal.
+
+\item Finally, a \textit{minimum~dominating~set} $D_\text{min}$ (note that minimum $\neq$  minimal) is the smallest minimal dominating set you can find.
+Thus a Minimum~Dominating~Set is a minimal~dominating~set but not necessarily the other way around.
 Note that there can be more then just one minimum~dominating~set for a given graph.
-Thus, the integer linear programming representation of the problem is given by eq.~\eqref{eq:ms-constraint} and
+
+\item The \textit{Dominating~Set~Problem} (DSP) asks whether the number of vertices in the the smallest dominating set $\gamma(G) \equiv |D_\text{min}|$ is smaller or equal to a given integer number $\gamma(G) \leq K$.
+If one was able to find a global MDS, one would solve this problem for a given graph.
+\end{itemize}
+
+
+The integer linear programming representation of the MDS problem is given by the minimization condition
 \begin{equation}\label{mds:min-con-classical}
-	\min_{i \in V} \sum_i x_i \, .
+	\min_{i \in V}\left( \sum_i x_i \right)\, ,
 \end{equation}
+and the $|V|$ (number of all vertices) constraint conditions
+\begin{equation}\label{eq:ms-constraint}
+	x_i + \sum_{j \in \mathcal N_i} x_j \geq 1 \, , \qquad x_i \in \{ 0, 1\} \, , \qquad \forall_{i \in V} \, ,
+\end{equation}
+where $x_i$ represents if vertex $i$ is in the dominating set ($i\in D_\text{min} \Rightarrow x_i = 1$) and $\mathcal N_i$ is the neighborhood of vertex $i$ (not including $i$ itself).
 
 To allow the implementation of inequalities on D-Wave, we first map eq.~\eqref{eq:ms-constraint} to it's slack variable representation
 \begin{equation}\label{mds:con-slack-classical}
 	x_i  - s_{i} - 1 + \sum_{j \in \mathcal{N}_i} x_j = 0 \, , \quad 0 \leq s_{i} \leq |\mathcal{N}_i| \, .
 \end{equation}
-The solution to the Minimum Dominating Set Problem (MDSP) is found by finding the optimal vector $\vec \psi = (\vec x, \vec s)^T$ such that
+The solution to the DSP is found by finding the optimal vector $\vec \psi = (\vec x, \vec s)^T$ such that the objective function $f$ is minimal
 \begin{equation}\label{mds:objective-function}
 	f(\vec x, \vec s)
 	=
@@ -326,18 +333,17 @@ The solution to the Minimum Dominating Set Problem (MDSP) is found by finding th
 	+ p \sum_{i \in V} \left(x_i  - s_{i} - 1  + \sum_{j \in\mathcal{N}_i} x_j\right)^2
 	\, ,
 	\qquad
-	p \geq |V| + 1 \, ,
+	p \geq |V| + 1 \, .
 \end{equation}
-is minimal.
-To guarantee that the global minimum solution causes the constraint to be zero, $p$ needs to be larger than the minimization condition eq.~\eqref{mds:min-con-classical}.
-In principal, $p = |V| + 1$ is generally sufficient, it might be that one has to optimize this parameter in order to simplify convergence on the D-Wave.
+To guarantee that the global minimum solution fulfills the constraints, $p$ needs to be larger than the minimization condition eq.~\eqref{mds:min-con-classical}.
+In principal, for any graph $p = |V| + 1$ is sufficient---nevertheless it might be that one has to optimize this parameter in order to simplify convergence on the D-Wave.
 
 The values of the vertex variables $x_i$ are already in a bit representation and thus can be directly mapped onto QUBO components.
 The slack variables can be integers and thus have to be mapped onto bits.
 To ensure that eq.~\eqref{mds:con-slack-classical} is fulfilled, we introduce the following mapping procedure:
-For a given slack variable $s_i$, we find the smallest integer $b_i$ such that $2^{b_i}$ is larger or equal to the number of neighbors of vertex $i$
+For a given slack variable $s_i$, we find the smallest integer $b_i$ such that $2^{b_i}$ is larger than the number of neighbors of vertex $i$
 \begin{equation}
-	|\mathcal{N}_i| \leq 2^{b_i-1} = \max(s_i)
+	|\mathcal{N}_i| \leq 2^{b_i} - 1 = \max(s_i)
 	\quad \Rightarrow \quad 
 	s_i = \sum_{k=0}^{b_i-1} 2^k q_{ik}
 	\, , \qquad 
@@ -346,7 +352,7 @@ For a given slack variable $s_i$, we find the smallest integer $b_i$ such that $
 	\forall_{i \in V}
 	\, .
 \end{equation}
-For this choice, the basis of the QUBO $Q$ can be written by
+For this choice, the objective function can be written in terms of a vector-matrix-vector product of QUBO $Q$ 
 \begin{align}\label{mds:qubo}
 	Q &= 
 	\begin{pmatrix}\Omega & 0 \\ 0 & 0 \end{pmatrix}
@@ -355,10 +361,10 @@ For this choice, the basis of the QUBO $Q$ can be written by
 	\, , & 
 	f(\vec x, \vec s)
 	&=
-	\vec \psi \cdot Q \cdot \vec \psi - p |V|
+	\vec \psi \cdot Q \cdot \vec \psi + p |V|
 	\, . 
 \end{align}
-for the bit vector $\vec q$ which relates to $\vec s$ using the bitmap $\vec B$
+The bit vector $\vec q$ is related to the slack variable $\vec s$ by the bitmap $\vec B$
 \begin{equation}
 	\vec \psi \to \begin{pmatrix}
 		\vec x \\ \vec q
@@ -370,8 +376,9 @@ for the bit vector $\vec q$ which relates to $\vec s$ using the bitmap $\vec B$
 	\, .
 \end{equation}
 The first matrix in eq.~\eqref{mds:qubo} represents the minimization condition eq.~\eqref{mds:min-con-classical} while the second matrix describes the constraint eq.~\eqref{eq:ms-constraint}.
-The derivation of the QUBO utilizes that components of the bit vector squared are equal to the linear component, $\psi_\nu^2 = \psi_\nu$, and thus the QUBO represents the original objective function $f$ modulo a known constant.
-The block matrices can be found by multiplying out eq.~\eqref{mds:objective-function} and identifying the linear and quadratic components
+The derivation of the QUBO utilizes that components of the bit vector squared are equal to the component, $\psi_\nu^2 = \psi_\nu$, and thus the quadratic QUBO element is able to represent the original objective function $f$ modulo a known constant.
+
+The block matrices are determined by the linear and quadratic components of eq.~\eqref{mds:objective-function}
 \begin{align}
 	\vec x \cdot \Omega \cdot \vec x 
 	&=
@@ -391,7 +398,7 @@ The block matrices can be found by multiplying out eq.~\eqref{mds:objective-func
     &= 
     \sum_{i \in V} \left[s_i^2 + 2 s_i\right] \, .
 \end{align}
-Given the adjacency matrix $A$ (symmetric matrix representing the graph with and zero diagonal and entries being either one or zero), one finds
+Given the adjacency matrix $A$\footnote{The adjacency matrix used in this context is defined as the symmetric matrix representing the graph with and zero diagonal entries. Other entries are either equal to one or zero.} and the slack-bitmap $B$, one finds
 \begin{align}
 	\Omega &= \mathbbm{1} \, ,
     &
@@ -402,10 +409,10 @@ Given the adjacency matrix $A$ (symmetric matrix representing the graph with and
      \gamma &= B^T B + 2 \text{diag}(|B|)
     \, .
 \end{align}
-
+The result of the matrix operation $|M|$ defines a vector given by the sum over the matrix columns $|M| = \sum_{ij} M_{ij} \vec e_j$.
 
 \subsection{Remarks on Scaling}
-The QUBO $Q$ is block upper-triangular, $\gamma$ is block diagonal and $\alpha, \beta$ are relatively dense because of the neighbors-to-neighbors entries ($A^2$) and neighbors-to-slack-bits entries ($A B$).
+The QUBO $Q$ is upper block triangular (does this word exist?), $\gamma$ is block diagonal and $\alpha, \beta$ are relatively dense because of the neighbors-to-neighbors entries ($A^2$) and neighbors-to-slack-bits entries ($A B$).
 Assuming there is maximal number of edges per vertex which does not scale with the number of vertices $|V|$, the total scaling is
 \begin{equation}
 	\text{rank}(Q) \sim |V| \, ,
@@ -418,30 +425,20 @@ if the maximal number of edges is in some way proportional to $|V|$ one finds
 
 \subsection{Examples}
 I have implemented a Python module which takes a graph (defined by a set of edges) as input, computes the matrices $A$ and $B$, and eventually computes the QUBO $Q$.
-Next, the module classically searches the full bit-space for small example graphs to verify the solutions returned by the algorithm make sense.
-Below you can find a few example plots.
+Next, the module classically searches the full bit-space for small example graphs to verify that the solutions returned by the algorithm make sense.
+You can find a few example plots in fig.~\ref{fig:mds-sol-1}.
 
-If you run `\texttt{python qlp/mds/qubo.py}'\footnote{You have to install the scripts by running `\texttt{python~-m~pip~install~.}' before.} from the repo root, you will generate a random graph, compute the minimum QUBO, find the global minimum solutions and visualize them.
+If you run `\texttt{python qlp/mds/qubo.py}'\footnote{You have to install the scripts by running `\texttt{python~-m~pip~install~.}' before you are able to run the code.} from the repo root, you will generate a random graph, compute the minimum QUBO, find the global minimum solutions and visualize them.
 
-\begin{figure}
+\begin{figure}[htb]
 	\centering
-	\includegraphics[width=0.8\textwidth]{mds-sol-n5-s.png}
+	\includegraphics[width=0.64\textwidth]{mds-sol-n5-s.png}
+	\includegraphics[width=0.32\textwidth]{mds-sol-n5.png}
+	\includegraphics[width=0.49\textwidth]{mds-sol-n6.png}
+	\includegraphics[width=0.49\textwidth]{mds-sol-n7.png}
 	\caption{
-		\label{fig:mds-sol-1}
-	}
-\end{figure}
-\begin{figure}
-	\centering
-	\includegraphics[width=0.6\textwidth]{mds-sol-n5.png}
-	\caption{
-		\label{fig:mds-sol-2}
-	}
-\end{figure}
-\begin{figure}
-	\centering
-	\includegraphics[width=0.8\textwidth]{mds-sol-n6.png}
-	\caption{
-		\label{fig:mds-sol-3}
+		\label{fig:mds-sol-1} Vertex representation for global minimum solution of $\vec \psi \cdot Q \cdot \vec \psi$ for random 5-, 6- and 7-vertex graphs.
+		Green vertices are included in the MDS.
 	}
 \end{figure}
 
