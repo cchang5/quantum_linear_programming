@@ -11,9 +11,20 @@ from tqdm import tqdm
 def classical_search(
     qubo: "SparseMatrix", n_nodes: Optional[int] = None
 ) -> Union[int, List[Tuple[int]]]:
-    """
+    """Classicaly searches minimal energy for all integer solutions.
 
     Assumes that the first n_nodes entries correspond to sorted vertex numbers.
+
+    Arguments:
+        qubo: The QUBO to optimize.
+        n_nodes: If present, optimizes the spaces for the full qubo but only returns
+            solutions accounting for entries from zero to n_nodes (exclusive).
+            This means that the energy and slack contributions are excluced from the
+            presentation of the solution.
+
+    Returns:
+        e_min: The minimal energy.
+        solutions: A list of vertices (qubo entries) which are non-zero.
     """
     energies = []
     vecs = []
