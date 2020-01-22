@@ -129,7 +129,7 @@ def main():  # pylint: disable=R0914
     from qlp.mds.solver import classical_search
 
     n_nodes = 5
-    n_edges = 5
+    n_edges = 6
     n_edge_max = 3
 
     test_graph = generate_graph(n_nodes, n_edges, n_edge_max=n_edge_max)
@@ -144,11 +144,14 @@ def main():  # pylint: disable=R0914
     # Plotting
     n_sols = len(solutions)
     col_wrap = 4
-    n_rows = max(n_sols // col_wrap, 1)
+    n_rows = n_sols // col_wrap + 1
     n_cols = col_wrap if col_wrap < n_sols else n_sols
 
     fig, axs = plt.subplots(ncols=n_cols, nrows=n_rows)
+    for ax in axs.flatten():
+        ax.set_visible(False)
     for sol, ax in zip(solutions, axs.flatten()):
+        ax.set_visible(True)
         get_plot_mpl(test_graph, color_nodes=sol, ax=ax)
 
     fig.suptitle(rf"$\gamma(G) \leq {e_min}$")
