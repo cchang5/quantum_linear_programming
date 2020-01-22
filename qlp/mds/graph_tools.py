@@ -52,6 +52,7 @@ def get_plot(
     color_nodes: Optional[List[int]] = None,
     show_plot: bool = False,
     backend="mpl",
+    seed: int = 42,
 ):
     """Creates graph plot from edge set.
 
@@ -62,7 +63,9 @@ def get_plot(
         backend: The plotting backend. Either "mpl" or "bokeh".
     """
     if backend == "mpl":
-        fig = get_plot_mpl(graph, color_nodes=color_nodes, show_plot=show_plot)
+        fig = get_plot_mpl(
+            graph, color_nodes=color_nodes, show_plot=show_plot, seed=seed
+        )
     elif backend == "bokeh":
         fig = get_plot_bokeh(graph, color_nodes=color_nodes, show_plot=show_plot)
     else:
@@ -76,6 +79,7 @@ def get_plot_mpl(
     color_nodes: Optional[List[int]] = None,
     show_plot: bool = False,
     ax: Optional["Axes"] = None,
+    seed: int = 42,
 ) -> Optional["Figure"]:
     """Creates matplotlib graph plot from edge set.
 
@@ -97,8 +101,12 @@ def get_plot_mpl(
         else "white"
     )
 
+    if seed is not None:
+        pos = nx.spring_layout(G, seed=seed)
+
     nx.draw(
         G,
+        pos,
         with_labels=True,
         node_color=node_color,
         font_size=10,
