@@ -8,15 +8,18 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 
-def generate_graph(n_nodes: int, n_edges: int, n_edge_max: int = 5) -> Set[Tuple[int]]:
+def generate_graph(
+    n_nodes: int, n_edges: int, n_edge_max: int = 5, seed: Optional[int] = None
+) -> Set[Tuple[int]]:
     """Creates random edges for graph.
 
     Node labels are from 0 to n_nodes - 1
 
     Arguments:
-        n_nodes: Number of nodes
-        n_edges: Number of edges
-        n_edge_max: Maximal number of edges for graph
+        n_nodes: Number of nodes.
+        n_edges: Number of edges.
+        n_edge_max: Maximal number of edges for graph.
+        seed: Random seed to set before graph is generated.
 
     Todo:
         What about connected / unconnected graphs?
@@ -25,6 +28,9 @@ def generate_graph(n_nodes: int, n_edges: int, n_edge_max: int = 5) -> Set[Tuple
     """
     assert n_edge_max > 0
     assert n_nodes * n_edge_max // 2 > n_edges
+
+    if seed:
+        rand.seed(42)
 
     nodes = {n: 0 for n in range(n_nodes)}
     edges = set()
@@ -159,13 +165,12 @@ def get_plot_bokeh(  # pylint: disable=R0914
 def main():
     """Creates a random graph (fixed seed) and plots it.
     """
-    rand.seed(42)
 
     n_nodes = 5
     n_edges = 5
     n_edge_max = 3
 
-    test_graph = generate_graph(n_nodes, n_edges, n_edge_max=n_edge_max)
+    test_graph = generate_graph(n_nodes, n_edges, n_edge_max=n_edge_max, seed=42)
     get_plot(test_graph, show_plot=True)
 
 
