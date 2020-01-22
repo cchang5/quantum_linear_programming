@@ -1,4 +1,4 @@
-"""Tools to generate a Minimal Dominating Set QUBO from a graph
+"""Tools to generate a Minimum Dominating Set QUBO from a graph
 """
 from typing import Set, Tuple, List
 from scipy.sparse import dok_matrix, bmat
@@ -73,7 +73,7 @@ def get_bitmap(n_neigbors: List[int]) -> dok_matrix:
 
 
 def get_mds_qubo(graph: Set[Tuple[int]]) -> dok_matrix:
-    """This routine computes minimal dominating set QUBO for a given graph.
+    """This routine computes Minimum Dominating Set QUBO for a given graph.
 
     It assumes the graph is connected and nodes are labeled from 0...N-1.
     Self loops are forbidden.
@@ -121,8 +121,11 @@ def get_mds_qubo(graph: Set[Tuple[int]]) -> dok_matrix:
     return bmat([[alpha, beta], [None, gamma]]).todok()
 
 
-def main():  # pylint: disable=R0914
+def main(col_wrap: int = 4):  # pylint: disable=R0914
     """Generates a random graph
+
+    Arguments:
+        col_wrap: Plot at most graphs `col_wrap` in one row.
     """
     from argparse import ArgumentParser
     import matplotlib.pylab as plt
@@ -131,7 +134,7 @@ def main():  # pylint: disable=R0914
 
     parser = ArgumentParser(
         "Generate random graph,"
-        " compute QUBO of minimal dominating set problem"
+        " compute QUBO of Minimum Dominating Set problem"
         " and plot minimum solutions."
     )
     parser.add_argument("-n", "--n-nodes", type=int, help="Number of nodes.", default=5)
@@ -165,8 +168,7 @@ def main():  # pylint: disable=R0914
 
     # Plotting
     n_sols = len(solutions)
-    col_wrap = 4
-    n_rows = n_sols // col_wrap + 1
+    n_rows = n_sols // col_wrap + (1 if n_sols % col_wrap != 0 else 0)
     n_cols = col_wrap if col_wrap < n_sols else n_sols
 
     fig, axs = plt.subplots(ncols=n_cols, nrows=n_rows, squeeze=False)
