@@ -61,9 +61,6 @@ def get_bitmap(n_neigbors: List[int]) -> dok_matrix:
 
     # Figure out how many bits we need for each neighborhood
     n_bits = np.floor(np.log2(n_neigbors) + 1).astype(int)
-
-    print(n_bits)
-
     bitmap = dok_matrix((n_nodes, n_bits.sum()), dtype=int)
 
     acc = 0
@@ -139,11 +136,16 @@ def main():  # pylint: disable=R0914
     qubo = get_mds_qubo(test_graph)
     e_min, solutions = classical_search(qubo, n_nodes=n_nodes)
 
+    ## Note that the energy offset (constant part of penalty not in QUBO) is of size
+    ### (n_nodes + 1) * n_nodes where the first term is the penalty and the second one
+    ### The number of constraints.
+    e_min += (n_nodes + 1) * n_nodes
+
     # Plotting
     n_sols = len(solutions)
     col_wrap = 4
     n_rows = max(n_sols // col_wrap, 1)
-    n_cols = col_wrap if col_wrap > n_sols else n_sols
+    n_cols = col_wrap if col_wrap < n_sols else n_sols
 
     fig, axs = plt.subplots(ncols=n_cols, nrows=n_rows)
     for sol, ax in zip(solutions, axs.flatten()):
