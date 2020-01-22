@@ -50,9 +50,7 @@ def classical_search(
 
     if n_nodes is not None:
         # Compute energy for one of the solution vectors by only considering n_nodes
-        v0 = np.array(
-            [vv if vv in n < n_nodes else 0 for n, vv in enumerate(solutions[0])]
-        )
+        v0 = np.array([vv if n < n_nodes else 0 for n, vv in enumerate(solutions[0])])
         e_min = (v0 @ qubo @ v0).flatten()[0]
         # Reduce solutions to n_nodes entries
         solutions = [sol[:n_nodes] for sol in solutions]

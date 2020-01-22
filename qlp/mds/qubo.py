@@ -124,7 +124,7 @@ def get_mds_qubo(graph: Set[Tuple[int]]) -> dok_matrix:
     return bmat([[alpha, beta], [None, gamma]]).todok()
 
 
-def main():  # pylint: R0914
+def main():  # pylint: disable=R0914
     """Generates a random graph
     """
     import matplotlib.pylab as plt
