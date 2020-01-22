@@ -38,7 +38,7 @@ def classical_search(
             raise KeyboardInterrupt("Too many iterations abort.")
 
     # Brute force iterate space
-    for vv in tqdm(product(*[(0, 1)] * qubo.shape[1])):
+    for vv in tqdm(list(product(*[(0, 1)] * qubo.shape[1]))):
         ee = (vv @ qubo @ vv).flatten()[0]
         energies.append(ee)
         vecs.append(vv)
@@ -49,9 +49,6 @@ def classical_search(
     solutions = [tuple(vv) for vv, ee in zip(vecs, energies) if ee == e_min]
 
     if n_nodes is not None:
-        # Compute energy for one of the solution vectors by only considering n_nodes
-        v0 = np.array([vv if n < n_nodes else 0 for n, vv in enumerate(solutions[0])])
-        e_min = (v0 @ qubo @ v0).flatten()[0]
         # Reduce solutions to n_nodes entries
         solutions = [sol[:n_nodes] for sol in solutions]
 
