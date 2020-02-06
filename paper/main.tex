@@ -1,0 +1,107 @@
+\documentclass[fleqn,10pt]{wlscirep}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{bm}
+\usepackage{graphicx}
+\usepackage{color}
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,       % false: boxed links; true: colored links
+    linkcolor=blue,          % color of internal links
+    citecolor=blue,        % color of links to bibliography
+    filecolor=blue,      % color of file links
+    urlcolor=blue           % color of external links
+}
+
+\title{Solutions to Integer Linear Programming from Quantum Annealing}
+
+\author[1,*]{Chia~Cheng~Chang}
+\author[2]{Chih-Chieh~Chen}
+\author[3]{Christopher K\"orber}
+\author[4]{Travis~Humble}
+\author[5]{Jim~Ostrowski}
+
+\affil[1]{RIKEN Interdisciplinary Theoretical and Mathematical Sciences (iTHEMS), Wako, Saitama 351-0198, Japan}
+\affil[1]{Department of Physics, University of California, Berkeley, California 94720, USA}
+\affil[1]{Nuclear Science Division, Lawrence Berkeley National Laboratory, Berkeley, California 94720, USA}
+\affil[2]{?}
+\affil[3]{Department of Physics, University of California, Berkeley, California 94720, USA}
+\affil[4]{Quantum Computing Institute, Oak Ridge National Laboratory, Oak Ridge, Tennessee 37831, USA}
+\affil[4]{University of Tennessee}
+\affil[*]{chiacheng.chang@riken.jp}
+
+\begin{abstract}
+\cite{Chang:2018uxx}
+\end{abstract}
+
+\begin{document}
+
+\flushbottom
+\maketitle
+
+\noindent\textbf{INTRODUCTION.}
+
+Motivate ILP and quantum annealing.
+
+\noindent{\textit{\textbf{Integer Linear Programming.}}}
+
+Problem definition and classical solutions.
+
+\noindent{\textbf{RESULTS}}
+
+\noindent\textit{\textbf{ILP Mapping to QUBO}}
+
+Write down how the mapping is done.
+
+\noindent\textit{\textbf{Application to Minimum Dominating Set}}
+
+Write down mapping to QUBO
+
+\noindent{\textbf{DISCUSSION}}
+
+\noindent\textit{\textbf{ILP examples}}
+
+Simple problems and scaling with problem size for single global solution.
+
+- number of constraint equations (slack variables)
+- range of integer values
+- number of variables
+- precision of problem (decimal places needed)
+
+Problems with degenerate minima
+
+- does D-Wave find them with expected distribution for very small systems?
+- at what problem size does this break?
+
+\noindent\textit{\textbf{Dominating Set}}
+
+Demonstrate simple dominating set problem.
+
+Study scaling with random graphs (but fixed number of vertices?)
+
+\noindent\textbf{METHODS}
+
+Might not be necessary to have this section.
+
+
+\noindent{\textbf{DATA AVAILABILITY}
+	
+Link to GitHub.
+
+\noindent{\textbf{ACKNOWLEDGMENTS}
+
+We thank x, y, z...
+
+\noindent{\textbf{AUTHOR CONTRIBUTIONS}}
+
+...
+
+\noindent{\textbf{ADDITIONAL INFORMATION}}
+
+\textbf{Competing Interests:} The authors declare no competing interests.
+
+\bibliography{qilp}
+
+\end{document}
