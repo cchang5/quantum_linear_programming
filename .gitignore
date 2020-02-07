@@ -1,3 +1,12 @@
 *.egg-info
+qlp/__pycache__/
+qlp/example/__pycache__/
 tests/
 Notes/apikey.txt
+paper/main.aux
+paper/main.bbl
+paper/main.blg
+paper/main.log
+paper/main.out
+paper/main.pdf
+paper/main.synctex.gz

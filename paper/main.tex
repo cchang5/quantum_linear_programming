@@ -5,6 +5,7 @@
 \usepackage{bm}
 \usepackage{graphicx}
 \usepackage{color}
+\usepackage{dsfont}
 
 \usepackage{hyperref}
 \hypersetup{
@@ -15,11 +16,11 @@
     urlcolor=blue           % color of external links
 }
 
-\title{Solutions to Integer Linear Programming from Quantum Annealing}
+\title{Solutions to Integer Programming from Quantum Annealing}
 
-\author[1,*]{Chia~Cheng~Chang}
-\author[2]{Chih-Chieh~Chen}
-\author[3]{Christopher K\"orber}
+\author[1,*]{Christopher K\"orber}
+\author[2]{Chia~Cheng~Chang}
+\author[3]{Chih-Chieh~Chen}
 \author[4]{Travis~Humble}
 \author[5]{Jim~Ostrowski}
 
@@ -30,7 +31,7 @@
 \affil[3]{Department of Physics, University of California, Berkeley, California 94720, USA}
 \affil[4]{Quantum Computing Institute, Oak Ridge National Laboratory, Oak Ridge, Tennessee 37831, USA}
 \affil[4]{University of Tennessee}
-\affil[*]{chiacheng.chang@riken.jp}
+\affil[*]{ckoerber@berkeley.edu}
 
 \begin{abstract}
 \cite{Chang:2018uxx}
@@ -41,27 +42,147 @@
 \flushbottom
 \maketitle
 
-\noindent\textbf{INTRODUCTION.}
+\section{INTRODUCTION}
+\label{sec:introduction}
 
-Motivate ILP and quantum annealing.
+Integer linear programming (ILP) is an integer optimization problem subject to inequality constraints and is a commonly tackled problem applicable to situations such as x~\cite{}, y~\cite{}, and z~\cite{}. In general however, ILP is classically NP-complete, and as a result, heuristic methods are employed~\cite{}. The NP-hardness of ILP can be understood by realizing that while the solution to an $n$-dimensional linear problem can be obtained in polynomial time, the optimal integer solution in general must be found in the $2^n$ integer solutions which surround the real number solution. Due to the importance and difficulty, in this work we present a method to obtain the optimal solution to ILP by employing methods of quantum annealing.
 
-\noindent{\textit{\textbf{Integer Linear Programming.}}}
+Quantum annealing solves a general quadratic binary optimization problem (QUBO) by slowly varying a time-dependent Hamiltonian~\cite{}. Through the adiabatic theorem of quantum mechanics, the annealer is prepared initially in a trivial ground state while the solution to ILP is encoded in the target Hamiltonian. Due to the explosion in research efforts towards hardware implementations of quantum annealers and future improvements to the annealing schedule~\cite{}, mapping ILP to QUBO provides a path forward towards obtaining optimal solutions to the class of integer optimization problems.
 
-Problem definition and classical solutions.
+Formally, ILP is defined as the optimization of a linear function
+\begin{align}
+f(x) = &\min(c_i x_i),\\
+\textrm{subject to} \quad & A_{ij}x_j +b_i \leq 0_i,\\
+& x_i \geq 0_i,\\
+& x_i \in \mathbb{Z},
+\end{align}
+where the inequality constraints can be rewritten as an equality by introducing slack variables $s$ such that the ILP becomes
+\begin{align}
+f(x) = &\min(c_i x_i),\\
+\textrm{subject to} \quad & A_{ij}x_j + s_i + b_i = 0_i,\\
+& s_i \geq 0_i,\\
+& x_i \geq 0_i,\\
+& x_i \in \mathbb{Z}.
+\end{align}
 
-\noindent{\textbf{RESULTS}}
+Since quantum annealing solves the QUBO problem, we extend the proposed algorithm to solve integer quadratic optimization problems such that
+\begin{align}
+f(x) = \min(x_i d_{ij} x_j + c_i x_i)
+\end{align}
+without the introduction of auxiliary qubits.
 
-\noindent\textit{\textbf{ILP Mapping to QUBO}}
+{\color{red} Paragraph on how this is solved classically. Include strengths and drawbacks of classical solution.}
 
-Write down how the mapping is done.
+\section{RESULTS}
+\label{sec:results}
+We map integer variables $z_i$ to qubits under the following transformation~\cite{Chang:2018uoc}
+\begin{align}
+z_i = & \sum_{r=0}^{R_i-1} 2^r \psi_{ri}
+\label{eq:int_to_bin}
+\end{align}
+where $\psi \in \{0, 1\}$ while the number of qubits used to represent the $i$-th integer variable is allowed to vary with $R_i$. The transformation can in general be express as a rectangular matrix. For example, a vector of two integer variables $z_0$ and $z_1$ represented by one and two qubits respectively is given as
+\begin{align}
+\begin{pmatrix}
+z_0\\
+z_1
+\end{pmatrix}
+= &
+\begin{pmatrix}
+2^0 & 0 & 0\\
+0 & 2^0 & 2^1
+\end{pmatrix}
+\begin{pmatrix}
+\psi_{00}\\
+\psi_{01}\\
+\psi_{11}
+\end{pmatrix}
+\equiv T^z \begin{pmatrix}
+\psi_{00}\\
+\psi_{01}\\
+\psi_{11}
+\end{pmatrix}
+\end{align}
+The transformation can be reduced to a tensor product if $R_i$ is a constant for all $i$ such that
+\begin{align}
+\mathcal{R} = & \begin{pmatrix} 2^0 & \dots & 2^{R-1}\end{pmatrix},\\
+\mathcal{Z} = & \begin{pmatrix} z_0 & \dots & z_{N-1}\end{pmatrix},\\
+|\mathds{1}| = & |\mathcal{Z}|,\\
+T^z = & \mathds{1}\otimes \mathcal{R}.
+\end{align}
 
-\noindent\textit{\textbf{Application to Minimum Dominating Set}}
+While the coefficients of the inequality constraints are not required to be integer valued, the inequalities can be trivially rescaled such that $s_i \in \mathbb{Z}$ given fixed precision coefficients $A_{ij}$ and $b_i$. As a result, we can restrict both $x_i$ and $s_i$ to sample over only positive integer values as allowed by Eq.~(\ref{eq:int_to_bin}).
 
-Write down mapping to QUBO
+\subsection{Integer Programming Mapping to QUBO}
+\label{sec:results:ilp}
+The integer quadratic optimization problem can be mapped to a minimization of the quadratic objective function
+\begin{align}
+\chi^2 = & \left[\Psi^x_{j^\prime} T^x_{j^\prime i}d_{ij} T^x_{jk}\Psi^x_k + c_i T^x_{ij} \Psi^x_j + p (A_{ij} T^x_{jk} \Psi^x_{k} + T^s_{ij} \Psi^s_j + b_i)^2 \right],\\
+\Psi = & \begin{pmatrix}
+\Psi^x\\
+\Psi^s
+\end{pmatrix},
+\end{align}
+where $p$ is the strength of the penalty factor which must be set large enough such that the constraints are satisfied under minimization. The objective function can be represented as a QUBO Hamiltonian
+\begin{align}
+E = &
+\begin{pmatrix}
+\Psi^x & \Psi^s
+\end{pmatrix}
+\begin{pmatrix}
+{T^{x}}^T Q_{00} T^x & {T^{x}}^T Q_{01} T^s\\
+{T^{s}}^T Q_{10} T^{x} & {T^{s}}^T Q_{11} T^s
+\end{pmatrix}
+\begin{pmatrix}
+\Psi^x\\ \Psi^s
+\end{pmatrix} + b^2,\\
+\equiv & \Psi^T Q \Psi + C,
+\end{align}
+where
+\begin{align}
+Q_{00} = & d + A^T A + \mathrm{Diag} \left(c + A^T b + b^T A\right),\\
+Q_{01} = & Q_{10}^T = A^T,\\
+Q_{11} = & \mathrm{Diag}\left(1 + b^T + b\right).
+\end{align}
+The function $\mathrm{Diag}(x) = \mathds{1}\circ(x\otimes\mathbf{1})$ embeds a vector $x$ into a diagonal matrix, and absorbs the linear contributions of the QUBO into the diagonal elements of the quadratic representation.
 
-\noindent{\textbf{DISCUSSION}}
+\subsection{Application to Minimum Dominating Set}
+\label{sec:results:mds}
 
-\noindent\textit{\textbf{ILP examples}}
+Given a graph $G(E,V)$ defined by the set of $V$ vertices and $E$ edges and a subset $D \subseteq V(G)$, if the nearest-neighbor vertices of $\mathit{N}(D) = V(G)$, then $D$ is a dominating set, where an example is given by Fig.~\ref{fig:dominating_sets}a. The set $D$ is a minimal dominating set if there is no proper subset of $D$ that is a dominating set, {\it{i.e.}}, the removal of any vertex in $D$ results in $N(D) \neq V(G)$. An example is given by Fig.~\ref{fig:dominating_sets}b. The domination number of $D$ is given by the cardinality of $|D| \equiv \overline{\overline{D}}$. The minimum dominating set is defined by $D$ with the smallest domination number. Fig.~\ref{fig:dominating_sets}c shows an example of the minimum dominating set of $G(V, E)$ and is different from the minimal dominating set. We emphasize that while the maximum independent set is always a minimal dominating set as exemplified by Fig.~\ref{fig:dominating_sets}b, the minimum dominating set in general can have a smaller domination number. As a result, the solution to the dominating set problem can not be obtained by solving for the maximum independent set, a problem that is well studied for quantum annealers~\cite{}.
+
+\begin{figure*}
+	\centering
+	\begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.3\textwidth}}
+	\includegraphics[width=0.20\textwidth]{./figures/subaru_ds.pdf}
+&
+	\includegraphics[width=0.20\textwidth]{./figures/subaru_mds4.pdf}
+&
+	\includegraphics[width=0.20\textwidth]{./figures/subaru_mds2.pdf}\\
+	\centering\bf{a} & \centering\bf{b} & \centering\bf{c}
+	\end{tabular}
+	\caption{Example of different dominating sets for the Pleiades constellation $G(V, E)$. Vertices in the dominating set $D$ are highlighted in blue. {\bf{a)}} A dominating set of $G$ with domination number $\overline{\overline{D}} = 5$. {\bf{b)}} A minimal dominating set of $G$ with domination number of $\overline{\overline{D}} = 4$. We note that $D$ is also the maximum independent set of $G$. {\bf{c)}} The minimum dominating set of $G$ with domination number of $\overline{\overline{D}} = 2$.}
+	\label{fig:dominating_sets}
+\end{figure*}
+
+The solution to the minimum independent set can be expressed as an integer optimization problem given by,
+\begin{align}
+f(x) = &\min(\sum_{v_i\in V} \psi_{v_i}),\\
+\textrm{subject to} \quad & \psi_{v_i} + \sum_{v_j \in \mathit{N}(v_i)} \psi_{v_j} \geq 1,\\
+& \psi_{v_i} \in \{0, 1\}.
+\end{align}
+The problem minimizes the number of vertices in $D$ with a binary variable $\psi$ encoded by a single qubit, subject to the constraint that at least one vertex in $\mathit{N}(v_i)$ is in $D$. We introduce slack variables to encode the inequality constraint such that
+\begin{align}
+f(x) = &\min(\sum_{v_i\in V} \psi_{v_i}),\\
+\textrm{subject to} \quad & \psi_{v_i} + s_{v_i} + J_{v_i v_j} \psi_{v_j} = 1,\\
+& \psi_{v_i} \in \{0, 1\},\\
+& 0 \leq s_{v_i} \leq |\mathrm{N}(v_i)|\\
+& s_{v_i} \in \mathbb{Z},
+\end{align}
+where the nearest-neighbor sum is expressed by $J$, the adjacency matrix for $G$. The algorithm uses $\overline{\overline{V}}$ qubits to encode $\overline{\overline{V}}$ vertices and $\sum_{v_i \in V} \log_2 \mathit(N(v_i))$ qubits to embed the slack variables. Therefore, the embedding at worse scales with $\overline{\overline{V}} \log_2 |\overline{\overline{V}}|$ qubits for fully connected graphs.
+
+\section{DISCUSSION}
+
+\subsection{ILP Examples}
 
 Simple problems and scaling with problem size for single global solution.
 
@@ -75,30 +196,36 @@ Problems with degenerate minima
 - does D-Wave find them with expected distribution for very small systems?
 - at what problem size does this break?
 
-\noindent\textit{\textbf{Dominating Set}}
+\subsection{Dominating Set}
 
 Demonstrate simple dominating set problem.
 
 Study scaling with random graphs (but fixed number of vertices?)
 
-\noindent\textbf{METHODS}
+\subsection{Total Domination with Quantum Annealing}
+
+Solve the total dominating set problem.
+
+This probably just involves making the inequality constraint > 1 instead of > 0.
+
+\section{METHODS}
 
 Might not be necessary to have this section.
 
 
-\noindent{\textbf{DATA AVAILABILITY}
+\section{DATA AVAILABILITY}
 	
 Link to GitHub.
 
-\noindent{\textbf{ACKNOWLEDGMENTS}
+\section{ACKNOWLEDGEMENTS}
 
 We thank x, y, z...
 
-\noindent{\textbf{AUTHOR CONTRIBUTIONS}}
+\section{AUTHOR CONTRIBUTIONS}
 
 ...
 
-\noindent{\textbf{ADDITIONAL INFORMATION}}
+\section{ADDITIONAL INFORMATION}
 
 \textbf{Competing Interests:} The authors declare no competing interests.
 
