@@ -2,7 +2,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb}
-\usepackage{bm}
+\usepackage{bm,bbm}
 \usepackage{graphicx}
 \usepackage{color}
 \usepackage{dsfont}
@@ -51,23 +51,24 @@ Quantum annealing solves a general quadratic binary optimization problem (QUBO) 
 
 Formally, ILP is defined as the optimization of a linear function
 \begin{align}
-f(x) = &\min(c_i x_i),\\
-\textrm{subject to} \quad & A_{ij}x_j +b_i \leq 0_i,\\
-& x_i \geq 0_i,\\
-& x_i \in \mathbb{Z},
+f(x) = &\min\limits_{x}(c_i x_i),\\
+\textrm{subject to} \quad & A_{aj}x_i +b_a \leq 0 \\
+& x_i \geq 0,\\
+& x_i \in \mathbb{Z}
 \end{align}
-where the inequality constraints can be rewritten as an equality by introducing slack variables $s$ such that the ILP becomes
+where $i=1, \cdots,  N$ is the number of dependent variables and $a=1, \cdots, M$ the number of constraint equations. The inequality constraints can be rewritten as an equality by introducing slack variables $s$ such that the ILP becomes
 \begin{align}
 f(x) = &\min(c_i x_i),\\
-\textrm{subject to} \quad & A_{ij}x_j + s_i + b_i = 0_i,\\
-& s_i \geq 0_i,\\
-& x_i \geq 0_i,\\
+\textrm{subject to} \quad & A_{a i}x_i + s_a + b_a = 0,\\
+& s_a \geq 0,\\
+& s_a \in \mathbb{Z},\\
+& x_i \geq 0,\\
 & x_i \in \mathbb{Z}.
 \end{align}
 
 Since quantum annealing solves the QUBO problem, we extend the proposed algorithm to solve integer quadratic optimization problems such that
 \begin{align}
-f(x) = \min(x_i d_{ij} x_j + c_i x_i)
+f(x) = \min\limits_{x}(x_i d_{ij} x_j + c_i x_i)
 \end{align}
 without the introduction of auxiliary qubits.
 
@@ -80,7 +81,7 @@ We map integer variables $z_i$ to qubits under the following transformation~\cit
 z_i = & \sum_{r=0}^{R_i-1} 2^r \psi_{ri}
 \label{eq:int_to_bin}
 \end{align}
-where $\psi \in \{0, 1\}$ while the number of qubits used to represent the $i$-th integer variable is allowed to vary with $R_i$. The transformation can in general be express as a rectangular matrix. For example, a vector of two integer variables $z_0$ and $z_1$ represented by one and two qubits respectively is given as
+where $\psi_{ri} \in \{0, 1\}$ while the number of qubits used to represent the $i$-th integer variable is allowed to vary with $R_i$. The transformation can in general be express as a rectangular matrix. For example, a vector of two integer variables $z_0$ and $z_1$ represented by one and two qubits respectively is given as
 \begin{align}
 \begin{pmatrix}
 z_0\\
@@ -116,7 +117,7 @@ While the coefficients of the inequality constraints are not required to be inte
 \label{sec:results:ilp}
 The integer quadratic optimization problem can be mapped to a minimization of the quadratic objective function
 \begin{align}
-\chi^2 = & \left[\Psi^x_{j^\prime} T^x_{j^\prime i}d_{ij} T^x_{jk}\Psi^x_k + c_i T^x_{ij} \Psi^x_j + p (A_{ij} T^x_{jk} \Psi^x_{k} + T^s_{ij} \Psi^s_j + b_i)^2 \right],\\
+\chi^2 = & \left[\Psi^x_{\mu} T^x_{\mu i}d_{ij} T^x_{j \nu}\Psi^x_\nu + c_i T^x_{i\mu} \Psi^x_\mu + p (A_{a b} T^x_{b \mu} \Psi^x_{\mu} + T^s_{a \alpha} \Psi^s_\alpha + b_a)^2 \right],\\
 \Psi = & \begin{pmatrix}
 \Psi^x\\
 \Psi^s
@@ -129,8 +130,8 @@ E = &
 \Psi^x & \Psi^s
 \end{pmatrix}
 \begin{pmatrix}
-{T^{x}}^T Q_{00} T^x & {T^{x}}^T Q_{01} T^s\\
-{T^{s}}^T Q_{10} T^{x} & {T^{s}}^T Q_{11} T^s
+ Q_{00} & Q_{01}\\
+Q_{10} & {T^{s}}^T Q_{11} T^s
 \end{pmatrix}
 \begin{pmatrix}
 \Psi^x\\ \Psi^s
@@ -140,16 +141,16 @@ E = &
 \end{align}
 where
 \begin{align}
-Q_{00} = & d + \mathrm{Diag}(c) + p \left[ A^T A + \mathrm{Diag} \left(A^T b + b^T A\right)\right],\\
-Q_{01} = & Q_{10}^T = pA^T,\\
-Q_{11} = & p\mathrm{Diag}\left(1 + b^T + b\right).
+Q_{00} = & {T^{x}}^T \left[ d + p A^T A + p \mathrm{Diag}_{x} \left(A^T b + b^T A\right) \right] T^x + \mathrm{Diag}_{\psi^x}(c) T^x,\\
+Q_{01} = & Q_{10}^T = p {T^{x}}^T A^T T^s,\\
+Q_{11} = & p\mathrm{Diag}_{\psi^s}\left(1 + b^T + b\right).
 \end{align}
-The function $\mathrm{Diag}(x) = \mathds{1}\circ(x\otimes\mathbf{1})$ embeds a vector $x$ into a diagonal matrix, and absorbs the linear contributions of the QUBO into the diagonal elements of the quadratic representation.
+The function $\mathrm{Diag}_{z}(v)$ embeds a vector $v$ into a diagonal matrix in subspace $z$, and absorbs the linear contributions of the QUBO into the diagonal elements of the quadratic representation.
 
 \subsection{Application to the Dominating Set Problem}
 \label{sec:results:mds}
 
-Given a graph $G(E,V)$ defined by the set of $V$ vertices and $E$ edges and a subset $D \subseteq V(G)$, if the nearest-neighbor vertices of $\mathit{N}(D) = V(G)$, then $D$ is a dominating set, where an example is given by Fig.~\ref{fig:dominating_sets}a. The set $D$ is a minimal dominating set if there is no proper subset of $D$ that is a dominating set, {\it{i.e.}}, the removal of any vertex in $D$ results in $N(D) \neq V(G)$. An example is given by Fig.~\ref{fig:dominating_sets}b. The domination number of $D$ is given by the cardinality of $|D| \equiv \overline{\overline{D}}$. The minimum dominating set is defined by $D$ with the smallest domination number. Fig.~\ref{fig:dominating_sets}c shows an example of the minimum dominating set of $G(V, E)$ and is different from the minimal dominating set. We emphasize that while the maximum independent set is always a minimal dominating set as exemplified by Fig.~\ref{fig:dominating_sets}b, the minimum dominating set in general can have a smaller domination number. As a result, the solution to the dominating set problem can not be obtained by solving for the maximum independent set, a problem that is well studied for quantum annealers~\cite{}.
+Given a graph $G(E,V)$, defined by the set of $V$ vertices and $E$ edges, and a subset of vertices $D \subseteq V$. If the set of all vertices not in $D$ is adjacent to at least one vertex in $D$, then $D$ is a dominating set. This is equivalent to requiring the set of nearest-neighbor vertices of $D$ (exclusive) and $D$ cover all vertices $N(D) \cup D = V$ (an example is given by Fig.~\ref{fig:dominating_sets}a). The set $D$ is a minimal dominating set if there is no proper subset of $D$ that is a dominating set, {\it{i.e.}}, the removal of any vertex in $D$ results in $N(D) \cup D  \neq V$. An example is given by Fig.~\ref{fig:dominating_sets}b. The domination number of $D$ is given by the cardinality of $|D| \equiv \overline{\overline{D}}$. The minimum dominating set is defined by $D$ with the smallest domination number. Fig.~\ref{fig:dominating_sets}c shows an example of the minimum dominating set of $G(V, E)$ and is different from the minimal dominating set. We emphasize that while the maximum independent set is always a minimal dominating set as exemplified by Fig.~\ref{fig:dominating_sets}b, the minimum dominating set in general can have a smaller domination number. As a result, the solution to the dominating set problem can not be obtained by solving for the maximum independent set, a problem that is well studied for quantum annealers~\cite{}.
 
 \begin{figure*}
 	\centering
@@ -168,35 +169,38 @@ Given a graph $G(E,V)$ defined by the set of $V$ vertices and $E$ edges and a su
 \subsubsection{Minimum Dominating Set}
 The solution to the minimum independent set can be expressed as an integer optimization problem given by,
 \begin{align}
-f(x) = &\min(\sum_{v_i\in V} \psi_{v_i}),\\
-\textrm{subject to} \quad & \psi_{v_i} + \sum_{v_j \in \mathit{N}(v_i)} \psi_{v_j} \geq 1,\\
-& \psi_{v_i} \in \{0, 1\}.
+f(x) = &\min(\sum_{\nu \in V} \psi^x_{\nu}),\\
+\textrm{subject to} \quad & \psi^x_{\nu} + \sum_{\mu \in \mathit{N}(\nu)} \psi^x_{\mu} \geq 1,\\
+& \psi^x_{\nu} \in \{0, 1\}
 \end{align}
-The problem minimizes the number of vertices in $D$ with a binary variable $\psi$ encoded by a single qubit, subject to the constraint that at least one vertex in $\mathit{N}(v_i)$ is in $D$. We introduce slack variables $s_{v_i} = T^s_{v_i v_j} \psi^s_{v_j}$ to encode the inequality constraint such that
+where the dimension of the dependent variable $x$ is the number of vertices $\overline{\overline{V}}$.
+The problem minimizes the number of vertices in $D$ with a binary variable $\psi^x$ encoded by a single qubit, subject to the constraint that at least one vertex in $\mathit{N}(\nu)$ is in $D$. For each vertex in $V$ we introduce slack variables $s_{\nu} = T^s_{\nu \alpha} \psi^s_{\alpha}$ to encode the inequality constraint such that
 \begin{align}
-f(x) = &\min(\sum_{v_i\in V} \psi_{v_i}),\\
-\textrm{subject to} \quad & \psi_{v_i} + T^s_{v_i v_j} \psi^s_{v_j} + J_{v_i v_j} \psi_{v_j} = 1,\\
-& \psi_{v_i} \in \{0, 1\},\\
-& 0 \leq s_{v_i} \leq |\mathrm{N}(v_i)|\\
-& s_{v_i} \in \mathbb{Z},
+f(x) = &\min(\sum_{\nu\in V} \psi^x_{\nu}),\\
+\textrm{subject to} \quad & \psi^x_{\nu} + J_{\nu \mu} \psi^x_{\mu}- T^s_{\nu \alpha} \psi^s_{\alpha}  - 1 = 0,\\
+& \psi_{\nu} \in \{0, 1\},\\
+& 0 \leq s_{\nu} \leq |\mathrm{N}(\nu)|\\
+& s_{\nu} \in \mathbb{Z},
 \end{align}
-where the nearest-neighbor sum is expressed by $J$, the adjacency matrix for $G$. The algorithm uses $\overline{\overline{V}}$ qubits to encode $\overline{\overline{V}}$ vertices and $\sum_{v_i \in V} \log_2 \mathit(N(v_i))$ qubits to embed the slack variables. Therefore, the embedding at worse scales with $\overline{\overline{V}} \log_2 |\overline{\overline{V}}|$ qubits for fully connected graphs.
+where the nearest-neighbor sum is expressed by $J$ (symmetric and zero diagonal), the adjacency matrix for $G$.
+The algorithm uses $N_q = \overline{\overline{V}} + \sum_{\nu \in V} \log_2 \mathit(N(\nu))$ qubits---$\overline{\overline{V}}$ qubits to encode the vertices and another $\sum_{\nu \in V} \log_2 \mathit(N(\nu))$ qubits to embed the slack variables. Therefore, the embedding at worse scales with $\overline{\overline{V}} \log_2 |\overline{\overline{V}}|$ qubits for fully connected graphs.
 
-The target Hamiltonian can be written in the convenient matrix form
+The target Hamiltonian can be written in the matrix form
 \begin{align}
 E = &
 \begin{pmatrix}
 \Psi^x & \Psi^s
 \end{pmatrix}
 \begin{pmatrix}
-1 + p\left[1+J^T J + 2(J+J^T)\right] &p(1+J^T)T^s\\
-p{T^s}^T(1+J)& p\left[{T^s}^T T^s + {T^s}^T + T^s\right]
+\mathbbm{1} + p\left[J^2 + 2 J - \mathrm{Diag}_{\psi^x}(|J|) - \mathbbm{1} \right] & - p(\mathbbm{1}+J)T^s\\
+- p{T^s}^T(\mathbbm{1}+J)& p\left[{T^s}^T T^s + 2\mathrm{Diag}_{\psi^s}(|T^s|)\right]
 \end{pmatrix}
 \begin{pmatrix}
 \Psi^x\\ \Psi^s
-\end{pmatrix} + p.
+\end{pmatrix} + p
 \label{eq:matrix_form}
 \end{align}
+where $ |M| \equiv \sum_{\nu} M_{\nu \mu}$.
 
 \subsubsection{Total Dominating Set}
 
