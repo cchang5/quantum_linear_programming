@@ -134,18 +134,19 @@ E = &
 \end{pmatrix}
 \begin{pmatrix}
 \Psi^x\\ \Psi^s
-\end{pmatrix} + b^2,\\
+\end{pmatrix} + pb^2,\\
 \equiv & \Psi^T Q \Psi + C,
+\label{eq:matrix_form}
 \end{align}
 where
 \begin{align}
-Q_{00} = & d + A^T A + \mathrm{Diag} \left(c + A^T b + b^T A\right),\\
-Q_{01} = & Q_{10}^T = A^T,\\
-Q_{11} = & \mathrm{Diag}\left(1 + b^T + b\right).
+Q_{00} = & d + \mathrm{Diag}(c) + p \left[ A^T A + \mathrm{Diag} \left(A^T b + b^T A\right)\right],\\
+Q_{01} = & Q_{10}^T = pA^T,\\
+Q_{11} = & p\mathrm{Diag}\left(1 + b^T + b\right).
 \end{align}
 The function $\mathrm{Diag}(x) = \mathds{1}\circ(x\otimes\mathbf{1})$ embeds a vector $x$ into a diagonal matrix, and absorbs the linear contributions of the QUBO into the diagonal elements of the quadratic representation.
 
-\subsection{Application to Minimum Dominating Set}
+\subsection{Application to the Dominating Set Problem}
 \label{sec:results:mds}
 
 Given a graph $G(E,V)$ defined by the set of $V$ vertices and $E$ edges and a subset $D \subseteq V(G)$, if the nearest-neighbor vertices of $\mathit{N}(D) = V(G)$, then $D$ is a dominating set, where an example is given by Fig.~\ref{fig:dominating_sets}a. The set $D$ is a minimal dominating set if there is no proper subset of $D$ that is a dominating set, {\it{i.e.}}, the removal of any vertex in $D$ results in $N(D) \neq V(G)$. An example is given by Fig.~\ref{fig:dominating_sets}b. The domination number of $D$ is given by the cardinality of $|D| \equiv \overline{\overline{D}}$. The minimum dominating set is defined by $D$ with the smallest domination number. Fig.~\ref{fig:dominating_sets}c shows an example of the minimum dominating set of $G(V, E)$ and is different from the minimal dominating set. We emphasize that while the maximum independent set is always a minimal dominating set as exemplified by Fig.~\ref{fig:dominating_sets}b, the minimum dominating set in general can have a smaller domination number. As a result, the solution to the dominating set problem can not be obtained by solving for the maximum independent set, a problem that is well studied for quantum annealers~\cite{}.
@@ -164,21 +165,40 @@ Given a graph $G(E,V)$ defined by the set of $V$ vertices and $E$ edges and a su
 	\label{fig:dominating_sets}
 \end{figure*}
 
+\subsubsection{Minimum Dominating Set}
 The solution to the minimum independent set can be expressed as an integer optimization problem given by,
 \begin{align}
 f(x) = &\min(\sum_{v_i\in V} \psi_{v_i}),\\
 \textrm{subject to} \quad & \psi_{v_i} + \sum_{v_j \in \mathit{N}(v_i)} \psi_{v_j} \geq 1,\\
 & \psi_{v_i} \in \{0, 1\}.
 \end{align}
-The problem minimizes the number of vertices in $D$ with a binary variable $\psi$ encoded by a single qubit, subject to the constraint that at least one vertex in $\mathit{N}(v_i)$ is in $D$. We introduce slack variables to encode the inequality constraint such that
+The problem minimizes the number of vertices in $D$ with a binary variable $\psi$ encoded by a single qubit, subject to the constraint that at least one vertex in $\mathit{N}(v_i)$ is in $D$. We introduce slack variables $s_{v_i} = T^s_{v_i v_j} \psi^s_{v_j}$ to encode the inequality constraint such that
 \begin{align}
 f(x) = &\min(\sum_{v_i\in V} \psi_{v_i}),\\
-\textrm{subject to} \quad & \psi_{v_i} + s_{v_i} + J_{v_i v_j} \psi_{v_j} = 1,\\
+\textrm{subject to} \quad & \psi_{v_i} + T^s_{v_i v_j} \psi^s_{v_j} + J_{v_i v_j} \psi_{v_j} = 1,\\
 & \psi_{v_i} \in \{0, 1\},\\
 & 0 \leq s_{v_i} \leq |\mathrm{N}(v_i)|\\
 & s_{v_i} \in \mathbb{Z},
 \end{align}
 where the nearest-neighbor sum is expressed by $J$, the adjacency matrix for $G$. The algorithm uses $\overline{\overline{V}}$ qubits to encode $\overline{\overline{V}}$ vertices and $\sum_{v_i \in V} \log_2 \mathit(N(v_i))$ qubits to embed the slack variables. Therefore, the embedding at worse scales with $\overline{\overline{V}} \log_2 |\overline{\overline{V}}|$ qubits for fully connected graphs.
+
+The target Hamiltonian can be written in the convenient matrix form
+\begin{align}
+E = &
+\begin{pmatrix}
+\Psi^x & \Psi^s
+\end{pmatrix}
+\begin{pmatrix}
+1 + p\left[1+J^T J + 2(J+J^T)\right] &p(1+J^T)T^s\\
+p{T^s}^T(1+J)& p\left[{T^s}^T T^s + {T^s}^T + T^s\right]
+\end{pmatrix}
+\begin{pmatrix}
+\Psi^x\\ \Psi^s
+\end{pmatrix} + p.
+\label{eq:matrix_form}
+\end{align}
+
+\subsubsection{Total Dominating Set}
 
 \section{DISCUSSION}
 
