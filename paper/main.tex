@@ -130,8 +130,8 @@ E = &
 \Psi^x & \Psi^s
 \end{pmatrix}
 \begin{pmatrix}
- Q_{00} & Q_{01}\\
-Q_{10} & Q_{11} 
+Q_{xx} & Q_{xs}\\
+Q_{sx} & Q_{ss} 
 \end{pmatrix}
 \begin{pmatrix}
 \Psi^x\\ \Psi^s
@@ -141,9 +141,9 @@ Q_{10} & Q_{11}
 \end{align}
 where
 \begin{align}
-Q_{00} = & {T^{x}}^T \left[ d + p A^T A + p \mathrm{Diag}_{x} \left(A^T b + b^T A\right) \right] T^x + \mathrm{Diag}_{\psi^x}(c) T^x,\\
-Q_{01} = & Q_{10}^T = p {T^{x}}^T A^T T^s,\\
-Q_{11} = & p\left[ {T^{s}}^T T^s + \mathrm{Diag}_{\psi^s}\left( {T^{s}}^T b + b^T T^s\right) \right].
+Q_{xx} = & {T^{x}}^T \left[ d + p A^T A + p \mathrm{Diag}_{x} \left(A^T b + b^T A\right) \right] T^x + \mathrm{Diag}_{\psi^x}(c) T^x,\\
+Q_{xs} = & Q_{sx}^T = p {T^{x}}^T A^T T^s,\\
+Q_{ss} = & p\left[ {T^{s}}^T T^s + \mathrm{Diag}_{\psi^s}\left( {T^{s}}^T b + b^T T^s\right) \right].
 \end{align}
 The function $\mathrm{Diag}_{z}(v)$ embeds a vector $v$ into a diagonal matrix in subspace $z$, and absorbs the linear contributions of the QUBO into the diagonal elements of the quadratic representation.
 
@@ -197,7 +197,7 @@ E = &
 \end{pmatrix}
 \begin{pmatrix}
 \Psi^x\\ \Psi^s
-\end{pmatrix} + p
+\end{pmatrix} + p \overline{\overline{V}}
 \label{eq:matrix_form}
 \end{align}
 where $ |M| \equiv \sum_{\nu} M_{\nu \mu}$.
