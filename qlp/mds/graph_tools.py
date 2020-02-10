@@ -9,7 +9,7 @@ import networkx as nx
 
 
 def generate_graph(
-    n_nodes: int, n_edges: int, n_edge_max: int = 5, seed: Optional[int] = None
+    n_nodes: int, n_edges: int, n_edge_max: int = 5, seed: Optional[int] = None,
 ) -> Set[Tuple[int]]:
     """Creates random edges for graph.
 
@@ -53,6 +53,7 @@ def get_plot(
     show_plot: bool = False,
     backend="mpl",
     seed: int = 42,
+    directed: bool = False,
 ):
     """Creates graph plot from edge set.
 
@@ -61,12 +62,19 @@ def get_plot(
         color_nodes: Colors given nodes green, default is white.
         show_plot: Wether or not the plot should be rendered.
         backend: The plotting backend. Either "mpl" or "bokeh".
+        directed: Plot graph as a directed graph
     """
     if backend == "mpl":
         fig = get_plot_mpl(
-            graph, color_nodes=color_nodes, show_plot=show_plot, seed=seed
+            graph,
+            color_nodes=color_nodes,
+            show_plot=show_plot,
+            seed=seed,
+            directed=directed,
         )
     elif backend == "bokeh":
+        if directed:
+            print("Directed graph not supported for bokeh")
         fig = get_plot_bokeh(graph, color_nodes=color_nodes, show_plot=show_plot)
     else:
         raise KeyError("Only implemented matplotlib ('mpl') or ")
@@ -80,6 +88,7 @@ def get_plot_mpl(
     show_plot: bool = False,
     ax: Optional["Axes"] = None,
     seed: int = 42,
+    directed: bool = False,
 ) -> Optional["Figure"]:
     """Creates matplotlib graph plot from edge set.
 
@@ -88,13 +97,14 @@ def get_plot_mpl(
         color_nodes: Colors given nodes green, default is white.
         show_plot: Wether or not the plot should be rendered.
         ax: The axes to plot in
+        directed: Plot graph as a directed graph
     """
     if not ax:
         fig, ax = plt.subplots()
     else:
         fig = None
 
-    G = nx.Graph(list(graph))
+    G = nx.DiGraph(list(graph)) if directed else nx.Graph(list(graph))
     node_color = (
         ["lightgreen" if node in color_nodes else "white" for node in G.nodes]
         if color_nodes
