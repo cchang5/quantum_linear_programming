@@ -1,7 +1,7 @@
 """Tools to generate a Minimum Dominating Set QUBO from a graph
 """
 from typing import Set, Tuple, List
-from scipy.sparse import dok_matrix, bmat
+from scipy.sparse import dok_matrix, bmat, triu, tril
 import numpy as np
 
 
@@ -81,7 +81,9 @@ def get_bitmap(n_neigbors: List[int]) -> dok_matrix:
     return bitmap
 
 
-def get_mds_qubo(graph: Set[Tuple[int]], directed: bool = False) -> dok_matrix:
+def get_mds_qubo(
+    graph: Set[Tuple[int]], directed: bool = False, triangularize: bool = False
+) -> dok_matrix:
     """This routine computes Minimum Dominating Set QUBO for a given graph.
 
     It assumes the graph is connected and nodes are labeled from 0...N-1.
@@ -90,6 +92,7 @@ def get_mds_qubo(graph: Set[Tuple[int]], directed: bool = False) -> dok_matrix:
     Arguments:
         graph: The graph. If the graph is directed, first entry points to second.
         directed: Whether or not this is a directed graph.
+        triangularize: Put lower triangular entries in the upper diagonal.
     """
     ## This is J
     adjacency = get_adjacency(graph, directed=directed)
@@ -132,7 +135,11 @@ def get_mds_qubo(graph: Set[Tuple[int]], directed: bool = False) -> dok_matrix:
     q_xx += one
 
     ## Construt QUBO
-    return bmat([[q_xx, q_xs], [None, q_ss]]).todok()
+    q = bmat([[q_xx, q_xs], [None, q_ss]]).todok()
+
+    if triangularize:
+        q = triu(q) + tril(q, -1).T
+    return q
 
 
 def main(col_wrap: int = 4):  # pylint: disable=R0914
