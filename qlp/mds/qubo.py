@@ -5,11 +5,17 @@ from scipy.sparse import dok_matrix, bmat
 import numpy as np
 
 
-def get_adjacency(graph: Set[Tuple[int]]) -> dok_matrix:
+def get_adjacency(graph: Set[Tuple[int]], directed: bool = False) -> dok_matrix:
     """This routine computes the adjecency matrix for a given graph.
 
     It assumes the graph is connected and nodes are labeled from 0...N-1.
     Self loops are forbidden.
+
+    Arguments:
+        graph: The graph. If the graph is directed, first entry points to second.
+        directed: Whether or not this is a directed graph. If not directed, the graph
+            is symmeterized.
+
     """
     if not isinstance(graph, set):
         raise TypeError("Graph must be a set of tuples")
@@ -25,7 +31,7 @@ def get_adjacency(graph: Set[Tuple[int]]) -> dok_matrix:
         nodes.add(v2)
         adj[(v1, v2)] = 1
 
-    nodes = sorted(nodes)
+    nodes = sorted(list(nodes))
     n_nodes = len(nodes)
 
     if nodes != list(range(n_nodes)):
@@ -34,7 +40,8 @@ def get_adjacency(graph: Set[Tuple[int]]) -> dok_matrix:
     adjacency = dok_matrix((n_nodes, n_nodes), dtype=int)
     for (v1, v2), val in adj.items():
         adjacency[(v1, v2)] = val
-        adjacency[(v2, v1)] = val
+        if not directed:
+            adjacency[(v2, v1)] = val
 
     if not all([val == 1 for val in adjacency.values()]):
         raise KeyError("Double entries in graph")
@@ -60,7 +67,9 @@ def get_bitmap(n_neigbors: List[int]) -> dok_matrix:
     n_nodes = len(n_neigbors)
 
     # Figure out how many bits we need for each neighborhood
-    n_bits = np.floor(np.log2(n_neigbors) + 1).astype(int)
+    n_bits = np.array(
+        [np.floor(np.log2(nn) + 1).astype(int) if nn > 0 else 0 for nn in n_neigbors]
+    )
     bitmap = dok_matrix((n_nodes, n_bits.sum()), dtype=int)
 
     acc = 0
@@ -72,53 +81,58 @@ def get_bitmap(n_neigbors: List[int]) -> dok_matrix:
     return bitmap
 
 
-def get_mds_qubo(graph: Set[Tuple[int]]) -> dok_matrix:
+def get_mds_qubo(graph: Set[Tuple[int]], directed: bool = False) -> dok_matrix:
     """This routine computes Minimum Dominating Set QUBO for a given graph.
 
     It assumes the graph is connected and nodes are labeled from 0...N-1.
     Self loops are forbidden.
+
+    Arguments:
+        graph: The graph. If the graph is directed, first entry points to second.
+        directed: Whether or not this is a directed graph.
     """
-    ## This is N
-    adjacency = get_adjacency(graph)
+    ## This is J
+    adjacency = get_adjacency(graph, directed=directed)
 
     ## Id in x-space
     one = dok_matrix(adjacency.shape, dtype=int)
     for n in range(adjacency.shape[0]):
         one[(n, n)] = 1
 
-    ## |N|
-    n_neigbors = adjacency.sum(axis=1).flatten().tolist()[0]
+    ## |J| (note that this is different than the n_neighbors)
+    adjacency_sum = adjacency.sum(axis=0).flatten().tolist()[0]
 
     ## diag(|N|)
     diag_neighbor = dok_matrix(adjacency.shape, dtype=int)
-    for n, el in enumerate(n_neigbors):
+    for n, el in enumerate(adjacency_sum):
         diag_neighbor[(n, n)] = el
 
-    ## B
+    ## T (note that this is different than the adjacency_sum)
+    n_neigbors = adjacency.sum(axis=1).flatten().tolist()[0]
     bitmap = get_bitmap(n_neigbors)
     n_bits = bitmap.shape[1]
 
-    ## diag(|B|)
+    ## diag(|T|)
     diag_bitmap = dok_matrix((n_bits, n_bits), dtype=int)
     for n, el in enumerate(bitmap.sum(axis=0).tolist()[0]):
         diag_bitmap[(n, n)] = el
 
     ## Compute QUBO components
-    alpha = -one + 2 * adjacency - 2 * diag_neighbor + adjacency @ adjacency
-    beta = -2 * (one + adjacency) @ bitmap
-    gamma = bitmap.T @ bitmap + 2 * diag_bitmap
+    q_xx = adjacency.T @ adjacency + adjacency + adjacency.T - 2 * diag_neighbor - one
+    q_xs = -2 * (one + adjacency.T) @ bitmap
+    q_ss = bitmap.T @ bitmap + 2 * diag_bitmap
 
     ## Multiply by penalty factor
     penalty = len(n_neigbors) + 1
-    alpha *= penalty
-    beta *= penalty
-    gamma *= penalty
+    q_xx *= penalty
+    q_xs *= penalty
+    q_ss *= penalty
 
     ## Add in minimization condition
-    alpha += one
+    q_xx += one
 
     ## Construt QUBO
-    return bmat([[alpha, beta], [None, gamma]]).todok()
+    return bmat([[q_xx, q_xs], [None, q_ss]]).todok()
 
 
 def main(col_wrap: int = 4):  # pylint: disable=R0914
