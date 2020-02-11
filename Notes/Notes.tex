@@ -442,5 +442,33 @@ If you run `\texttt{python qlp/mds/qubo.py}'\footnote{You have to install the sc
 	}
 \end{figure}
 
+\section{Ideas}
+\subsection{Penalty as a function of annealing time}
+The annealer encodes
+\begin{equation}
+	H(s) = (1-s)H_{init} + s H_{final} \, ,
+\end{equation}
+where $s$ is the annealing time.
+
+If our final Hamiltonian is linear in a computation parameter time, then we can ramp up this parameter as a function of annealing time.
+
+For example, in the MDS, we have
+\begin{equation}
+	H_{final} = H_{opt} + p H_{constraint} \, ,
+\end{equation}
+where $H_{opt} \leftrightarrow \sum_i x_i$ and $H_{constraint}$ encodes the Dominating set constraint.
+To have $H_{final} = p \tilde{H}_{constraint}$, we have to place the optimization condition in $H_{constraint}$.
+
+The idea here is: given a possible guess $\gamma$ for an MDS (which you can find using greedy search), is it possible to find a smaller solution.
+In other words, you map $H_{opt}$ to a new constraint
+\begin{equation}
+	 H_{constraint} \mapsto  p  H_{constraint} + p  \tilde H_{opt} = p \tilde H_{final} 
+	\, , \quad
+	\tilde H_{opt} \leftrightarrow \sum_i x_i < \gamma \, .
+\end{equation}
+Note that in principle you can have different $p$s here.
+You can now say that $p = \alpha s$ and ramp up the penalty as a function of annealing time.
+Because you also get the wave function and now the energy (zero - const if constraints are fulfilled), you do also get a better solution if possible.
+Also, since you ask for smaller, you might actually be lucky and get the optimal solution even if your guess was not really close.
 
 \end{document}
