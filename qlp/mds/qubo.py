@@ -1,6 +1,6 @@
 """Tools to generate a Minimum Dominating Set QUBO from a graph
 """
-from typing import Set, Tuple, List
+from typing import Set, Tuple, List, Optional
 from scipy.sparse import dok_matrix, bmat, triu, tril
 import numpy as np
 
