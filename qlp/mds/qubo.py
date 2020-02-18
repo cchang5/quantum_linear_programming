@@ -82,7 +82,10 @@ def get_bitmap(n_neigbors: List[int]) -> dok_matrix:
 
 
 def get_mds_qubo(
-    graph: Set[Tuple[int]], directed: bool = False, triangularize: bool = False
+    graph: Set[Tuple[int]],
+    directed: bool = False,
+    triangularize: bool = False,
+    penalty: Optional[int] = None,
 ) -> dok_matrix:
     """This routine computes Minimum Dominating Set QUBO for a given graph.
 
@@ -93,7 +96,9 @@ def get_mds_qubo(
         graph: The graph. If the graph is directed, first entry points to second.
         directed: Whether or not this is a directed graph.
         triangularize: Put lower triangular entries in the upper diagonal.
+        penalty: Energy penalty for violating constraints. Defaults to `n_nodes + 1`.
     """
+
     ## This is J
     adjacency = get_adjacency(graph, directed=directed)
 
@@ -126,7 +131,7 @@ def get_mds_qubo(
     q_ss = bitmap.T @ bitmap + 2 * diag_bitmap
 
     ## Multiply by penalty factor
-    penalty = len(n_neigbors) + 1
+    penalty = penalty or len(n_neigbors) + 1
     q_xx *= penalty
     q_xs *= penalty
     q_ss *= penalty
