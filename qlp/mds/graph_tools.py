@@ -1,6 +1,6 @@
 """Routines which are useful to create and plot graphs
 """
-from typing import Set, Tuple, Optional, List
+from typing import Set, Tuple, Optional, List, Any
 
 from numpy import random as rand
 import matplotlib.pyplot as plt
@@ -80,6 +80,72 @@ def get_plot(
         raise KeyError("Only implemented matplotlib ('mpl') or ")
 
     return fig
+
+
+def _flatten(obj: Tuple[Any]) -> Tuple[Any]:
+    """Flattens nested tuple of tuple to just a tuple.
+
+    Returns iterator.
+
+    Follows:
+    https://symbiosisacademy.org/tutorial-index/python-flatten-nested-lists-tuples-sets/
+    """
+    for item in obj:
+        if isinstance(item, tuple):
+            yield from _flatten(item)
+        else:
+            yield item
+
+
+def _v2str(v: Tuple[int]) -> str:
+    """Maps nested tuple of ints to flat string.
+
+    String is joined on '' if v_max < 9 else ','
+    """
+    if isinstance(v, tuple):
+        vflat = list(_flatten(v))
+        sep = "," if max(vflat) > 9 else ""
+        out = sep.join(map(str, vflat))
+    else:
+        out = str(v)
+    return out
+
+
+def generate_hamming_graph(
+    d: int, q: int, v_as_string: bool = False
+) -> Set[Tuple[str, str]]:
+    """Returns edges for hamming graph (caretesian product of complete graphs).
+
+    See also http://mathworld.wolfram.com/HammingGraph.html
+
+    Arguments:
+        d: Dimension of graph (number of copies).
+        q: Number of nodes for complete graph used in cartesian product.
+        v_as_string: Convert vertices to strings of format "v10v11v12...".
+    """
+    kq = nx.complete_graph(q)
+    graph = kq
+    for _ in range(d - 1):
+        graph = nx.cartesian_product(graph, kq)
+
+    edges = set((_v2str(v1), _v2str(v2)) for v1, v2 in graph.edges)
+
+    if not v_as_string:
+        nodes = dict()
+        n_nodes = 0
+        int_edges = set()
+        for v1, v2 in edges:
+            if v1 not in nodes:
+                nodes[v1] = n_nodes
+                n_nodes += 1
+            if v2 not in nodes:
+                nodes[v2] = n_nodes
+                n_nodes += 1
+
+            int_edges.add((nodes[v1], nodes[v2]))
+        edges = int_edges
+
+    return edges
 
 
 def get_plot_mpl(
