@@ -70,6 +70,7 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
+            os.path.join(BASE_DIR, "templates"),
             os.path.join(ESPRESSO_DB_ROOT, "espressodb", "base", "templates"),
             os.path.join(ESPRESSO_DB_ROOT, "espressodb", "documentation", "templates"),
         ],
@@ -103,7 +104,9 @@ DATABASES = {"default": DB_CONFIG}
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
@@ -129,9 +132,7 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 
-STATICFILES_DIRS = [
-    os.path.join(ESPRESSO_DB_ROOT, "espressodb", "base", "static")
-]
+STATICFILES_DIRS = [os.path.join(ESPRESSO_DB_ROOT, "espressodb", "base", "static")]
 for app in PROJECT_APPS[::-1]:
     _static_dir = os.path.join(ROOT_DIR, app.replace(".", os.sep), "static")
     if os.path.exists(_static_dir):
