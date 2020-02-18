@@ -10,7 +10,26 @@
 <div class="container">
     <h5>Links</h5>
     <ul>
-        <li><a href="https://docs.dwavesys.com/docs/latest/c_solver_1.html#anneal-schedule" target="_blank">Anneal schedule</a></li>
+        <li>
+            <a href="https://docs.dwavesys.com/docs/latest/c_solver_1.html#anneal-schedule" target="_blank">Anneal schedule</a>
+            <p> Set the following parameters</p>
+            <ul>
+                <li>
+                    <code>anneal_schedule</code>:
+                    List of tuples where first key is time and second is value of s (from 0 to 1)
+                </li>
+                <li>
+                    <code>initial_state</code>:
+                    The vector as a list of tuples where first is vec entry and second is 0 or zero
+                </li>
+                <li>
+                    <code>reinitialize_state</code>:
+                    Reinitialize the state only at the beginning of the anneal. That's probaly not important though as we will just have one read.
+                </li>
+                <li>
+                    Also, <code>spin_reversal</code> will not work.
+                </li>
+        </li>
     </ul>
 </div>
 {% endblock %}
