@@ -135,11 +135,11 @@ def get_mds_qubo(
     q_xx += one
 
     ## Construt QUBO
-    q = bmat([[q_xx, q_xs], [None, q_ss]]).todok()
+    q = bmat([[q_xx, q_xs], [None, q_ss]])
 
     if triangularize:
         q = triu(q) + tril(q, -1).T
-    return q
+    return q.todok()
 
 
 def main(col_wrap: int = 4):  # pylint: disable=R0914
