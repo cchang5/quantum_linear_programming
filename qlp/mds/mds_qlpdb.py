@@ -35,15 +35,20 @@ def insert_result(graph_params, experiment_params, data_params):
     )
 
     # select or insert row in data
-    """
-    data_data, created = data_Data.objects.get_or_create(
-        experiment=experiment,  # Foreign Key to `experiment`
-        measurement=,  # Increasing integer field labeling measurement number
-        spin_config=,  # Spin configuration of solution, limited to 0, 1
-        energy=,  # Energy corresponding to spin_config and QUBO
-    )
-    """
-    return 0
+    for idx in range(len(data_params["spin_config"])):
+        measurement = data_Data.objects.filter(experiment=experiment).order_by("-measurement")
+        if measurement.exists():
+            measurement = measurement.first().measurement + 1
+        else:
+            measurement = 0
+        data, created = data_Data.objects.get_or_create(
+            experiment=experiment,  # Foreign Key to `experiment`
+            measurement=measurement,  # Increasing integer field labeling measurement number
+            spin_config=list(data_params["spin_config"][idx]),  # Spin configuration of solution, limited to 0, 1
+            energy=data_params["energy"][idx],  # Energy corresponding to spin_config and QUBO
+            constraint_satisfaction=data_params["constraint_satisfaction"][idx],
+        )
+    return data
 
 
 def graph_summary(tag, graph):
