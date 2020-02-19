@@ -73,7 +73,7 @@ def experiment_summary(machine, settings, penalty, qubo):
     params = dict()
     params["machine"] = machine
     params["settings"] = settings
-    params["setting_hash"] = hashlib.md5(
+    params["settings_hash"] = hashlib.md5(
         str([[key, settings[key]] for key in sorted(settings)])
         .replace(" ", "")
         .encode("utf-8")
