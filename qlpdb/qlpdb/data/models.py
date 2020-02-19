@@ -31,6 +31,10 @@ class Data(Base):
         null=False,
         help_text="Energy corresponding to spin_config and QUBO"
     )
+    constraint_satisfaction = models.BooleanField(
+        null=False,
+        help_text="Are the inequality constraints satisfied by the slacks?"
+    )
     class Meta:
         constraints = [
             models.UniqueConstraint(

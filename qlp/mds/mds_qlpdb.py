@@ -72,5 +72,9 @@ def experiment_summary(machine, settings, penalty, qubo):
     params["qubo"] = qubo.todense().tolist()
     return params
 
-def data_summary():
-    pass
+def data_summary(raw):
+    params = dict()
+    params["spin_config"] = raw.iloc[:,:logical_qubits].values
+    params["energy"] =
+
+
