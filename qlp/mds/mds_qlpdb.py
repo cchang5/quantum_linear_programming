@@ -4,15 +4,22 @@ from qlpdb.graph.models import Graph as graph_Graph
 from qlpdb.experiment.models import Experiment as experiment_Experiment
 from qlpdb.data.models import Data as data_Data
 
+
 def insert_result(graph_params, experiment_params, data_params):
     # select or insert row in graph
     graph, created = graph_Graph.objects.get_or_create(
-	    tag=graph_params["tag"], # Tag for graph type (e.g. Hamming(n,m) or K(n,m))
-    	total_vertices=graph_params["total_vertices"], # Total number of vertices in graph
-	    total_edges=graph_params["total_edges"], # Total number of edges in graph
-    	max_edges=graph_params["max_edges"], # Maximum number of edges per vertex
-	    adjacency=graph_params["adjacency"], # Sorted adjacency matrix of dimension [N, 2]
-    	adjacency_hash=graph_params["adjacency_hash"], # md5 hash of adjacency list used for unique constraint
+        tag=graph_params["tag"],  # Tag for graph type (e.g. Hamming(n,m) or K(n,m))
+        total_vertices=graph_params[
+            "total_vertices"
+        ],  # Total number of vertices in graph
+        total_edges=graph_params["total_edges"],  # Total number of edges in graph
+        max_edges=graph_params["max_edges"],  # Maximum number of edges per vertex
+        adjacency=graph_params[
+            "adjacency"
+        ],  # Sorted adjacency matrix of dimension [N, 2]
+        adjacency_hash=graph_params[
+            "adjacency_hash"
+        ],  # md5 hash of adjacency list used for unique constraint
     )
 
     # select or insert row in experiment
@@ -20,7 +27,9 @@ def insert_result(graph_params, experiment_params, data_params):
         graph=graph,  # Foreign Key to `graph`
         machine=experiment_params["machine"],  # Hardware name (e.g. DW_2000Q_5)
         settings=experiment_params["settings"],  # Store DWave machine parameters
-        settings_hash=experiment_params["settings_hash"],  # md5 hash of key sorted settings
+        settings_hash=experiment_params[
+            "settings_hash"
+        ],  # md5 hash of key sorted settings
         p=experiment_params["p"],  # Coefficient of penalty term, 0 to 9999.99
         qubo=experiment_params["qubo"],  # Input QUBO to DWave
     )
@@ -35,6 +44,7 @@ def insert_result(graph_params, experiment_params, data_params):
     )
     """
     return 0
+
 
 def graph_summary(tag, graph):
     """
@@ -72,9 +82,14 @@ def experiment_summary(machine, settings, penalty, qubo):
     params["qubo"] = qubo.todense().tolist()
     return params
 
-def data_summary(raw):
+
+def data_summary(raw, graph_params, experiment_params):
     params = dict()
-    params["spin_config"] = raw.iloc[:,:logical_qubits].values
-    params["energy"] =
-
-
+    params["spin_config"] = raw.iloc[:, : len(experiment_params["qubo"])].values
+    params["energy"] = raw["energy"].values
+    params["constraint_satisfaction"] = np.equal(
+        params["energy"]
+        + experiment_params["p"] * graph_params["total_vertices"],
+        np.sum(params["spin_config"][:, : graph_params["total_vertices"]], axis=1),
+    )
+    return params
