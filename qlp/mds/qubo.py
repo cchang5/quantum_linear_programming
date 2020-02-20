@@ -86,6 +86,7 @@ def get_mds_qubo(
     directed: bool = False,
     triangularize: bool = False,
     penalty: Optional[int] = None,
+    dtype: str = "i",
 ) -> dok_matrix:
     """This routine computes Minimum Dominating Set QUBO for a given graph.
 
@@ -97,13 +98,14 @@ def get_mds_qubo(
         directed: Whether or not this is a directed graph.
         triangularize: Put lower triangular entries in the upper diagonal.
         penalty: Energy penalty for violating constraints. Defaults to `n_nodes + 1`.
+        dtype: Data type of qubo arrays. Defaults to "i" (integer). Float is "d".
     """
 
     ## This is J
-    adjacency = get_adjacency(graph, directed=directed)
+    adjacency = get_adjacency(graph, directed=directed).astype(dtype)
 
     ## Id in x-space
-    one = dok_matrix(adjacency.shape, dtype=int)
+    one = dok_matrix(adjacency.shape, dtype=dtype)
     for n in range(adjacency.shape[0]):
         one[(n, n)] = 1
 
@@ -111,17 +113,17 @@ def get_mds_qubo(
     adjacency_sum = adjacency.sum(axis=0).flatten().tolist()[0]
 
     ## diag(|N|)
-    diag_neighbor = dok_matrix(adjacency.shape, dtype=int)
+    diag_neighbor = dok_matrix(adjacency.shape, dtype=dtype)
     for n, el in enumerate(adjacency_sum):
         diag_neighbor[(n, n)] = el
 
     ## T (note that this is different than the adjacency_sum)
     n_neigbors = adjacency.sum(axis=1).flatten().tolist()[0]
-    bitmap = get_bitmap(n_neigbors)
+    bitmap = get_bitmap(n_neigbors).astype(dtype)
     n_bits = bitmap.shape[1]
 
     ## diag(|T|)
-    diag_bitmap = dok_matrix((n_bits, n_bits), dtype=int)
+    diag_bitmap = dok_matrix((n_bits, n_bits), dtype=dtype)
     for n, el in enumerate(bitmap.sum(axis=0).tolist()[0]):
         diag_bitmap[(n, n)] = el
 
