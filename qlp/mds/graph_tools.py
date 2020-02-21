@@ -6,7 +6,7 @@ from numpy import random as rand
 import matplotlib.pyplot as plt
 
 import networkx as nx
-
+from networkx.algorithms import bipartite
 
 def generate_graph(
     n_nodes: int, n_edges: int, n_edge_max: int = 5, seed: Optional[int] = None,
@@ -147,6 +147,19 @@ def generate_hamming_graph(
 
     return edges
 
+def generate_bipartite_graph(
+        p: int, q: int
+) -> Set[Tuple[int, int]]:
+    """Returns edges of a bipartite graph.
+
+    K(4,4) is the fundamental unit of a Chimera graph.
+
+    Arguments:
+        p: Number of vertices in set 1
+        q: Number of vertices in set 2
+    """
+
+    return set(bipartite.complete_bipartite_graph(p, q).edges)
 
 def get_plot_mpl(
     graph: Set[Tuple[int]],
