@@ -11,16 +11,14 @@ from django.contrib.postgres.fields import ArrayField
 
 class Experiment(Base):
     graph = models.ForeignKey(
-        "graph.Graph",
-        on_delete=models.CASCADE,
-        help_text=r"Foreign Key to `graph`",
+        "graph.Graph", on_delete=models.CASCADE, help_text=r"Foreign Key to `graph`"
     )
     machine = models.TextField(
         null=False, blank=False, help_text="Hardware name (e.g. DW_2000Q_5)"
     )
     settings = JSONField(help_text="Store DWave machine parameters")
     settings_hash = models.TextField(
-        null=False, blank=False, help_text="md5 hash of key sorted settings"
+        null=False, blank=False, help_text="md5 hash of key sorted normalized machine, settings, p, fact dictionary"
     )
     p = models.DecimalField(
         null=False,
@@ -28,6 +26,7 @@ class Experiment(Base):
         decimal_places=2,
         help_text="Coefficient of penalty term, 0 to 9999.99",
     )
+    fact = models.FloatField(null=False, help_text="Manual scaling coefficient")
     qubo = ArrayField(
         ArrayField(models.FloatField(null=False)), help_text="Input QUBO to DWave"
     )

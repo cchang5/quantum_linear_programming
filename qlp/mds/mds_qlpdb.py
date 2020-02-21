@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import hashlib
 from qlpdb.graph.models import Graph as graph_Graph
 from qlpdb.experiment.models import Experiment as experiment_Experiment
@@ -31,6 +32,7 @@ def insert_result(graph_params, experiment_params, data_params):
             "settings_hash"
         ],  # md5 hash of key sorted settings
         p=experiment_params["p"],  # Coefficient of penalty term, 0 to 9999.99
+        fact=experiment_params["fact"], # Manual rescale coefficient, float
         qubo=experiment_params["qubo"],  # Input QUBO to DWave
     )
 
@@ -72,7 +74,7 @@ def graph_summary(tag, graph):
     params["tag"] = tag
     params["total_vertices"] = len(vertices)
     params["total_edges"] = len(graph)
-    params["max_edges"] = max(neighbors)
+    params["max_edges"] = max(neighbors.values())
     params["adjacency"] = [list(i) for i in list(graph)]
     params["adjacency_hash"] = hashlib.md5(
         str(np.sort(list(graph))).replace(" ", "").encode("utf-8")
@@ -80,25 +82,28 @@ def graph_summary(tag, graph):
     return params
 
 
-def experiment_summary(machine, settings, penalty, qubo):
+def experiment_summary(machine, settings, penalty, factor, qubo):
     params = dict()
     params["machine"] = machine
     params["settings"] = settings
+    params["p"] = penalty
+    params["fact"] = factor
+    norm_params = pd.io.json.json_normalize(params, sep="_").to_dict()
+    norm_params = {key:norm_params[key][0] for key in norm_params}
     params["settings_hash"] = hashlib.md5(
-        str([[key, settings[key]] for key in sorted(settings)])
+        str([[key, norm_params[key]] for key in sorted(norm_params)])
         .replace(" ", "")
         .encode("utf-8")
     ).hexdigest()
-    params["p"] = penalty
     params["qubo"] = qubo.todense().tolist()
     return params
 
 
-def data_summary(raw, graph_params, experiment_params, fact):
+def data_summary(raw, graph_params, experiment_params):
     params = dict()
     params["spin_config"] = raw.iloc[:, : len(experiment_params["qubo"])].values
     params["energy"] = (
-        raw["energy"].values * fact
+        raw["energy"].values * experiment_params["fact"]
         + experiment_params["p"] * graph_params["total_vertices"]
     )
     params["constraint_satisfaction"] = np.equal(
@@ -106,3 +111,16 @@ def data_summary(raw, graph_params, experiment_params, fact):
         np.sum(params["spin_config"][:, : graph_params["total_vertices"]], axis=1),
     )
     return params
+
+
+def QUBO_to_Ising(Q):
+    q = np.diagonal(Q)
+    QD = np.copy(Q)
+    for i in range(len(QD)):
+        QD[i, i] = 0.0
+    QQ = np.copy(QD + np.transpose(QD))
+    J = np.triu(QQ) / 4.0
+    uno = np.ones(len(QQ))
+    h = q / 2 + np.dot(QQ, uno) / 4
+    g = np.dot(uno, np.dot(QD, uno)) / 4.0 + np.dot(q, uno) / 2.0
+    return (J, h, g)
