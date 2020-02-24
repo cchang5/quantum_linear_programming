@@ -15,6 +15,9 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path
+from qlpdb.experiment.views import ExperimentView
 
 app_name = "experiment"
-urlpatterns = []
+urlpatterns = [
+    path("detail/<int:pk>/", ExperimentView.as_view(), name="experiment-detail"),
+]
