@@ -471,4 +471,28 @@ You can now say that $p = \alpha s$ and ramp up the penalty as a function of ann
 Because you also get the wave function and now the energy (zero - const if constraints are fulfilled), you do also get a better solution if possible.
 Also, since you ask for smaller, you might actually be lucky and get the optimal solution even if your guess was not really close.
 
+
+\section{re-scale QUBO using ancillary qubits?}
+
+Original qubo is
+\begin{equation}
+f= \psi^T Q \psi .
+\end{equation}
+We can re-scale Q by a factor of 2 like:
+ \begin{align}
+\psi_2 &= (\psi , \psi)^T \\
+Q_2 &= 
+\begin{pmatrix}
+\frac{Q}{2} & 0 \\
+0 & \frac{Q}{2} \\
+\end{pmatrix} .
+\end{align}
+Then we have the re-scaled qubo:
+\begin{align}
+f &= \psi_2^T Q_2 \psi_2 \\
+&=  \psi^T  \frac{Q}{2} \psi +  \psi^T  \frac{Q}{2} \psi \\
+&=  \psi^T Q \psi .
+\end{align}
+
+
 \end{document}
