@@ -493,6 +493,19 @@ f &= \psi_2^T Q_2 \psi_2 \\
 &=  \psi^T  \frac{Q}{2} \psi +  \psi^T  \frac{Q}{2} \psi \\
 &=  \psi^T Q \psi .
 \end{align}
-
+The re-scaled qubo in general is
+ \begin{align}
+\psi_2 &= (\psi_a , \psi_b)^T \\
+Q_2 &= 
+\begin{pmatrix}
+\frac{Q}{2} & 0 \\
+0 & \frac{Q}{2} \\
+\end{pmatrix} .
+\end{align}
+\begin{align}
+f &= \psi_2^T Q_2 \psi_2 \\
+&=  \psi_a^T  \frac{Q}{2} \psi_a +  \psi_b^T  \frac{Q}{2} \psi_b .
+\end{align}
+This function reaches the maximum if and only if both $\psi_a$ and $\psi_b$ are in the solution space.
 
 \end{document}
