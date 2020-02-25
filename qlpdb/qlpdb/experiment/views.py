@@ -34,16 +34,3 @@ class ExperimentSummaryView(ListView):
     model = Experiment
     paginate_by = 50  # if pagination is desired
     ordering = ["-tag"]
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["setting_keys"] = (
-            {
-                key: key.replace("_", " ").capitalize()
-                for key in context["experiment_list"].first().settings.keys()
-                if not key in ["num_reads", "answer_mode"]
-            }
-            if context["experiment_list"].first()
-            else dict()
-        )
-        return context
