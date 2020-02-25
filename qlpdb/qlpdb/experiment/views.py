@@ -41,6 +41,7 @@ class ExperimentSummaryView(ListView):
             {
                 key: key.replace("_", " ").capitalize()
                 for key in context["experiment_list"].first().settings.keys()
+                if not key in ["num_reads", "answer_mode"]
             }
             if context["experiment_list"].first()
             else dict()
