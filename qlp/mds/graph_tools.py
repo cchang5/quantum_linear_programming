@@ -1,6 +1,6 @@
 """Routines which are useful to create and plot graphs
 """
-from typing import Set, Tuple, Optional, List, Any
+from typing import Set, Tuple, Optional, List, Any, Text
 
 from numpy import random as rand
 import matplotlib.pyplot as plt
@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 import networkx as nx
 from networkx.algorithms import bipartite
 
+
 def generate_graph(
-    n_nodes: int, n_edges: int, n_edge_max: int = 5, seed: Optional[int] = None,
+    n_nodes: int, n_edges: int, n_edge_max: int = 5, seed: Optional[int] = None
 ) -> Set[Tuple[int]]:
     """Creates random edges for graph.
 
@@ -113,7 +114,7 @@ def _v2str(v: Tuple[int]) -> str:
 
 def generate_hamming_graph(
     d: int, q: int, v_as_string: bool = False
-) -> Set[Tuple[str, str]]:
+) -> Tuple[Set[Tuple[str, str]], Text]:
     """Returns edges for hamming graph (caretesian product of complete graphs).
 
     See also http://mathworld.wolfram.com/HammingGraph.html
@@ -145,11 +146,10 @@ def generate_hamming_graph(
             int_edges.add((nodes[v1], nodes[v2]))
         edges = int_edges
 
-    return edges
+    return edges, f"Hamming({d},{q})"
 
-def generate_bipartite_graph(
-        p: int, q: int
-) -> Set[Tuple[int, int]]:
+
+def generate_bipartite_graph(p: int, q: int) -> Tuple[Set[Tuple[int, int]], Text]:
     """Returns edges of a bipartite graph.
 
     K(4,4) is the fundamental unit of a Chimera graph.
@@ -159,7 +159,16 @@ def generate_bipartite_graph(
         q: Number of vertices in set 2
     """
 
-    return set(bipartite.complete_bipartite_graph(p, q).edges)
+    return set(bipartite.complete_bipartite_graph(p, q).edges), f"Bipartite({p},{q})"
+
+def generate_nn_graph(v: int) -> Tuple[Set[Tuple[int, int]], Text]:
+    """Returns edges of a 1 dimensional nearest neighbor graph.
+
+    Arugments:
+        v: Number of vertices
+    """
+    graph = {(i-1, i) for i in range(1, v)}
+    return graph, f"NN({v})"
 
 def get_plot_mpl(
     graph: Set[Tuple[int]],
