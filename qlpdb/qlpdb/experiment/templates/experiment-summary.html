@@ -16,7 +16,7 @@
         <tr>
           <th scope="col">Graph</th>
           <th scope="col">#Data</th>
-          <th scope="col">Energy/Occurances</th>
+          <th scope="col">Energy | Occurances</th>
           <th scope="col">Machine</th>
           <th scope="col">p</th>
           <th scope="col">fact</th>
@@ -32,7 +32,7 @@
           <td>{{experiment.n_data}}</td>
           <td><ul>
           {% for result in experiment.get_summary %}
-          <li>{{result.energy}} / {{result.occurances}}</li>
+          <li>{{result.energy}} | {{result.occurances}}</li>
           {% endfor %}
           </ul></td>
           <td>{{experiment.machine}}</td>
