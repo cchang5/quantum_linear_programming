@@ -18,11 +18,9 @@
           <th scope="col">#Data</th>
           <th scope="col">Energy | Occurances</th>
           <th scope="col">Machine</th>
-          <th scope="col">p</th>
-          <th scope="col">fact</th>
-          {% for setting in setting_keys.values %}
-            <th scope="col">{{setting}}</th>
-          {% endfor %}
+          <th scope="col">Penalty</th>
+          <th scope="col">Scaling Factor</th>
+          <th scope="col">Settings</th>
         </tr>
       </thead>
       <tbody>
@@ -38,9 +36,11 @@
           <td>{{experiment.machine}}</td>
           <td>{{experiment.p}}</td>
           <td>{{experiment.fact}}</td>
-          {% for setting in setting_keys %}
-          <td>{{experiment.settings|get_item:setting }}</td>
+          <td><ul>
+          {% for item in experiment.settings.items %}
+          <li>{{item.0}}: {{item.1}}</li>
           {% endfor %}
+          </ul></td>
         </tr>
         {% endfor %}
       </tbody>
