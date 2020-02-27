@@ -2,8 +2,10 @@
 """
 from typing import Set, Tuple, Optional, List, Any, Text
 
+from numpy import abs, ndarray
 from numpy import random as rand
 import matplotlib.pyplot as plt
+from seaborn import heatmap
 
 import networkx as nx
 from networkx.algorithms import bipartite
@@ -161,14 +163,16 @@ def generate_bipartite_graph(p: int, q: int) -> Tuple[Set[Tuple[int, int]], Text
 
     return set(bipartite.complete_bipartite_graph(p, q).edges), f"Bipartite({p},{q})"
 
+
 def generate_nn_graph(v: int) -> Tuple[Set[Tuple[int, int]], Text]:
     """Returns edges of a 1 dimensional nearest neighbor graph.
 
     Arugments:
         v: Number of vertices
     """
-    graph = {(i-1, i) for i in range(1, v)}
+    graph = {(i - 1, i) for i in range(1, v)}
     return graph, f"NN({v})"
+
 
 def get_plot_mpl(
     graph: Set[Tuple[int]],
@@ -270,6 +274,39 @@ def get_plot_bokeh(  # pylint: disable=R0914
         show(plot)
 
     return plot
+
+
+def plot_qubo(
+    qubo, ax: Optional["Axes"] = None, axes: bool = False, **kwargs
+) -> "Axes":
+    """Plots qubo as heat map
+
+    Kwargs are fed to heatmap.
+    """
+    if not ax:
+        ax = plt.gca()
+
+    m = qubo.todense() if not isinstance(qubo, ndarray) else qubo
+    vmax = abs(m).max()
+
+    data = dict(
+        annot=True,
+        annot_kws={"fontsize": 4},
+        cmap="RdBu_r",
+        vmin=-vmax,
+        vmax=vmax,
+        mask=m == 0,
+        cbar=False,
+    )
+    data.update(kwargs)
+
+    heatmap(m, ax=ax, **data)
+
+    if not axes:
+        ax.set_yticks([])
+        ax.set_xticks([])
+
+    return ax
 
 
 def main():
