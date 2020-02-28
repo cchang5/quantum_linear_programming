@@ -513,8 +513,9 @@ Instead of minimizing the size of the minimum dominating set under constraints, 
 \begin{equation}
 	\sum_{i \in V} x_i \leq \gamma_D \quad \Rightarrow \quad \sum_{i \in V} x_i - \gamma_D + s_D = 0 \, .
 \end{equation}
+This approach is interesting as it is constraints only.
 Note that we still obtain solution vectors.
-In principle this means one has to iterate approaches to get the best energy solution but it is also possible to find $E_0 = \gamma + n$ with $n\geq1$.
+In principle this means one has to iterate approaches to get the best energy solution but it is also possible to find $E_0 = \gamma - n$ with $n\geq1$.
 The QUBO now becomes
 \begin{align}\label{mds2:qubo}
 	Q &= 
