@@ -508,4 +508,43 @@ f &= \psi_2^T Q_2 \psi_2 \\
 \end{align}
 This function reaches the maximum if and only if both $\psi_a$ and $\psi_b$ are in the solution space.
 
+\section{Asking MDS Question}
+Instead of minimizing the size of the minimum dominating set under constraints, we can also ask if the number of nodes is smaller than an input dominating number
+\begin{equation}
+	\sum_{i \in V} x_i \leq \gamma_D \quad \Rightarrow \quad \sum_{i \in V} x_i - \gamma_D + s_D = 0 \, .
+\end{equation}
+Note that we still obtain solution vectors.
+In principle this means one has to iterate approaches to get the best energy solution but it is also possible to find $E_0 = \gamma + n$ with $n\geq1$.
+The QUBO now becomes
+\begin{align}\label{mds2:qubo}
+	Q &= 
+	\begin{pmatrix}\alpha & \beta & 0 \\ 0 & \gamma & 0 \\ 0 & 0 & 0 \end{pmatrix}
+	+
+	A \begin{pmatrix}\alpha' & 0 & \beta' \\ 0 & 0 & 0 \\ 0 & 0 & \gamma' \end{pmatrix}
+	\, , & 
+	f(\vec x, \vec s, s_D)
+	&=
+	\vec \psi \cdot Q \cdot \vec \psi + |V| + A \gamma_D^2
+	\, ,
+\end{align}
+where $\alpha, \beta, \gamma$ are the same as before and $\alpha', \beta', \gamma'$ implement the new constraint.
+In particular 
+\begin{align}
+	\vec x \cdot \alpha' \vec x &= \left(\sum_i x_i\right)^2 - 2 \left(\sum_i x_i\right) \gamma_D 
+	&& \Rightarrow &
+	\alpha' &= \vec 1_x \vec 1_x^T - 2 \gamma_D \mathbbm{1}_x
+	\\
+	\vec x \cdot \beta' \vec s &= 2 \left(\sum_i x_i\right) s_D \gamma_D 
+	&& \Rightarrow &
+	\beta' &= 2 \gamma_D \vec 1_x B'
+	\\
+	\vec s \cdot \gamma' \vec s &= s_D^2 - 2 s_D \gamma_D 
+	&& \Rightarrow &
+	\alpha' &= B'^T B' - 2 \gamma_D B'
+	\\
+\end{align}
+
+
+
+
 \end{document}
