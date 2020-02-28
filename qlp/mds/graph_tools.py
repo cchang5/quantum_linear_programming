@@ -277,7 +277,7 @@ def get_plot_bokeh(  # pylint: disable=R0914
 
 
 def plot_qubo(
-    qubo, ax: Optional["Axes"] = None, axes: bool = False, **kwargs
+    qubo, ax: Optional["Axes"] = None, axes: bool = False, fontsize: int = 4, **kwargs
 ) -> "Axes":
     """Plots qubo as heat map
 
@@ -291,7 +291,7 @@ def plot_qubo(
 
     data = dict(
         annot=True,
-        annot_kws={"fontsize": 4},
+        annot_kws={"fontsize": fontsize},
         cmap="RdBu_r",
         vmin=-vmax,
         vmax=vmax,
