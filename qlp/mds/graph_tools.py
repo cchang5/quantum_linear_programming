@@ -9,6 +9,7 @@ from seaborn import heatmap
 
 import networkx as nx
 from networkx.algorithms import bipartite
+from networkx.generators.random_graphs import fast_gnp_random_graph
 
 
 def generate_graph(
@@ -163,6 +164,29 @@ def generate_bipartite_graph(p: int, q: int) -> Tuple[Set[Tuple[int, int]], Text
 
     return set(bipartite.complete_bipartite_graph(p, q).edges), f"K({p},{q})"
 
+def generate_erdos_renyi_graph(n: int, p: float) -> Tuple[Set[Tuple[int, int]], "NetworkXGraphClass", Text]:
+    """Return edges of a Erdos Renyi graph.
+    A generalized random graph.
+    Can be disconnected
+
+    The following statements are true on average
+    ======
+    np < 1 has O(log(n)) clusters
+    np = 1 has O(n^2/3) clusters
+    np -> c > 1 will cluster to one large component, sub clusters have O(log(n)) vertices
+
+    p < ln(n)/n the graph will be disconnected
+    p > ln(n)/n the graph will be connected
+    ======
+
+    G(n,p)
+
+    Arguments:
+        n: Number of vertices
+        p: Probability of edge creation
+    """
+    G = fast_gnp_random_graph(n, p)
+    return set(G.edges), G, f"G({n},{p})"
 
 def generate_nn_graph(v: int) -> Tuple[Set[Tuple[int, int]], Text]:
     """Returns edges of a 1 dimensional nearest neighbor graph.

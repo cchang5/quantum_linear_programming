@@ -34,8 +34,8 @@ def get_adjacency(graph: Set[Tuple[int]], directed: bool = False) -> dok_matrix:
     nodes = sorted(list(nodes))
     n_nodes = len(nodes)
 
-    if nodes != list(range(n_nodes)):
-        raise KeyError("Nodes must be from 0 ... n_nodes")
+    #if nodes != list(range(n_nodes)):
+    #    raise KeyError("Nodes must be from 0 ... n_nodes")
 
     adjacency = dok_matrix((n_nodes, n_nodes), dtype=int)
     for (v1, v2), val in adj.items():
@@ -70,7 +70,7 @@ def get_bitmap(n_neigbors: List[int]) -> dok_matrix:
     n_bits = np.array(
         [np.floor(np.log2(nn) + 1).astype(int) if nn > 0 else 0 for nn in n_neigbors]
     )
-    bitmap = dok_matrix((n_nodes, n_bits.sum()), dtype=int)
+    bitmap = dok_matrix((n_nodes, int(n_bits.sum())), dtype=int)
 
     acc = 0
     for v, n_bit in enumerate(n_bits):
