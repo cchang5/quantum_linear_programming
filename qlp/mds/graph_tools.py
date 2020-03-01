@@ -164,7 +164,7 @@ def generate_bipartite_graph(p: int, q: int) -> Tuple[Set[Tuple[int, int]], Text
 
     return set(bipartite.complete_bipartite_graph(p, q).edges), f"K({p},{q})"
 
-def generate_erdos_renyi_graph(n: int, p: float) -> Tuple[Set[Tuple[int, int]], "NetworkXGraphClass", Text]:
+def generate_erdos_renyi_graph(n: int, p: float) -> Tuple[Set[Tuple[int, int]], Text]:
     """Return edges of a Erdos Renyi graph.
     A generalized random graph.
     Can be disconnected
@@ -186,7 +186,7 @@ def generate_erdos_renyi_graph(n: int, p: float) -> Tuple[Set[Tuple[int, int]], 
         p: Probability of edge creation
     """
     G = fast_gnp_random_graph(n, p)
-    return set(G.edges), G, f"G({n},{p})"
+    return set(G.edges), f"G({n},{p})"
 
 def generate_nn_graph(v: int) -> Tuple[Set[Tuple[int, int]], Text]:
     """Returns edges of a 1 dimensional nearest neighbor graph.
