@@ -152,7 +152,7 @@ def generate_hamming_graph(
 
 
 def generate_bipartite_graph(p: int, q: int) -> Tuple[Set[Tuple[int, int]], Text]:
-    """Returns edges of a bipartite graph.
+    """Returns edges of a complete bipartite graph.
 
     K(4,4) is the fundamental unit of a Chimera graph.
 
@@ -161,7 +161,7 @@ def generate_bipartite_graph(p: int, q: int) -> Tuple[Set[Tuple[int, int]], Text
         q: Number of vertices in set 2
     """
 
-    return set(bipartite.complete_bipartite_graph(p, q).edges), f"Bipartite({p},{q})"
+    return set(bipartite.complete_bipartite_graph(p, q).edges), f"K({p},{q})"
 
 
 def generate_nn_graph(v: int) -> Tuple[Set[Tuple[int, int]], Text]:

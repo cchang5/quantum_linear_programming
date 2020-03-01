@@ -27,6 +27,10 @@ class Data(Base):
         ),
         help_text="Spin configuration of solution, limited to 0, 1"
     )
+    chain_break_fraction = models.FloatField(
+        null=False,
+        help_text="Chain break fraction"
+    )
     energy = models.FloatField(
         null=False,
         help_text="Energy corresponding to spin_config and QUBO"

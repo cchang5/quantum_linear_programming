@@ -30,6 +30,7 @@ class Experiment(Base):
         help_text="Coefficient of penalty term, 0 to 9999.99",
     )
     fact = models.FloatField(null=False, help_text="Manual scaling coefficient")
+    chain_strength = models.FloatField(null=False, help_text="Set chain strength before auto_scaling")
     qubo = ArrayField(
         ArrayField(models.FloatField(null=False)), help_text="Input QUBO to DWave"
     )
@@ -37,7 +38,7 @@ class Experiment(Base):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["graph", "machine", "settings_hash", "p"],
+                fields=["graph", "machine", "settings_hash", "p", "chain_strength"],
                 name="unique_experiment",
             )
         ]

@@ -33,6 +33,7 @@ def insert_result(graph_params, experiment_params, data_params):
         ],  # md5 hash of key sorted settings
         p=experiment_params["p"],  # Coefficient of penalty term, 0 to 9999.99
         fact=experiment_params["fact"], # Manual rescale coefficient, float
+        chain_strength=experiment_params["chain_strength"],
         qubo=experiment_params["qubo"],  # Input QUBO to DWave
     )
 
@@ -51,6 +52,7 @@ def insert_result(graph_params, experiment_params, data_params):
             spin_config=list(
                 data_params["spin_config"][idx]
             ),  # Spin configuration of solution, limited to 0, 1
+            chain_break_fraction=data_params["chain_break_fraction"][idx],
             energy=data_params["energy"][
                 idx
             ],  # Energy corresponding to spin_config and QUBO
@@ -82,12 +84,13 @@ def graph_summary(tag, graph):
     return params
 
 
-def experiment_summary(machine, settings, penalty, factor, qubo):
+def experiment_summary(machine, settings, penalty, factor, chain_strength, qubo):
     params = dict()
     params["machine"] = machine
     params["settings"] = settings
     params["p"] = penalty
     params["fact"] = factor
+    params["chain_strength"] = chain_strength
     norm_params = pd.io.json.json_normalize(params, sep="_").to_dict()
     norm_params = {key:norm_params[key][0] for key in norm_params}
     params["settings_hash"] = hashlib.md5(
@@ -106,6 +109,7 @@ def data_summary(raw, graph_params, experiment_params):
         raw["energy"].values * experiment_params["fact"]
         + experiment_params["p"] * graph_params["total_vertices"]
     )
+    params["chain_break_fraction"] = raw["chain_break_fraction"].values
     params["constraint_satisfaction"] = np.equal(
         params["energy"],
         np.sum(params["spin_config"][:, : graph_params["total_vertices"]], axis=1),
