@@ -7,7 +7,7 @@ from espressodb.base.models import Base
 from django.contrib.postgres.fields import JSONField
 from django.contrib.postgres.fields import ArrayField
 
-from django.db.models import Count
+from django.db.models import Count, Avg
 
 
 class Experiment(Base):
@@ -30,7 +30,9 @@ class Experiment(Base):
         help_text="Coefficient of penalty term, 0 to 9999.99",
     )
     fact = models.FloatField(null=False, help_text="Manual scaling coefficient")
-    chain_strength = models.FloatField(null=False, help_text="Set chain strength before auto_scaling")
+    chain_strength = models.FloatField(
+        null=False, help_text="Set chain strength before auto_scaling"
+    )
     qubo = ArrayField(
         ArrayField(models.FloatField(null=False)), help_text="Input QUBO to DWave"
     )
@@ -62,6 +64,9 @@ class Experiment(Base):
         satisfied_data = (
             exp_data.filter(constraint_satisfaction=True)
             .values("energy")
-            .annotate(occurances=Count("energy"))
+            .annotate(
+                occurances=Count("energy"),
+                chain_break_fraction=Avg("chain_break_fraction"),
+            )
         )
         return sorted(list(satisfied_data[:n_entries]), key=lambda el: el["energy"])

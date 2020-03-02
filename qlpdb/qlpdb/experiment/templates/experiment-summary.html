@@ -11,12 +11,12 @@
 </div>
 <div class="container-fluid row justify-content-center">
     <div class="col-auto">
-    <table class="table table-hover table-responsive">
+    <table class="table table-responsive">
       <thead>
         <tr>
           <th scope="col">Graph</th>
           <th scope="col">#Data</th>
-          <th scope="col">Energy | Occurances</th>
+          <th scope="col">E | N | CBF</th>
           <th scope="col">Machine</th>
           <th scope="col">Penalty</th>
           <th scope="col">Scaling Factor</th>
@@ -28,17 +28,27 @@
         <tr>
           <td>{{experiment.graph.tag}}</td>
           <td>{{experiment.n_data}}</td>
-          <td><ul>
-          {% for result in experiment.get_summary %}
-          <li>{{result.energy}} | {{result.occurances}}</li>
-          {% endfor %}
-          </ul></td>
+          <td>
+          {% if experiment.get_summary %}
+          <table class="table table-sm text-monospace text-right"  align="right" style="font-size: 0.8rem;">
+              {% for result in experiment.get_summary %}
+              <tr>
+                  <td style="border: none;">{{result.energy|floatformat:0}}</td>
+                  <td style="border: none;">{{result.occurances}}</td>
+                  <td style="border: none;">{{result.chain_break_fraction|floatformat:2}}</td>
+              </tr>
+              {% endfor %}
+            </table>
+          {% else %}
+            -
+          {% endif %}
+          </td>
           <td>{{experiment.machine}}</td>
           <td>{{experiment.p}}</td>
           <td>{{experiment.fact}}</td>
-          <td><ul>
+          <td><ul class="text-monospace" style="font-size: 0.8rem;">
           {% for item in experiment.settings.items %}
-          <li>{{item.0}}: {{item.1}}</li>
+          <li>{{item.0}}={{item.1}}</li>
           {% endfor %}
           </ul></td>
         </tr>
