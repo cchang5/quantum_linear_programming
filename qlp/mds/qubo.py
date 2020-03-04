@@ -34,7 +34,7 @@ def get_adjacency(graph: Set[Tuple[int]], directed: bool = False) -> dok_matrix:
     nodes = sorted(list(nodes))
     n_nodes = len(nodes)
 
-    #if nodes != list(range(n_nodes)):
+    # if nodes != list(range(n_nodes)):
     #    raise KeyError("Nodes must be from 0 ... n_nodes")
 
     adjacency = dok_matrix((n_nodes, n_nodes), dtype=int)
@@ -208,6 +208,21 @@ def main(col_wrap: int = 4):  # pylint: disable=R0914
 
     fig.suptitle(rf"$\gamma(G) \leq {e_min}$")
     plt.show()
+
+
+def QUBO_to_Ising(Q):
+    """Maps QUBO to Ising model
+    """
+    q = np.diagonal(Q)
+    QD = np.copy(Q)
+    for i in range(len(QD)):
+        QD[i, i] = 0.0
+    QQ = np.copy(QD + np.transpose(QD))
+    J = np.triu(QQ) / 4.0
+    uno = np.ones(len(QQ))
+    h = q / 2 + np.dot(QQ, uno) / 4
+    g = np.dot(uno, np.dot(QD, uno)) / 4.0 + np.dot(q, uno) / 2.0
+    return (J, h, g)
 
 
 if __name__ == "__main__":

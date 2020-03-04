@@ -3,3 +3,6 @@ numpy
 plotly
 pandas
 tqdm
+scipy
+seaborn
+networkx
