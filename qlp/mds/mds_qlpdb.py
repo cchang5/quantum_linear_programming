@@ -59,6 +59,7 @@ def insert_result(graph_params, experiment_params, data_params):
         p=experiment_params["p"],  # Coefficient of penalty term, 0 to 9999.99
         fact=experiment_params["fact"],  # Manual rescale coefficient, float
         chain_strength=experiment_params["chain_strength"],
+        percentage=experiment_params["percentage"],
         qubo=experiment_params["qubo"],  # Input QUBO to DWave
     )
 
