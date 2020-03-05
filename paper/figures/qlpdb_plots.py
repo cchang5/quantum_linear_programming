@@ -50,6 +50,7 @@ def plot_prob(datadict):
     ax.set_xlabel("Nodes in graph")
     ax.set_ylabel("Probability of getting MDS solution")
     plt.legend()
+    plt.savefig("./scaling_plot.pdf")
     plt.draw()
     plt.show()
 
