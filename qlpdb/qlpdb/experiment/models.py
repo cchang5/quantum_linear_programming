@@ -33,6 +33,12 @@ class Experiment(Base):
     chain_strength = models.FloatField(
         null=False, help_text="Set chain strength before auto_scaling"
     )
+    percentage = models.DecimalField(
+        null=False,
+        max_digits=4,
+        decimal_places=3,
+        help_text="Scale min anneal_offset value. Must be less than 1. Set to 0 for no offset.",
+    )
     qubo = ArrayField(
         ArrayField(models.FloatField(null=False)), help_text="Input QUBO to DWave"
     )
@@ -40,7 +46,7 @@ class Experiment(Base):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["graph", "machine", "settings_hash", "p", "chain_strength"],
+                fields=["graph", "machine", "settings_hash", "p", "chain_strength", "percentage"],
                 name="unique_experiment",
             )
         ]

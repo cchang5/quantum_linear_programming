@@ -8,6 +8,7 @@ from qlpdb.data.models import Data as data_Data
 from minorminer import find_embedding
 from dwave.system.composites import EmbeddingComposite, FixedEmbeddingComposite
 
+
 def embed_with_offset(sampler, qubo, percentage, offset=False, seed=0):
     np.random.seed(seed)
 
@@ -15,11 +16,12 @@ def embed_with_offset(sampler, qubo, percentage, offset=False, seed=0):
     qpu_graph = sampler.edgelist
     qubo_dict = {key: val for key, val in zip(qubo.keys(), qubo.values())}
     embedding = find_embedding(qubo_dict, qpu_graph)
-    print("B", embedding)
     embed = FixedEmbeddingComposite(sampler, embedding)
     anneal_offset = np.zeros(2048)  # expects full yield 2000Q
     if offset:
-        anneal_offset_ranges = embed.properties["child_properties"]["anneal_offset_ranges"]
+        anneal_offset_ranges = embed.properties["child_properties"][
+            "anneal_offset_ranges"
+        ]
         for key, qubit in embedding.items():
             offset_range_min = max([anneal_offset_ranges[idx][0] for idx in qubit])
             random_offset = np.random.uniform(percentage * offset_range_min, 0)
@@ -27,6 +29,7 @@ def embed_with_offset(sampler, qubo, percentage, offset=False, seed=0):
                 # sets same offset for all qubits in chain
                 anneal_offset[idx] = random_offset
     return qubo_dict, embed, list(anneal_offset)
+
 
 def insert_result(graph_params, experiment_params, data_params):
     # select or insert row in graph
@@ -54,7 +57,7 @@ def insert_result(graph_params, experiment_params, data_params):
             "settings_hash"
         ],  # md5 hash of key sorted settings
         p=experiment_params["p"],  # Coefficient of penalty term, 0 to 9999.99
-        fact=experiment_params["fact"], # Manual rescale coefficient, float
+        fact=experiment_params["fact"],  # Manual rescale coefficient, float
         chain_strength=experiment_params["chain_strength"],
         qubo=experiment_params["qubo"],  # Input QUBO to DWave
     )
@@ -106,15 +109,18 @@ def graph_summary(tag, graph):
     return params
 
 
-def experiment_summary(machine, settings, penalty, factor, chain_strength, qubo):
+def experiment_summary(
+    machine, settings, penalty, factor, chain_strength, percentage, qubo
+):
     params = dict()
     params["machine"] = machine
     params["settings"] = settings
     params["p"] = penalty
     params["fact"] = factor
     params["chain_strength"] = chain_strength
+    params["percentage"] = percentage
     norm_params = pd.json_normalize(params, sep="_").to_dict()
-    norm_params = {key:norm_params[key][0] for key in norm_params}
+    norm_params = {key: norm_params[key][0] for key in norm_params if key not in ["settings_anneal_offsets"]}
     params["settings_hash"] = hashlib.md5(
         str([[key, norm_params[key]] for key in sorted(norm_params)])
         .replace(" ", "")
