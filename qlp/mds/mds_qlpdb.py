@@ -8,6 +8,13 @@ from qlpdb.data.models import Data as data_Data
 from minorminer import find_embedding
 from dwave.system.composites import EmbeddingComposite, FixedEmbeddingComposite
 
+def retry_embedding(qubo_dict, qpu_graph, n_tries):
+    for i in range(n_tries):
+        try:
+            embedding = find_embedding(qubo_dict, qpu_graph)
+            return embedding
+        except:
+            continue
 
 def embed_with_offset(sampler, qubo, percentage, offset=False, seed=0):
     np.random.seed(seed)
@@ -15,7 +22,7 @@ def embed_with_offset(sampler, qubo, percentage, offset=False, seed=0):
     # embed = EmbeddingComposite(sampler)
     qpu_graph = sampler.edgelist
     qubo_dict = {key: val for key, val in zip(qubo.keys(), qubo.values())}
-    embedding = find_embedding(qubo_dict, qpu_graph)
+    embedding = retry_embedding(qubo_dict, qpu_graph, 10)
     embed = FixedEmbeddingComposite(sampler, embedding)
     anneal_offset = np.zeros(2048)  # expects full yield 2000Q
     if offset:
