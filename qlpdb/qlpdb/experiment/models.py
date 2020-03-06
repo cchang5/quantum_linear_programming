@@ -29,24 +29,19 @@ class Experiment(Base):
         decimal_places=2,
         help_text="Coefficient of penalty term, 0 to 9999.99",
     )
-    fact = models.FloatField(null=False, help_text="Manual scaling coefficient")
     chain_strength = models.FloatField(
         null=False, help_text="Set chain strength before auto_scaling"
     )
-    percentage = models.DecimalField(
+    tag = models.TextField(
         null=False,
-        max_digits=4,
-        decimal_places=3,
-        help_text="Scale min anneal_offset value. Must be less than 1. Set to 0 for no offset.",
-    )
-    qubo = ArrayField(
-        ArrayField(models.FloatField(null=False)), help_text="Input QUBO to DWave"
+        blank=False,
+        help_text="Tag describing the anneal schedule. (Easier to just unique with tag.)",
     )
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["graph", "machine", "settings_hash", "p", "chain_strength", "percentage"],
+                fields=["graph", "machine", "settings_hash", "p", "chain_strength", "tag"],
                 name="unique_experiment",
             )
         ]

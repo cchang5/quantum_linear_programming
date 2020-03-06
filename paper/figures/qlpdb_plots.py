@@ -59,8 +59,8 @@ if __name__ == "__main__":
     nndata = {
         key: data_Data.objects.filter(
             experiment__graph__tag=f"NN({key})"
-        ).to_dataframe()
-        for key in range(2, 15)
+        ).filter(experiment__percentage=f"{pct}").to_dataframe()
+        for key in range(2, 15) for pct in [0, 0.05]
     }
 
     #single_histogram(nndata)

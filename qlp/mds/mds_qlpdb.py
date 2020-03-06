@@ -8,34 +8,59 @@ from qlpdb.data.models import Data as data_Data
 from minorminer import find_embedding
 from dwave.system.composites import EmbeddingComposite, FixedEmbeddingComposite
 
-def retry_embedding(qubo_dict, qpu_graph, n_tries):
+
+class AnnealOffset:
+    def __init__(self, tag):
+        self.tag = tag
+
+    def fcn(self, h, min_offset, max_offset):
+        if self.tag == "constant":
+            return np.zeros(len(h)), f"Constant"
+        if self.tag == "linear":
+            hnorm = abs(h) / max(abs(h))
+            return hnorm * (max_offset - min_offset) * 0.9 + min_offset * 1.1, f"Linear"
+        else:
+            print(
+                "Anneal offset not defined.\nDefine in AnnealOffset class inside qlp.mds.mds_qlpdb"
+            )
+
+
+def retry_embedding(sampler, qubo_dict, qpu_graph, n_tries):
     for i in range(n_tries):
         try:
             embedding = find_embedding(qubo_dict, qpu_graph)
-            return embedding
-        except:
+            embedding_idx = [
+                idx for embed_list in embedding.values() for idx in embed_list
+            ]
+            embed = FixedEmbeddingComposite(sampler, embedding)
+            anneal_offset_ranges = np.array(
+                embed.properties["child_properties"]["anneal_offset_ranges"]
+            )
+            min_offset = max(
+                [offsets[0] for offsets in anneal_offset_ranges[embedding_idx]]
+            )
+            max_offset = min(
+                [offsets[1] for offsets in anneal_offset_ranges[embedding_idx]]
+            )
+            if max_offset - min_offset < 0.1:
+                raise ValueError(
+                    f"{max_offset - min_offset}Not enough offset range for inhomogeneous driving. Try another embedding."
+                )
+            else:
+                return embed, embedding, min_offset, max_offset
+        except Exception as e:
+            print(e)
             continue
 
-def embed_with_offset(sampler, qubo, percentage, offset=False, seed=0):
-    np.random.seed(seed)
 
-    # embed = EmbeddingComposite(sampler)
-    qpu_graph = sampler.edgelist
-    qubo_dict = {key: val for key, val in zip(qubo.keys(), qubo.values())}
-    embedding = retry_embedding(qubo_dict, qpu_graph, 10)
-    embed = FixedEmbeddingComposite(sampler, embedding)
+def find_offset(h, fcn, embedding, min_offset, max_offset):
     anneal_offset = np.zeros(2048)  # expects full yield 2000Q
-    if offset:
-        anneal_offset_ranges = embed.properties["child_properties"][
-            "anneal_offset_ranges"
-        ]
-        for key, qubit in embedding.items():
-            offset_range_min = max([anneal_offset_ranges[idx][0] for idx in qubit])
-            random_offset = np.random.uniform(percentage * offset_range_min, 0)
-            for idx in qubit:
-                # sets same offset for all qubits in chain
-                anneal_offset[idx] = random_offset
-    return qubo_dict, embed, list(anneal_offset)
+    offset_value, tag = fcn(h, min_offset, max_offset)
+    for logical_qubit, qubit in embedding.items():
+        for idx in qubit:
+            # sets same offset for all qubits in chain
+            anneal_offset[idx] = offset_value[logical_qubit]
+    return list(anneal_offset), tag
 
 
 def insert_result(graph_params, experiment_params, data_params):
@@ -64,10 +89,8 @@ def insert_result(graph_params, experiment_params, data_params):
             "settings_hash"
         ],  # md5 hash of key sorted settings
         p=experiment_params["p"],  # Coefficient of penalty term, 0 to 9999.99
-        fact=experiment_params["fact"],  # Manual rescale coefficient, float
         chain_strength=experiment_params["chain_strength"],
-        percentage=experiment_params["percentage"],
-        qubo=experiment_params["qubo"],  # Input QUBO to DWave
+        tag=experiment_params["tag"],
     )
 
     # select or insert row in data
@@ -94,7 +117,7 @@ def insert_result(graph_params, experiment_params, data_params):
     return data
 
 
-def graph_summary(tag, graph):
+def graph_summary(tag, graph, qubo):
     """
     Get summary statistics of input graph
     :param graph:
@@ -109,6 +132,7 @@ def graph_summary(tag, graph):
     params["tag"] = tag
     params["total_vertices"] = len(vertices)
     params["total_edges"] = len(graph)
+    params["total_qubits"] = len(qubo.todense())
     params["max_edges"] = max(neighbors.values())
     params["adjacency"] = [list(i) for i in list(graph)]
     params["adjacency_hash"] = hashlib.md5(
@@ -117,33 +141,28 @@ def graph_summary(tag, graph):
     return params
 
 
-def experiment_summary(
-    machine, settings, penalty, factor, chain_strength, percentage, qubo
-):
+def experiment_summary(machine, settings, penalty, chain_strength, tag):
     params = dict()
     params["machine"] = machine
-    params["settings"] = {key: settings[key] for key in settings if key not in ["anneal_offsets"]}
+    params["settings"] = {
+        key: settings[key] for key in settings if key not in ["anneal_offsets"]
+    }
     params["p"] = penalty
-    params["fact"] = factor
     params["chain_strength"] = chain_strength
-    params["percentage"] = percentage
-    norm_params = pd.json_normalize(params, sep="_").to_dict()
-    norm_params = {key: norm_params[key][0] for key in norm_params}
+    params["tag"] = tag
     params["settings_hash"] = hashlib.md5(
-        str([[key, norm_params[key]] for key in sorted(norm_params)])
+        str([[key, params["settings"][key]] for key in sorted(params["settings"])])
         .replace(" ", "")
         .encode("utf-8")
     ).hexdigest()
-    params["qubo"] = qubo.todense().tolist()
     return params
 
 
 def data_summary(raw, graph_params, experiment_params):
     params = dict()
-    params["spin_config"] = raw.iloc[:, : len(experiment_params["qubo"])].values
+    params["spin_config"] = raw.iloc[:, : graph_params["total_qubits"]].values
     params["energy"] = (
-        raw["energy"].values * experiment_params["fact"]
-        + experiment_params["p"] * graph_params["total_vertices"]
+        raw["energy"].values + experiment_params["p"] * graph_params["total_vertices"]
     )
     params["chain_break_fraction"] = raw["chain_break_fraction"].values
     params["constraint_satisfaction"] = np.equal(
