@@ -115,13 +115,13 @@ def experiment_summary(
 ):
     params = dict()
     params["machine"] = machine
-    params["settings"] = settings
+    params["settings"] = {key: settings[key] for key in settings if key not in ["anneal_offsets"]}
     params["p"] = penalty
     params["fact"] = factor
     params["chain_strength"] = chain_strength
     params["percentage"] = percentage
     norm_params = pd.json_normalize(params, sep="_").to_dict()
-    norm_params = {key: norm_params[key][0] for key in norm_params if key not in ["settings_anneal_offsets"]}
+    norm_params = {key: norm_params[key][0] for key in norm_params}
     params["settings_hash"] = hashlib.md5(
         str([[key, norm_params[key]] for key in sorted(norm_params)])
         .replace(" ", "")
