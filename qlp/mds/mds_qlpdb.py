@@ -19,6 +19,12 @@ class AnnealOffset:
         if self.tag == "linear":
             hnorm = abs(h) / max(abs(h))
             return hnorm * (max_offset - min_offset) * 0.9 + min_offset * 1.1, f"Linear"
+        if self.tag == "signedlinear":
+            hnorm = 0.5*(1.0+ h / max(abs(h)))
+            return hnorm * (max_offset - min_offset) * 0.9 + min_offset * 1.1, f"Signedlinear"
+        if self.tag == "negsignedlinear":
+            hnorm = 0.5*(1.0- h / max(abs(h)))
+            return hnorm * (max_offset - min_offset) * 0.9 + min_offset * 1.1, f"Negsignedlinear"
         else:
             print(
                 "Anneal offset not defined.\nDefine in AnnealOffset class inside qlp.mds.mds_qlpdb"
