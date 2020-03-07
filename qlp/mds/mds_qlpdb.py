@@ -44,7 +44,7 @@ def retry_embedding(sampler, qubo_dict, qpu_graph, n_tries):
             )
             if max_offset - min_offset < 0.1:
                 raise ValueError(
-                    f"{max_offset - min_offset}Not enough offset range for inhomogeneous driving. Try another embedding."
+                    f"\n{max_offset - min_offset}Not enough offset range for inhomogeneous driving. Try another embedding."
                 )
             else:
                 return embed, embedding, min_offset, max_offset
