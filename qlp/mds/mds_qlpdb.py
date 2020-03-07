@@ -13,19 +13,19 @@ class AnnealOffset:
     def __init__(self, tag):
         self.tag = tag
 
-    def fcn(self, h, min_offset, max_offset):
+    def fcn(self, h, offset_min, offset_range):
         if self.tag == "constant":
             return np.zeros(len(h)), f"Constant"
         if self.tag == "linear":
             hnorm = abs(h) / max(abs(h))
-            return hnorm * (max_offset - min_offset) * 0.9 + min_offset * 1.1, f"Linear"
+            return hnorm * offset_range * 0.9 + offset_min * 1.1, f"Linear_{offset_min}_{offset_range}"
         else:
             print(
                 "Anneal offset not defined.\nDefine in AnnealOffset class inside qlp.mds.mds_qlpdb"
             )
 
 
-def retry_embedding(sampler, qubo_dict, qpu_graph, n_tries):
+def retry_embedding(sampler, qubo_dict, qpu_graph, target_min=-0.1, target_range=0.12, n_tries=100):
     for i in range(n_tries):
         try:
             embedding = find_embedding(qubo_dict, qpu_graph)
@@ -42,9 +42,11 @@ def retry_embedding(sampler, qubo_dict, qpu_graph, n_tries):
             max_offset = min(
                 [offsets[1] for offsets in anneal_offset_ranges[embedding_idx]]
             )
-            if max_offset - min_offset < 0.1:
+            if (max_offset - min_offset < target_range) or min_offset > target_min:
                 raise ValueError(
-                    f"\n{max_offset - min_offset}Not enough offset range for inhomogeneous driving. Try another embedding."
+                    f"\n{max_offset - min_offset} < {target_range}: Not enough offset range for inhomogeneous driving."
+                    f"\n{min_offset} > {target_min}: min_offset needs to be lower."
+                    "Try another embedding."
                 )
             else:
                 return embed, embedding, min_offset, max_offset
@@ -53,9 +55,9 @@ def retry_embedding(sampler, qubo_dict, qpu_graph, n_tries):
             continue
 
 
-def find_offset(h, fcn, embedding, min_offset, max_offset):
+def find_offset(h, fcn, embedding, offset_min, offset_range):
     anneal_offset = np.zeros(2048)  # expects full yield 2000Q
-    offset_value, tag = fcn(h, min_offset, max_offset)
+    offset_value, tag = fcn(h, offset_min, offset_range)
     for logical_qubit, qubit in embedding.items():
         for idx in qubit:
             # sets same offset for all qubits in chain
