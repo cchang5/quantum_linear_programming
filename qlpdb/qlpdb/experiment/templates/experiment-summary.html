@@ -19,7 +19,7 @@
           <th scope="col">E | N | CBF</th>
           <th scope="col">Machine</th>
           <th scope="col">Penalty</th>
-          <th scope="col">Scaling Factor</th>
+          <th scope="col">Offset Tag</th>
           <th scope="col">Settings</th>
         </tr>
       </thead>
@@ -45,7 +45,7 @@
           </td>
           <td>{{experiment.machine}}</td>
           <td>{{experiment.p}}</td>
-          <td>{{experiment.fact}}</td>
+          <td>{{experiment.tag}}</td>
           <td><ul class="text-monospace" style="font-size: 0.8rem;">
           {% for item in experiment.settings.items %}
           <li>{{item.0}}={{item.1}}</li>
