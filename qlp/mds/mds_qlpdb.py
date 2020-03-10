@@ -19,6 +19,9 @@ class AnnealOffset:
         if self.tag == "linear":
             hnorm = abs(h) / max(abs(h))
             return hnorm * offset_range * 0.9 + offset_min * 1.1, f"Linear_{offset_min}_{offset_range}"
+        if self.tag == "neglinear":
+            hnorm = abs(h) / max(abs(h))
+            slope = -1. * hnorm * offset_range * 0.9 + offset_range + offset_min * 1.1, f"Neglinear_{offset_min}_{offset_range}"
         if self.tag == "signedlinear":
             hnorm = 0.5*(1.0+ h / max(abs(h)))
             return hnorm * offset_range * 0.9 + offset_min * 1.1, f"Signedlinear_{offset_min}_{offset_range}"
