@@ -3,6 +3,13 @@
 {% load base_extras %}
 {% load experiments_extras %}
 
+{% block head-extra %}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
+
+{% endblock %}
+
 
 {% block content %}
 <div class="jumbotron">
@@ -11,68 +18,76 @@
 </div>
 <div class="container-fluid row justify-content-center">
     <div class="col-auto">
-    <table class="table table-responsive">
-      <thead>
-        <tr>
-          <th scope="col">Graph</th>
-          <th scope="col">#Data</th>
-          <th scope="col">E | N | CBF</th>
-          <th scope="col">Machine</th>
-          <th scope="col">Penalty</th>
-          <th scope="col">Offset Tag</th>
-          <th scope="col">Settings</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for experiment in experiment_list %}
-        <tr>
-          <td>{{experiment.graph.tag}}</td>
-          <td>{{experiment.n_data}}</td>
-          <td>
-          {% if experiment.get_summary %}
-          <table class="table table-sm text-monospace text-right"  align="right" style="font-size: 0.8rem;">
-              {% for result in experiment.get_summary %}
-              <tr>
-                  <td style="border: none;">{{result.energy|floatformat:0}}</td>
-                  <td style="border: none;">{{result.occurances}}</td>
-                  <td style="border: none;">{{result.chain_break_fraction|floatformat:2}}</td>
-              </tr>
+        <table class="table table-hover" id="experiment-table">
+          <thead>
+            <tr>
+              <th scope="col">Graph</th>
+              <th scope="col">#Data</th>
+              <th scope="col">E | N | CBF</th>
+              <th scope="col">Machine</th>
+              <th scope="col">Penalty</th>
+              <th scope="col">Offset Tag</th>
+              <th scope="col">Settings</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for experiment in experiment_list %}
+            <tr>
+              <td>{{experiment.graph.tag}}</td>
+              <td>{{experiment.n_data}}</td>
+              <td>
+              {% if experiment.get_summary %}
+              <table class="table table-sm text-monospace text-right"  align="right" style="font-size: 0.8rem;">
+                  {% for result in experiment.get_summary %}
+                  <tr>
+                      <td style="border: none;">{{result.energy|floatformat:0}}</td>
+                      <td style="border: none;">{{result.occurances}}</td>
+                      <td style="border: none;">{{result.chain_break_fraction|floatformat:2}}</td>
+                  </tr>
+                  {% endfor %}
+                </table>
+              {% else %}
+                -
+              {% endif %}
+              </td>
+              <td>{{experiment.machine}}</td>
+              <td>{{experiment.p}}</td>
+              <td>{{experiment.tag}}</td>
+              <td><ul class="text-monospace" style="font-size: 0.8rem;">
+              {% for item in experiment.settings.items %}
+              <li>{{item.0}}={{item.1}}</li>
               {% endfor %}
-            </table>
-          {% else %}
-            -
-          {% endif %}
-          </td>
-          <td>{{experiment.machine}}</td>
-          <td>{{experiment.p}}</td>
-          <td>{{experiment.tag}}</td>
-          <td><ul class="text-monospace" style="font-size: 0.8rem;">
-          {% for item in experiment.settings.items %}
-          <li>{{item.0}}={{item.1}}</li>
-          {% endfor %}
-          </ul></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+              </ul></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
 
-    <div class="pagination">
-        <span class="step-links">
-            {% if page_obj.has_previous %}
-                <a href="?page=1">&laquo; first</a>
-                <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-            {% endif %}
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
 
-            <span class="current">
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
             </span>
-
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}">next</a>
-                <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
-            {% endif %}
-        </span>
-    </div>
+        </div>
     </div>
 </div>
+
+<script>
+$(document).ready(function() {
+    $('#experiment-table').DataTable({
+        "paging":   false
+    });
+});
+</script>
+
 {% endblock %}
