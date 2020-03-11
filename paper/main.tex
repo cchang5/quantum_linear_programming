@@ -150,7 +150,7 @@ The function $\mathrm{Diag}_{z}(v)$ embeds a vector $v$ into a diagonal matrix i
 \subsection{Application to the Dominating Set Problem}
 \label{sec:results:mds}
 
-Given a graph $G(E,V)$, defined by the set of $V$ vertices and $E$ edges, and a subset of vertices $D \subseteq V$. If the set of all vertices not in $D$ is adjacent to at least one vertex in $D$, then $D$ is a dominating set. This is equivalent to requiring the set of nearest-neighbor vertices of $D$ (exclusive) and $D$ cover all vertices $N(D) \cup D = V$ (an example is given by Fig.~\ref{fig:dominating_sets}a). The set $D$ is a minimal dominating set if there is no proper subset of $D$ that is a dominating set, {\it{i.e.}}, the removal of any vertex in $D$ results in $N(D) \cup D  \neq V$. An example is given by Fig.~\ref{fig:dominating_sets}b. The domination number of $D$ is given by the cardinality of $|D| \equiv \overline{\overline{D}}$. The minimum dominating set is defined by $D$ with the smallest domination number. Fig.~\ref{fig:dominating_sets}c shows an example of the minimum dominating set of $G(V, E)$ and is different from the minimal dominating set. We emphasize that while the maximum independent set is always a minimal dominating set as exemplified by Fig.~\ref{fig:dominating_sets}b, the minimum dominating set in general can have a smaller domination number. As a result, the solution to the dominating set problem can not be obtained by solving for the maximum independent set, a problem that is well studied for quantum annealers~\cite{}.
+Given a graph $G(E,V)$, defined by the set of $V$ vertices and $E$ edges, and a subset of vertices $D \subseteq V$. If the set of all vertices not in $D$ is adjacent to at least one vertex in $D$, then $D$ is a dominating set. This is equivalent to requiring the set of nearest-neighbor vertices of $D$ (exclusive) and $D$ cover all vertices $N(D) \cup D = V$ (an example is given by Fig.~\ref{fig:dominating_sets}a). The set $D$ is a minimal dominating set if there is no proper subset of $D$ that is a dominating set, {\it{i.e.}}, the removal of any vertex in $D$ results in $N(D) \cup D  \neq V$. An example is given by Fig.~\ref{fig:dominating_sets}b. The domination number of $D$ is given by the cardinality of $|D| \equiv \overline{\overline{D}}$. The minimum dominating set (MDS) is defined by $D$ with the smallest domination number. Fig.~\ref{fig:dominating_sets}c shows an example of the minimum dominating set of $G(V, E)$ and is different from the minimal dominating set. We emphasize that while the maximum independent set is always a minimal dominating set as exemplified by Fig.~\ref{fig:dominating_sets}b, the minimum dominating set in general can have a smaller domination number. As a result, the solution to the dominating set problem can not be obtained by solving for the maximum independent set, a problem that is well studied for quantum annealers~\cite{}.
 
 \begin{figure*}
 	\centering
@@ -164,6 +164,35 @@ Given a graph $G(E,V)$, defined by the set of $V$ vertices and $E$ edges, and a 
 	\end{tabular}
 	\caption{Example of different dominating sets for the Pleiades constellation $G(V, E)$. Vertices in the dominating set $D$ are highlighted in blue. {\bf{a)}} A dominating set of $G$ with domination number $\overline{\overline{D}} = 5$. {\bf{b)}} A minimal dominating set of $G$ with domination number of $\overline{\overline{D}} = 4$. We note that $D$ is also the maximum independent set of $G$. {\bf{c)}} The minimum dominating set of $G$ with domination number of $\overline{\overline{D}} = 2$.}
 	\label{fig:dominating_sets}
+\end{figure*}
+
+For general graphs, existing "classical" algorithms either find minimal solutions in exponential time $\sim O( 1.5^n)$ \cite{Fomin2009, vanRooij2009} or approximate solutions in polynomial time. For example, greedy algorithms locally optimize decisions about which nodes to add to the dominating set.
+Thus one is guaranteed to find a dominating set but not necessarily a MDS.
+We demonstrate an example greedy algorithm in figure Fig.~\ref{fig:mds-greedy}.
+\begin{figure*}
+	\centering
+	\begin{tabular}{p{0.22\textwidth}p{0.22\textwidth}p{0.22\textwidth}p{0.22\textwidth}}
+	\includegraphics[width=0.20\textwidth]{./figures/greedy-1.pdf}
+&
+	\includegraphics[width=0.20\textwidth]{./figures/greedy-2.pdf}
+&
+	\includegraphics[width=0.20\textwidth]{./figures/greedy-3.pdf}
+&
+	\includegraphics[width=0.20\textwidth]{./figures/greedy-4.pdf}\\
+	\centering\bf{a} & \centering\bf{b} & \centering\bf{c} & \centering\bf{d}
+	\end{tabular}
+	\caption{
+		Example of greedy MDS algorithm:
+		The algorithm iteratively adds vertices to the dominating set (black nodes) such that newly added nodes are maximally unconnected (white nodes).
+		Connected nodes are neighbors of the DS (turquoise) or already in the DS.
+		In (a), one finds three unconnected nodes [(2), (4), (7)] which are adjacent to three unconnected nodes each.
+		In the first step $a\to b$, randomly the node (4) is picked.
+		In (b), one has two unconnected choices [(1), (2)] with each adjacent to another unconnected node.
+		After randomly selecting (2) when going from $b \to c$, only one unconnected node is remaining (6).
+		The found solution is a (minimal) dominating set but not a MDS.
+		To find the MDS using this greedy algorithm, the first node choice must be either (2) or (5).
+	}
+	\label{fig:mds-greedy}
 \end{figure*}
 
 \subsubsection{Minimum Dominating Set}
