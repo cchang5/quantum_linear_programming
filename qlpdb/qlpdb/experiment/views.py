@@ -32,5 +32,4 @@ class ExperimentSummaryView(ListView):
 
     template_name = "experiment-summary.html"
     model = Experiment
-    paginate_by = 50  # if pagination is desired
     ordering = ["-tag"]

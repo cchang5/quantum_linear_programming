@@ -15,9 +15,9 @@
 <div class="jumbotron">
     <h1>Experiment Summary</h1>
     <h5>Here are some useful informations.</h5>
+    <p>Use <code>Shift-Click</code> to sort multiple columns at once.</p>
 </div>
-<div class="container-fluid row justify-content-center">
-    <div class="col-auto">
+<div class="container">
         <table class="table table-hover" id="experiment-table">
           <thead>
             <tr>
@@ -62,30 +62,11 @@
             {% endfor %}
           </tbody>
         </table>
-        <div class="pagination">
-            <span class="step-links">
-                {% if page_obj.has_previous %}
-                    <a href="?page=1">&laquo; first</a>
-                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-                {% endif %}
-
-                <span class="current">
-                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-                </span>
-
-                {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}">next</a>
-                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
-                {% endif %}
-            </span>
-        </div>
-    </div>
 </div>
 
 <script>
 $(document).ready(function() {
     $('#experiment-table').DataTable({
-        "paging":   false
     });
 });
 </script>
