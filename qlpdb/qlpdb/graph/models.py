@@ -35,6 +35,6 @@ class Graph(Base):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["adjacency_hash"], name="unique_graph"
+                fields=["adjacency_hash", "tag"], name="unique_graph"
             )
         ]

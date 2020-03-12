@@ -8,6 +8,8 @@ from qlpdb.data.models import Data as data_Data
 from minorminer import find_embedding
 from dwave.system.composites import EmbeddingComposite, FixedEmbeddingComposite
 
+import matplotlib.pyplot as plt
+import yaml
 
 class AnnealOffset:
     def __init__(self, tag):
@@ -18,51 +20,82 @@ class AnnealOffset:
             return np.zeros(len(h)), f"Constant"
         if self.tag == "linear":
             hnorm = abs(h) / max(abs(h))
-            return hnorm * offset_range * 0.9 + offset_min * 1.1, f"Linear_{offset_min}_{offset_range}"
+            return hnorm * offset_range * 0.9 + offset_min * 0.9, f"Linear_{offset_min}_{offset_range}"
         if self.tag == "neglinear":
             hnorm = abs(h) / max(abs(h))
-            return -1. * hnorm * offset_range * 0.9 + offset_range + offset_min * 1.1, f"Neglinear_{offset_min}_{offset_range}"
+            return -1. * hnorm * offset_range * 0.9 + offset_range + offset_min * 0.9, f"Neglinear_{offset_min}_{offset_range}"
         if self.tag == "signedlinear":
             hnorm = 0.5*(1.0+ h / max(abs(h)))
-            return hnorm * offset_range * 0.9 + offset_min * 1.1, f"Signedlinear_{offset_min}_{offset_range}"
+            return hnorm * offset_range * 0.9 + offset_min * 0.9, f"Signedlinear_{offset_min}_{offset_range}"
         if self.tag == "negsignedlinear":
             hnorm = 0.5*(1.0- h / max(abs(h)))
-            return hnorm * offset_range * 0.9 + offset_min * 1.1, f"Negsignedlinear_{offset_min}_{offset_range}"
+            return hnorm * offset_range * 0.9 + offset_min * 0.9, f"Negsignedlinear_{offset_min}_{offset_range}"
         else:
             print(
                 "Anneal offset not defined.\nDefine in AnnealOffset class inside qlp.mds.mds_qlpdb"
             )
 
 
-def retry_embedding(sampler, qubo_dict, qpu_graph, target_min=-0.1, target_range=0.12, n_tries=100):
+def retry_embedding(sampler, qubo_dict, qpu_graph, graph_tag, target_min=-0.1, target_range=0.12, n_tries=100):
+    def get_embed_min_max_offset(sampler, embedding):
+        embed = FixedEmbeddingComposite(sampler, embedding)
+        anneal_offset_ranges = np.array(
+            embed.properties["child_properties"]["anneal_offset_ranges"]
+        )
+        min_offset = max(
+            [offsets[0] for offsets in anneal_offset_ranges[embedding_idx]]
+        )
+        max_offset = min(
+            [offsets[1] for offsets in anneal_offset_ranges[embedding_idx]]
+        )
+        return embed, min_offset, max_offset
     for i in range(n_tries):
         try:
             embedding = find_embedding(qubo_dict, qpu_graph)
             embedding_idx = [
                 idx for embed_list in embedding.values() for idx in embed_list
             ]
-            embed = FixedEmbeddingComposite(sampler, embedding)
-            anneal_offset_ranges = np.array(
-                embed.properties["child_properties"]["anneal_offset_ranges"]
-            )
-            min_offset = max(
-                [offsets[0] for offsets in anneal_offset_ranges[embedding_idx]]
-            )
-            max_offset = min(
-                [offsets[1] for offsets in anneal_offset_ranges[embedding_idx]]
-            )
-            if (max_offset - min_offset < target_range) or min_offset > target_min:
+            embed, min_offset, max_offset = get_embed_min_max_offset(sampler, embedding)
+            if (target_range > max_offset - target_min) or (min_offset > target_min):
                 raise ValueError(
-                    f"\n{max_offset - min_offset} < {target_range}: Not enough offset range for inhomogeneous driving."
+                    f"\n{target_range} > {max_offset - target_min}: Not enough offset range for inhomogeneous driving."
                     f"\n{min_offset} > {target_min}: min_offset needs to be lower."
                     "Try another embedding."
                 )
             else:
+                with open(f"../qlp/mds/embeddings/{graph_tag}_{target_min}_{target_range}.yaml", "w") as file:
+                    safe_embed = {int(k):list(embedding[k]) for k in embedding}
+                    yaml.safe_dump(safe_embed, file)
                 return embed, embedding, min_offset, max_offset
         except Exception as e:
-            print(e)
+            #print(e)
             continue
+    # if retries fail
+    try:
+        with open(f"../qlp/mds/embeddings/{graph_tag}_{target_min}_{target_range}.yaml", "r") as file:
+            embedding = yaml.safe_load(file)
+        embed, min_offset, max_offset = get_embed_min_max_offset(sampler, embedding)
+        return embed, embedding, min_offset, max_offset
+    except Exception as e:
+        print(e)
+        return None
 
+
+def plot_anneal_offset(sampler):
+    offsets = np.array(sampler.properties['anneal_offset_ranges'])
+    offset_min = offsets[:, 0]
+    offset_max = offsets[:, 1]
+    fig, axs = plt.subplots(2, 2, figsize=(15, 15), sharey=True, tight_layout=True)
+    axs[0,0].hist(offset_min, bins=30)
+    axs[0,0].set_title("offset min")
+    axs[0,1].hist(offset_max, bins=30)
+    axs[0,1].set_title("offset max")
+    axs[1,0].hist(offset_max - offset_min, bins=30)
+    axs[1,0].set_title("offset range")
+    axs[1,1].hist(0.5*(offset_max + offset_min), bins=30)
+    axs[1,1].set_title("offset mean")
+    plt.draw()
+    plt.show()
 
 def find_offset(h, fcn, embedding, offset_min, offset_range):
     anneal_offset = np.zeros(2048)  # expects full yield 2000Q

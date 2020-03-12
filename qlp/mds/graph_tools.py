@@ -249,6 +249,58 @@ def generate_corona_graph(k: int, n: int) -> Tuple[Set[Tuple[int, int]], Text]:
 
     return ring, f"C19({k},{n})"
 
+
+def generate_limited_corona_graph(k: int, n: int):
+    """Returns edges of a n-shortcut 3k-ring graph with broken rotational symmetry.
+
+    Has unique ground state solution with increased connectivity
+    For limited corona, the shortcuts are added to keep max connections / vertex the smallest
+
+    Arguments:
+        k: number of 3 vertex segments
+        n: number of shortcuts.
+    """
+
+    if n >= factorial(3 * k - 2):
+        raise ValueError("n >= (3k-2)!: More shortcuts than allowed for graph.\n Choose a smaller number.")
+
+    # construct base ring
+    ring, _ = generate_nn_graph(3 * k)
+    ring.add((3 * k - 1, 0))
+
+    # add antigen
+    antigen = ((3 * i + 1, 3 * k + i) for i in range(k))
+    ring.update(antigen)
+
+    # connectivity
+    connections = {idx: 2 for idx in range(3 * k)}
+    for i in range(k):
+        connections[3 * i + 1] += 1
+
+    # add shortcuts
+    shortcuts = [(kidx, (kidx + nidx + 2) % (3 * k)) for nidx in range(k) for kidx in range(3 * k)]
+    count = 0
+    minconnections = min(connections.values())
+    while count < n:
+        for idx, shortcut in enumerate(shortcuts):
+            start = shortcut[0]
+            end = shortcut[1]
+            if connections[start] > minconnections or connections[end] > minconnections:
+                deadend = True
+                pass
+            else:
+                ring.add(shortcut)
+                shortcuts.pop(idx)
+                connections[start] += 1
+                connections[end] += 1
+                minconnections = min(connections.values())
+                count += 1
+                deadend = False
+                break
+        if idx == len(shortcuts) - 1 and deadend:
+            minconnections += 1
+    return ring, f"lC19({k},{n})"
+
 def get_plot_mpl(
     graph: Set[Tuple[int]],
     color_nodes: Optional[List[int]] = None,
