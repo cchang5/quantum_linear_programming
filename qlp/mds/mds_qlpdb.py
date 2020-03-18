@@ -18,9 +18,30 @@ class AnnealOffset:
 
     def fcn(self, h, offset_min, offset_range):
         abshrange = max(abs(h)) - min(abs(h))
+        fullrange = max(h) - min(h)
 
         if self.tag == "constant":
             return np.zeros(len(h)), f"FixEmbedding_Constant_{offset_min}_{offset_range}"
+        if self.tag == "binary":
+            offset_tag = f"FixEmbedding_Binary_{offset_min}_{offset_range}"
+            offset_fcn = []
+            hmid = abshrange * 0.5 + min(abs(h))
+            for hi in h:
+                if abs(hi) <= hmid:
+                    offset_fcn.append(offset_min)
+                else:
+                    offset_fcn.append(offset_min + offset_range)
+            return offset_fcn, offset_tag
+        if self.tag == "negbinary":
+            offset_tag = f"FixEmbedding_NegBinary_{offset_min}_{offset_range}"
+            offset_fcn = []
+            hmid = abshrange * 0.5 + min(abs(h))
+            for hi in h:
+                if abs(hi) >= hmid:
+                    offset_fcn.append(offset_min)
+                else:
+                    offset_fcn.append(offset_min + offset_range)
+            return offset_fcn, offset_tag
         if self.tag == "shiftlinear":
             offset_tag = f"FixEmbedding_ShiftLinear_{offset_min}_{offset_range}"
             absshifth = abs(h) - min(abs(h))
@@ -31,6 +52,17 @@ class AnnealOffset:
             offset_tag = f"FixEmbedding_NegShiftLinear_{offset_min}_{offset_range}"
             invhnorm = -1*(abs(h) - max(abs(h))) / abshrange
             offset_fcn = invhnorm * offset_range + offset_min
+            return offset_fcn, offset_tag
+        if self.tag == "signedshiftlinear":
+            offset_tag = f"FixEmbedding_SignedShiftLinear_{offset_min}_{offset_range}"
+            shifth = h - min(h)
+            normh = shifth / fullrange
+            offset_fcn = normh * offset_range + offset_min
+            return offset_fcn, offset_tag
+        if self.tag == "signednegshiftlinear":
+            offset_tag = f"FixEmbedding_SignedNegShiftLinear_{offset_min}_{offset_range}"
+            shifth = -1*(h - max(h)) / fullrange
+            offset_fcn = shifth * offset_range + offset_min
             return offset_fcn, offset_tag
         if self.tag == "linear":
             offset_tag = f"Linear_{offset_min}_{offset_range}"
