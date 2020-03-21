@@ -546,6 +546,50 @@ In particular
 \end{align}
 
 
+\section{Time-dependent simulation of quantum annealing}
+
+I tried to follow DWave's convention as much as I can.
+This notebook is to solve time-dependent Schrodinger equation for quantum annealing Hamiltonian. Then use final wavefunction to check the overlap with the Ising ground state from exact diagonalization. The absolute square of the overlap is the probability that the measurement result gives the solution. This is like what Nishimori did in his original paper.
+
+Time dependent Hamiltoniain is
+\begin{align}
+H_{anneal}(t) =  \frac{-A(t)}{2} (\sum_i \sigma^x_i) + \frac{B(t)}{2} (\sum_{i>j} J_{ij} \sigma^z_i \sigma^z_j +\sum_i h_i \sigma^z_i ) 
+\end{align}
+
+The goal is to solve 
+\begin{align}
+i \partial_t \psi(t) = H(t) \psi(t)
+\end{align}
+with initial condition
+\begin{align}
+\psi(t=0)= \otimes_i  |\rightarrow \rangle_i
+\end{align}
+
+The time period is set to $[0,1]$. 
+
+The probability to get the ground state at measurement is
+\begin{align}
+P = | \langle \psi (t)  | gnd \rangle |^2
+\end{align}
+
+For now the offset is included in the following way: 
+\begin{align}
+H_{offset}(t) =  \frac{-A(t)}{2} ( \sum_i c_i(t) \sigma^x_i) + \frac{B(t)}{2} (\sum_{i>j} \frac{c_i(t)+c_j(t)}{2} \sigma^z_i \sigma^z_j +\sum_i  c_i(t) \sigma^z_i ) 
+\end{align}
+
+
+So the total Hamiltonian is $H=H_{anneal}+H_{offset}$.
+
+Users can define functions $c_i(t)$, $A(t)$, $B(t)$ in the code.
+
+\begin{figure}[htb]
+	\centering
+	\includegraphics[width=0.5\textwidth]{annealingschedule.png}
+	\includegraphics[width=0.5\textwidth]{probt.png}
+	\caption{
+		\label{tdse} time-dependent Schrodinger equation simulation of quantum annealing.
+	}
+\end{figure}
 
 
 \end{document}
