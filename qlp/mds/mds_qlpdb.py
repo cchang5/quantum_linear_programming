@@ -21,9 +21,9 @@ class AnnealOffset:
         fullrange = max(h) - min(h)
 
         if self.tag == "constant":
-            return np.zeros(len(h)), f"FixEmbedding_Constant_{offset_min}_{offset_range}"
+            return np.zeros(len(h)), f"FixEmbedding_Constant_{offset_min}_{offset_range}_v3_1"
         if self.tag == "binary":
-            offset_tag = f"FixEmbedding_Binary_{offset_min}_{offset_range}"
+            offset_tag = f"FixEmbedding_Binary_{offset_min}_{offset_range}_v3_1"
             offset_fcn = []
             hmid = abshrange * 0.5 + min(abs(h))
             for hi in h:
@@ -33,7 +33,7 @@ class AnnealOffset:
                     offset_fcn.append(offset_min + offset_range)
             return offset_fcn, offset_tag
         if self.tag == "negbinary":
-            offset_tag = f"FixEmbedding_NegBinary_{offset_min}_{offset_range}"
+            offset_tag = f"FixEmbedding_NegBinary_{offset_min}_{offset_range}_v3_1"
             offset_fcn = []
             hmid = abshrange * 0.5 + min(abs(h))
             for hi in h:
