@@ -11,30 +11,22 @@ class s_to_offset:
     def __init__(self, fill_value):
         if fill_value == "extrapolate":
             fill_valueC = fill_value
-            fill_valueA = fill_value
-            fill_valueB = fill_value
         elif fill_value == "truncate":
             fill_valueC = (0, 1)
-            fill_valueA = (10.3214800, 0.0000026)
-            fill_valueB = (0.4927432, 11.8604700)
         paramsC = {
             "kind": "linear",
             "fill_value": fill_valueC,
         }  # linear makes for more sensible extrapolation.
-        paramsA = {
+        params = {
             "kind": "linear",
-            "fill_value": fill_valueA,
-        }  # linear makes for more sensible extrapolation.
-        paramsB = {
-            "kind": "linear",
-            "fill_value": fill_valueB,
+            "fill_value": "extrapolate",
         }  # linear makes for more sensible extrapolation.
         self.anneal_schedule = read_excel(
             io="./09-1212A-B_DW_2000Q_5_anneal_schedule.xlsx", sheet_name=1
         )
         self.interpC = interp1d(self.anneal_schedule["s"], self.anneal_schedule["C (normalized)"], **paramsC)
-        self.interpA = interp1d(self.anneal_schedule["C (normalized)"], self.anneal_schedule["A(s) (GHz)"], **paramsA)
-        self.interpB = interp1d(self.anneal_schedule["C (normalized)"], self.anneal_schedule["B(s) (GHz)"], **paramsB)
+        self.interpA = interp1d(self.anneal_schedule["C (normalized)"], self.anneal_schedule["A(s) (GHz)"], **params)
+        self.interpB = interp1d(self.anneal_schedule["C (normalized)"], self.anneal_schedule["B(s) (GHz)"], **params)
 
     def sanity_check(self):
         # Sanity check: The data and interpolation should match
