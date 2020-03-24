@@ -553,17 +553,16 @@ This notebook is to solve time-dependent Schrodinger equation for quantum anneal
 
 Time dependent Hamiltoniain is
 \begin{align}
-H_{anneal}(t) =  \frac{-A(t)}{2} (\sum_i \sigma^x_i) + \frac{B(t)}{2} (\sum_{i>j} J_{ij} \sigma^z_i \sigma^z_j +\sum_i h_i \sigma^z_i ) 
+H_{anneal}(t) =  \frac{-1}{2} (\sum_i  A_i(t)\sigma^x_i) + \frac{1}{2} (\sum_{i>j} \frac{B_{i}(t)+B_{j}(t)}{2} J_{ij} \sigma^z_i \sigma^z_j +\sum_i B_{i}(t) h_i \sigma^z_i ) ,
 \end{align}
+where $A_i(t)$ and $B_{i}(t)$ are site-dependent annealing schedule functions. The site-dependence taking into account of possible annealing offsets.
 
 The goal is to solve 
 \begin{align}
-i \partial_t \psi(t) = H(t) \psi(t)
+i \partial_t \psi(t) = H(t) \psi(t) .
 \end{align}
-with initial condition
-\begin{align}
-\psi(t=0)= \otimes_i  |\rightarrow \rangle_i
-\end{align}
+
+The initial condition is the ground state of $H(s=0)$. This state is slightly different from the pure transverse  field eigenstate $\psi(t=0)= \otimes_i  |\rightarrow \rangle_i$, because the annealing schedule $B_i(s=0)> 0$.
 
 The time period is set to $[0,1]$. 
 
@@ -572,22 +571,14 @@ The probability to get the ground state at measurement is
 P = | \langle \psi (t)  | gnd \rangle |^2
 \end{align}
 
-For now the offset is included in the following way: 
-\begin{align}
-H_{offset}(t) =  \frac{-A(t)}{2} ( \sum_i c_i(t) \sigma^x_i) + \frac{B(t)}{2} (\sum_{i>j} \frac{c_i(t)+c_j(t)}{2} \sigma^z_i \sigma^z_j +\sum_i  c_i(t) \sigma^z_i ) 
-\end{align}
 
-
-So the total Hamiltonian is $H=H_{anneal}+H_{offset}$.
-
-Users can define functions $c_i(t)$, $A(t)$, $B(t)$ in the code.
 
 \begin{figure}[htb]
 	\centering
-	\includegraphics[width=0.5\textwidth]{annealingschedule.png}
+	%\includegraphics[width=0.5\textwidth]{annealingschedule.png}
 	\includegraphics[width=0.5\textwidth]{probt.png}
 	\caption{
-		\label{tdse} time-dependent Schrodinger equation simulation of quantum annealing.
+		\label{tdse} time-dependent Schrodinger equation simulation of quantum annealing. Annealing time=100 $\mu s$.
 	}
 \end{figure}
 
