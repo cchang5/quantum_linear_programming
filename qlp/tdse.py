@@ -8,27 +8,33 @@ from qlp.mds.mds_qlpdb import QUBO_to_Ising, find_offset, AnnealOffset
 
 # Get DWave anneal schedule
 class s_to_offset:
-    def __init__(self):
-        params = {
+    def __init__(self, fill_value):
+        if fill_value == "extrapolate":
+            fill_valueC = fill_value
+            fill_valueA = fill_value
+            fill_valueB = fill_value
+        elif fill_value == "truncate":
+            fill_valueC = (0, 1)
+            fill_valueA = (10.3214800, 0.0000026)
+            fill_valueB = (0.4927432, 11.8604700)
+        paramsC = {
             "kind": "linear",
-            "fill_value": "extrapolate",
+            "fill_value": fill_valueC,
+        }  # linear makes for more sensible extrapolation.
+        paramsA = {
+            "kind": "linear",
+            "fill_value": fill_valueA,
+        }  # linear makes for more sensible extrapolation.
+        paramsB = {
+            "kind": "linear",
+            "fill_value": fill_valueB,
         }  # linear makes for more sensible extrapolation.
         self.anneal_schedule = read_excel(
             io="./09-1212A-B_DW_2000Q_5_anneal_schedule.xlsx", sheet_name=1
         )
-        self.interpC = interp1d(
-            self.anneal_schedule["s"], self.anneal_schedule["C (normalized)"], **params
-        )
-        normA = (
-            self.anneal_schedule["A(s) (GHz)"]
-            / self.anneal_schedule["A(s) (GHz)"].max()
-        )
-        self.interpA = interp1d(self.anneal_schedule["C (normalized)"], normA, **params)
-        normB = (
-            self.anneal_schedule["B(s) (GHz)"]
-            / self.anneal_schedule["B(s) (GHz)"].max()
-        )
-        self.interpB = interp1d(self.anneal_schedule["C (normalized)"], normB, **params)
+        self.interpC = interp1d(self.anneal_schedule["s"], self.anneal_schedule["C (normalized)"], **paramsC)
+        self.interpA = interp1d(self.anneal_schedule["C (normalized)"], self.anneal_schedule["A(s) (GHz)"], **paramsA)
+        self.interpB = interp1d(self.anneal_schedule["C (normalized)"], self.anneal_schedule["B(s) (GHz)"], **paramsB)
 
     def sanity_check(self):
         # Sanity check: The data and interpolation should match
@@ -63,10 +69,10 @@ class s_to_offset:
 
 
 class AnnealSchedule:
-    def __init__(self, offset, hi, offset_min, offset_range):
+    def __init__(self, offset, hi, offset_min, offset_range, fill_value="extrapolate"):
         AO = AnnealOffset(offset)
         self.offset_list, self.offset_tag = AO.fcn(hi, offset_min, offset_range)
-        self.s2o = s_to_offset()
+        self.s2o = s_to_offset(fill_value)
 
     def C(self, s):
         C = self.s2o.interpC(s)
@@ -129,12 +135,12 @@ class TDSE:
         return fock
 
     def constructIsingH(self, Jij, hi):
-        """Hamiltonian (J_ij is i>j, i.e., lower diagonal"""
+        """Hamiltonian (J_ij is i < j, i.e., upper diagonal"""
         IsingH = np.zeros((2 ** self.n, 2 ** self.n))
         for i in range(self.n):
             IsingH += hi[i] * self.FockZ[i]
             for j in range(i):
-                IsingH += Jij[i, j] * self.FockZZ[i][j]
+                IsingH += Jij[j, i] * self.FockZZ[i][j]
         return IsingH
 
     def constructtransverseH(self, hxi):
@@ -156,3 +162,31 @@ class TDSE:
         )
         H = self.ising["energyscale"] * (-0.5 * AxtransverseH + 0.5 * BxIsingH)
         return H
+
+
+def embed_qubo_example():
+    """This is a NN(2) graph embedded in Chimera"""
+    q = """640 640 2.5
+641 641 6.0
+643 643 6.0
+645 645 -3.0
+647 647 10.5
+640 645 8.0
+641 645 -4.0
+643 645 -4.0
+640 647 -16.0
+641 647 -4.0
+643 647 -4.0"""
+    q = np.array([[float(i) for i in qn.split(" ")] for qn in q.split("\n")])
+    from scipy.sparse import dok_matrix
+
+    remap = {
+        key: idx
+        for idx, key in enumerate(np.unique(np.concatenate((q[:, 0], q[:, 1]), axis=0)))
+    }
+    qubo = dok_matrix((len(np.unique(q[:, 0])), len(np.unique(q[:, 0]))), dtype=float)
+    for qi in q:
+        i = remap[qi[0]]
+        j = remap[qi[1]]
+        qubo[i, j] = qi[2]
+    return qubo
