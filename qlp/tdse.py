@@ -5,28 +5,73 @@ import scipy as sp
 from scipy.integrate import solve_ivp
 from scipy.interpolate import interp1d
 from qlp.mds.mds_qlpdb import QUBO_to_Ising, find_offset, AnnealOffset
+import matplotlib.pyplot as plt
 
 # Get DWave anneal schedule
 class s_to_offset:
-    def __init__(self, fill_value):
+    def __init__(self, fill_value, anneal_curve):
+        if anneal_curve == "linear":
+            # Max Dwave coefficient = 11.8604700 GHz
+            maxB = 11.8604700
+            self.anneal_schedule = {
+                "s": [0, 1],
+                "C (normalized)": [0, 1],
+                "A(s) (GHz)": [maxB, 0],
+                "B(s) (GHz)": [0, maxB],
+            }
+        if anneal_curve == "logistic":
+            maxB = 11.8604700
+            # DWave approx 10 GHz
+            s = np.linspace(0, 1)
+            self.anneal_schedule = {
+                "s": s,
+                "C (normalized)": s,
+                "A(s) (GHz)": maxB / (1.0 + np.exp(10.0 * (s - 0.5))),
+                "B(s) (GHz)": maxB / (1.0 + np.exp(-10.0 * (s - 0.5))),
+            }
+        elif anneal_curve == "dwave":
+            anneal_schedule = read_excel(
+                io="./09-1212A-B_DW_2000Q_5_anneal_schedule.xlsx", sheet_name=1
+            )
+            self.anneal_schedule = {
+                key: anneal_schedule[key].values for key in anneal_schedule.columns
+            }
         if fill_value == "extrapolate":
-            fill_valueC = fill_value
+            fill_valueA = "extrapolate"
+            fill_valueB = "extrapolate"
         elif fill_value == "truncate":
-            fill_valueC = (0, 1)
-        paramsC = {
+            fill_valueA = (
+                self.anneal_schedule["A(s) (GHz)"][0],
+                self.anneal_schedule["A(s) (GHz)"][-1],
+            )
+            fill_valueB = (
+                self.anneal_schedule["B(s) (GHz)"][0],
+                self.anneal_schedule["B(s) (GHz)"][-1],
+            )
+        paramsA = {
             "kind": "linear",
-            "fill_value": fill_valueC,
+            "bounds_error": False,
+            "fill_value": fill_valueA,
         }  # linear makes for more sensible extrapolation.
-        params = {
+        paramsB = {
             "kind": "linear",
-            "fill_value": "extrapolate",
+            "bounds_error": False,
+            "fill_value": fill_valueB,
         }  # linear makes for more sensible extrapolation.
-        self.anneal_schedule = read_excel(
-            io="./09-1212A-B_DW_2000Q_5_anneal_schedule.xlsx", sheet_name=1
+        paramsC = {"kind": "linear", "fill_value": "extrapolate"}
+        self.interpC = interp1d(
+            self.anneal_schedule["s"], self.anneal_schedule["C (normalized)"], **paramsC
         )
-        self.interpC = interp1d(self.anneal_schedule["s"], self.anneal_schedule["C (normalized)"], **paramsC)
-        self.interpA = interp1d(self.anneal_schedule["C (normalized)"], self.anneal_schedule["A(s) (GHz)"], **params)
-        self.interpB = interp1d(self.anneal_schedule["C (normalized)"], self.anneal_schedule["B(s) (GHz)"], **params)
+        self.interpA = interp1d(
+            self.anneal_schedule["C (normalized)"],
+            self.anneal_schedule["A(s) (GHz)"],
+            **paramsA
+        )
+        self.interpB = interp1d(
+            self.anneal_schedule["C (normalized)"],
+            self.anneal_schedule["B(s) (GHz)"],
+            **paramsB
+        )
 
     def sanity_check(self):
         # Sanity check: The data and interpolation should match
@@ -61,10 +106,20 @@ class s_to_offset:
 
 
 class AnnealSchedule:
-    def __init__(self, offset, hi, offset_min, offset_range, fill_value="extrapolate"):
+    def __init__(
+        self,
+        offset,
+        hi_for_offset,
+        offset_min,
+        offset_range,
+        fill_value="extrapolate",
+        anneal_curve="linear",
+    ):
         AO = AnnealOffset(offset)
-        self.offset_list, self.offset_tag = AO.fcn(hi, offset_min, offset_range)
-        self.s2o = s_to_offset(fill_value)
+        self.offset_list, self.offset_tag = AO.fcn(
+            hi_for_offset, offset_min, offset_range
+        )
+        self.s2o = s_to_offset(fill_value, anneal_curve)
 
     def C(self, s):
         C = self.s2o.interpC(s)
@@ -86,7 +141,7 @@ class TDSE:
         self.ising = ising_params
         self.id2, self.sigx, self.sigz = self.pauli()
         self.FockX, self.FockZ, self.FockZZ = self.init_Fock()
-        self.AS = AnnealSchedule(hi=ising_params["hi"], **offset_params)
+        self.AS = AnnealSchedule(**offset_params)
         self.IsingH = self.constructIsingH(
             self.Bij(self.AS.B(1)) * self.ising["Jij"], self.AS.B(1) * self.ising["hi"]
         )
@@ -142,9 +197,12 @@ class TDSE:
         return transverseH
 
     def Bij(self, B):
-        """Annealing Hamiltonian"""
+        """Annealing Hamiltonian
+        https://www.dwavesys.com/sites/default/files/14-1002A_B_tr_Boosting_integer_factorization_via_quantum_annealing_offsets.pdf
+        Equation (1)
+        """
         return np.asarray(
-            [[0.5 * (B[i] + B[j]) for i in range(self.n)] for j in range(self.n)]
+            [[np.sqrt(B[i] * B[j]) for i in range(self.n)] for j in range(self.n)]
         )
 
     def annealingH(self, s):
@@ -152,13 +210,27 @@ class TDSE:
         BxIsingH = self.constructIsingH(
             self.Bij(self.AS.B(s)) * self.ising["Jij"], self.AS.B(s) * self.ising["hi"]
         )
-        H = self.ising["energyscale"] * (-0.5 * AxtransverseH + 0.5 * BxIsingH)
+        H = self.ising["energyscale"] * (-1 * AxtransverseH + BxIsingH)
         return H
 
 
-def embed_qubo_example():
-    """This is a NN(2) graph embedded in Chimera"""
-    q = """640 640 2.5
+def plot_anneal_schedule(tdse, normalized_time):
+    plt.figure()
+    ax = plt.axes()
+    X = np.linspace(*normalized_time)
+    yA = np.array([tdse.AS.A(Xi) for Xi in X])
+    yB = np.array([tdse.AS.B(Xi) for Xi in X])
+    for qubit in range(len(yA[0])):
+        ax.errorbar(x=X, y=yA[:, qubit])
+        ax.errorbar(x=X, y=yB[:, qubit], ls="--")
+    plt.draw()
+    plt.show()
+
+
+def embed_qubo_example(nvertices):
+    if nvertices == 2:
+        """This is a NN(2) graph embedded in Chimera"""
+        q = """640 640 2.5
 641 641 6.0
 643 643 6.0
 645 645 -3.0
@@ -169,6 +241,9 @@ def embed_qubo_example():
 640 647 -16.0
 641 647 -4.0
 643 647 -4.0"""
+        embedding = {0: [645], 1: [647, 640], 2: [641], 3: [643]}
+    else:
+        raise ValueError("No embedded graph defined.")
     q = np.array([[float(i) for i in qn.split(" ")] for qn in q.split("\n")])
     from scipy.sparse import dok_matrix
 
@@ -181,4 +256,4 @@ def embed_qubo_example():
         i = remap[qi[0]]
         j = remap[qi[1]]
         qubo[i, j] = qi[2]
-    return qubo
+    return qubo, embedding
