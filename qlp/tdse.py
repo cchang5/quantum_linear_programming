@@ -1,11 +1,12 @@
 # Library to solve the time dependent schrodinger equation in the many-body Fock space.
 from pandas import read_excel
 import numpy as np
-import scipy as sp
+from numpy.linalg import eigh
 from scipy.integrate import solve_ivp
 from scipy.interpolate import interp1d
-from qlp.mds.mds_qlpdb import QUBO_to_Ising, find_offset, AnnealOffset
 import matplotlib.pyplot as plt
+
+from qlp.mds.mds_qlpdb import AnnealOffset
 
 # Get DWave anneal schedule
 class s_to_offset:
@@ -65,12 +66,12 @@ class s_to_offset:
         self.interpA = interp1d(
             self.anneal_schedule["C (normalized)"],
             self.anneal_schedule["A(s) (GHz)"],
-            **paramsA
+            **paramsA,
         )
         self.interpB = interp1d(
             self.anneal_schedule["C (normalized)"],
             self.anneal_schedule["B(s) (GHz)"],
-            **paramsB
+            **paramsB,
         )
 
     def sanity_check(self):
@@ -114,6 +115,7 @@ class AnnealSchedule:
         offset_range,
         fill_value="extrapolate",
         anneal_curve="linear",
+        **kwargs,
     ):
         AO = AnnealOffset(offset)
         self.offset_list, self.offset_tag = AO.fcn(
@@ -136,9 +138,11 @@ class AnnealSchedule:
 
 
 class TDSE:
-    def __init__(self, n, ising_params, offset_params):
+    def __init__(self, n, ising_params, offset_params, solver_params):
         self.n = n
         self.ising = ising_params
+        self.offset_params = offset_params
+        self.solver_params = solver_params
         self.id2, self.sigx, self.sigz = self.pauli()
         self.FockX, self.FockZ, self.FockZZ = self.init_Fock()
         self.AS = AnnealSchedule(**offset_params)
@@ -146,7 +150,7 @@ class TDSE:
             self.Bij(self.AS.B(1)) * self.ising["Jij"], self.AS.B(1) * self.ising["hi"]
         )
 
-    def __call__(self, t, y):
+    def tdse(self, t, y):
         """Define time-dependent Schrodinger equation"""
         f = -1j * np.dot(self.annealingH(t), y)
         return f
@@ -161,6 +165,40 @@ class TDSE:
         sigz[0, 0] = 1.0
         sigz[1, 1] = -1.0
         return id2, sigx, sigz
+
+    def ground_state_degeneracy(self, H, degeneracy_tol=1e-6, debug=False):
+        eigval, eigv = eigh(H)
+        mask = [abs((ei - eigval[0]) / eigval[0]) < degeneracy_tol for ei in eigval]
+        gs_idx = np.arange(len(eigval))[mask]
+        if debug:
+            print(
+                f"Num. degenerate states @ s={self.offset_params['normalized_time'][1]}: {len(gs_idx)}"
+            )
+        return gs_idx, eigval, eigv
+
+    def calculate_overlap(self, psi1, psi2, degen_idx):
+        overlap = sum(
+            np.absolute([np.dot(np.conj(psi1[:, idx]), psi2) for idx in degen_idx]) ** 2
+        )
+        return overlap
+
+    def init_wavefunction(self, type="transverse"):
+        if type == "true":
+            # true ground state
+            eigvalue, eigvector = eigh(
+                self.annealingH(s=self.offset_params["normalized_time"][0])
+            )
+        elif type == "transverse":
+            # DWave initial wave function
+            eigvalue, eigvector = eigh(
+                -1
+                * self.ising["energyscale"]
+                * self.constructtransverseH(self.AS.A(0) * np.ones(self.n))
+            )
+        else:
+            raise TypeError("Undefined initial wavefunction.")
+        y1 = (1.0 + 0.0j) * eigvector[:, 0]
+        return y1
 
     def init_Fock(self):
         """Finish all the operators here and store them"""
@@ -213,6 +251,33 @@ class TDSE:
         H = self.ising["energyscale"] * (-1 * AxtransverseH + BxIsingH)
         return H
 
+    def solve_pure(self, y1, ngrid=11, debug=False):
+        start = self.offset_params["normalized_time"][0]
+        end = self.offset_params["normalized_time"][1]
+        interval = np.linspace(start, end, ngrid)
+
+        sol = sol_interface(y1)
+
+        for jj in range(ngrid - 1):
+            y1 = y1 / (np.sqrt(np.absolute(np.dot(np.conj(y1), y1))))
+            tempsol = solve_ivp(
+                self.tdse, [interval[jj], interval[jj + 1]], y1, **self.solver_params
+            )
+            y1 = tempsol.y[:, tempsol.t.size - 1]
+            sol.t = np.hstack((sol.t, tempsol.t))
+            sol.y = np.hstack((sol.y, tempsol.y))
+
+        if debug:
+            print(
+                "final total prob",
+                (np.absolute(np.dot(np.conj(sol.y[:, -1]), sol.y[:, -1]))) ** 2,
+            )
+        return sol
+
+class sol_interface():
+    def __init__(self, y1):
+        self.t = np.zeros((0))
+        self.y = np.zeros((y1.size, 0))
 
 def plot_anneal_schedule(tdse, normalized_time):
     plt.figure()
