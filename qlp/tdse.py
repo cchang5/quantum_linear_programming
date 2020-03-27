@@ -182,7 +182,7 @@ class TDSE:
         )
         return overlap
 
-    def init_wavefunction(self, type="transverse"):
+    def init_eigen(self, type):
         if type == "true":
             # true ground state
             eigvalue, eigvector = eigh(
@@ -197,8 +197,37 @@ class TDSE:
             )
         else:
             raise TypeError("Undefined initial wavefunction.")
+        return eigvalue, eigvector
+
+    def init_wavefunction(self, type="transverse"):
+        eigvalue, eigvector = self.init_eigen(type)
         y1 = (1.0 + 0.0j) * eigvector[:, 0]
         return y1
+
+    def init_densitymatrix(self, temp=13e-3, type="transverse", debug=False):
+        """Initial density matrix
+        temperature in kelvins
+        """
+        kb = 8.617333262145e-5  # Boltzmann constant [eV / K]
+        h = 4.135667696e-15  # Plank constant [eV s] (no 2 pi)
+        one = 1e-9  # GHz s
+        beta = 1 / (temp * kb / h * one)  # inverse temperature [h/GHz]
+
+        # construct initial density matrix
+        eigvalue, eigvector = self.init_eigen(type)
+
+        dE = eigvalue[:] - eigvalue[0]
+        pr = np.exp(-beta * dE)
+        pr = pr / sum(pr)
+        if debug:
+            print("dE", dE)
+            print("pr", pr, "total", sum(pr))
+
+        rho = np.zeros((eigvalue.size * eigvalue.size))
+        for i in range(eigvalue.size):
+            rho = rho + (pr[i]) * np.kron(eigvector[:, i], np.conj(eigvector[:, i]))
+        rho = (1.0 + 0.0j) * rho
+        return rho
 
     def init_Fock(self):
         """Finish all the operators here and store them"""
@@ -256,7 +285,7 @@ class TDSE:
         end = self.offset_params["normalized_time"][1]
         interval = np.linspace(start, end, ngrid)
 
-        sol = sol_interface(y1)
+        sol = pure_sol_interface(y1)
 
         for jj in range(ngrid - 1):
             y1 = y1 / (np.sqrt(np.absolute(np.dot(np.conj(y1), y1))))
@@ -274,7 +303,22 @@ class TDSE:
             )
         return sol
 
-class sol_interface():
+    def annealingH_densitymatrix(self, s):
+        Fockid = np.identity(self.Focksize)
+        return np.kron(self.annealingH(s), Fockid) - np.kron(Fockid, self.annealingH(s))
+
+    def f_densitymatrix(self, t, y):
+        """Define time-dependent Schrodinger equation for density matrix"""
+        f = -1j * np.dot(self.annealingH_densitymatrix(t), y)
+        return f
+
+    def solve_mixed(self, rho):
+        self.Focksize = int(np.sqrt(len(rho)))
+        sol = solve_ivp(self.f_densitymatrix, self.offset_params["normalized_time"], rho)
+        return sol
+
+
+class pure_sol_interface:
     def __init__(self, y1):
         self.t = np.zeros((0))
         self.y = np.zeros((y1.size, 0))
