@@ -549,15 +549,15 @@ In particular
 \section{Time-dependent simulation of quantum annealing}
 
 I tried to follow DWave's convention as much as I can.
-This notebook is to solve time-dependent Schrodinger equation for quantum annealing Hamiltonian. Then use final wavefunction to check the overlap with the Ising ground state from exact diagonalization. The absolute square of the overlap is the probability that the measurement result gives the solution. This is like what Nishimori did in his original paper.
+This notebook is to solve for time evolution dynamics of quantum annealing Hamiltonian. Then use final wavefunction to check the overlap with the Ising ground state from exact diagonalization. The absolute square of the overlap is the probability that the measurement result gives the solution. This is like what Nishimori did in his original paper.
 
 Time dependent Hamiltoniain is
 \begin{align}
-H_{anneal}(t) =  \frac{-1}{2} (\sum_i  A_i(t)\sigma^x_i) + \frac{1}{2} (\sum_{i>j} \frac{B_{i}(t)+B_{j}(t)}{2} J_{ij} \sigma^z_i \sigma^z_j +\sum_i B_{i}(t) h_i \sigma^z_i ) ,
+H_{anneal}(t) =  - \sum_i  A_i(t)\sigma^x_i +  \sum_{i>j} \sqrt{B_{i}(t)B_{j}(t)} J_{ij} \sigma^z_i \sigma^z_j +\sum_i B_{i}(t) h_i \sigma^z_i  ,
 \end{align}
 where $A_i(t)$ and $B_{i}(t)$ are site-dependent annealing schedule functions. The site-dependence taking into account of possible annealing offsets.
 
-The goal is to solve 
+The goal is to solve the time-dependent Schrodinger equation 
 \begin{align}
 i \partial_t \psi(t) = H(t) \psi(t) .
 \end{align}
@@ -568,9 +568,9 @@ The time period is set to $[0,1]$.
 
 The probability to get the ground state at measurement is
 \begin{align}
-P = | \langle \psi (t)  | gnd \rangle |^2
+P =\sum_i | \langle \psi (t)  | \mbox{gnd}_i \rangle |^2 ,
 \end{align}
-
+where the summation runs over degenerated ground states.
 
 
 \begin{figure}[htb]
@@ -582,5 +582,21 @@ P = | \langle \psi (t)  | gnd \rangle |^2
 	}
 \end{figure}
 
+
+For mixed state simulation the initial density matrix is the Gibbs canonical ensemble
+\begin{equation}
+\rho (0) =  \frac{e^{-\beta H(0)}}{\mbox{Tr}[e^{-\beta H(0)}]} .
+\end{equation}
+The time evolution of density matrix is governed by von Neumann equation
+\begin{align}
+i \partial_t \rho (t) = [H(t) , \rho(t)] ,
+\end{align}
+where $[,]$ denotes the Lie bracket.
+
+The probability to get the ground state at measurement is
+\begin{align}
+P =  \mbox{Tr} \{  \rho (t) \pi_{\mbox{gnd}} \}  ,
+\end{align}
+where the projection operator onto the ground state subspace is $\pi_{\mbox{gnd}}=\sum_i |\mbox{gnd}_i\rangle \langle \mbox{gnd}_i| $.
 
 \end{document}
