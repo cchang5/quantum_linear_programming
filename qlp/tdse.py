@@ -312,9 +312,20 @@ class TDSE:
         f = -1j * np.dot(self.annealingH_densitymatrix(t), y)
         return f
 
+    def f_densitymatrix2(self, t, y):
+        """Define time-dependent Schrodinger equation for density matrix"""
+        #f = -1j * np.dot(self.annealingH_densitymatrix(t), y)
+        #print('waht', type(self.Focksize))
+        #print(self.Focksize)
+        ymat=y.reshape((self.Focksize,self.Focksize))
+        H=self.annealingH(t)
+        ymat= -1j *( np.dot(H, ymat)-np.dot(ymat, H))
+        f=ymat.reshape(self.Focksize**2)
+        return f
+
     def solve_mixed(self, rho):
         self.Focksize = int(np.sqrt(len(rho)))
-        sol = solve_ivp(self.f_densitymatrix, self.offset_params["normalized_time"], rho)
+        sol = solve_ivp(self.f_densitymatrix2, self.offset_params["normalized_time"], rho)
         return sol
 
 
