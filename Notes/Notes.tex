@@ -599,4 +599,28 @@ P =  \mbox{Tr} \{  \rho (t) \pi_{\mbox{gnd}} \}  ,
 \end{align}
 where the projection operator onto the ground state subspace is $\pi_{\mbox{gnd}}=\sum_i |\mbox{gnd}_i\rangle \langle \mbox{gnd}_i| $.
 
+\subsection{unit conversion}
+
+So this part is typed up just to fix units and $2\pi$ not for correct math, please check if this makes sense...
+
+
+We have time $t \in [0,T]$ where $T=N_T \times 10^{-6} sec$ is annealing time with unit of micro sec. $N_T$ is just dimensionless number. The time is mapped to the dimensionless schedule $s\in [0,1]$ through $s=t/T$.
+
+Now the equation we are solving is
+\begin{equation}
+ i \hbar \frac{d}{dt}\psi = H \psi .
+\end{equation}
+
+The Hamiltonian is $H=N_H \times GHz \times h =N_H \times 10^9  \times h/( sec)$ where $N_H$ is the dimensionless numerical value. Use
+\begin{equation}
+\frac{d}{dt}\psi = \frac{d}{Tds}\psi .
+\end{equation}
+So the equation is
+\begin{align}
+  \frac{d}{ds}\psi  &=  -i \frac{H\times T}{\hbar} \psi  &\\
+   &=  -i \frac{N_H \times 10^9 \times h \times N_T \times 10^{-6} sec \times 2\pi }{h\times sec  } \psi &  \\
+  &= -i N_H \times N_T \times 10^{3} \times (2\pi) \psi  &.
+\end{align}
+and this is why the factor $10^{3} \times (2\pi)$.
+
 \end{document}
