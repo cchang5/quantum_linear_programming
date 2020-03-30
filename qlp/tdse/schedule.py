@@ -154,7 +154,7 @@ class AnnealSchedule:
     """Class for obtaining anneal parameters for given anneal schedule parameters.
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=W0613
         self,
         offset,
         hi_for_offset,
