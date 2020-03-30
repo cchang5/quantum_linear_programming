@@ -2,11 +2,15 @@
 
 """Functions and classes which define TDSE anneal schedule setups
 """
-from numpy import linspace, exp
+from typing import Optional
+
+from numpy import linspace, exp, array
 from scipy.interpolate import interp1d
 from pandas import read_excel
 
-from matplotlib.pyplot import subplots, draw, show
+from matplotlib.pyplot import subplots, draw, show, savefig
+
+from qlp.mds.mds_qlpdb import AnnealOffset
 
 
 class s_to_offset:
@@ -141,5 +145,69 @@ class s_to_offset:
             / self.anneal_schedule["B(s) (GHz)"].max(),
         )
         ax.errorbar(x=x, y=self.interpB(self.interpC(x)))
+        draw()
+        show()
+
+
+class AnnealSchedule:
+    def __init__(
+        self,
+        offset,
+        hi_for_offset,
+        offset_min,
+        offset_range,
+        fill_value="extrapolate",
+        anneal_curve="linear",
+        **kwargs,
+    ):
+        AO = AnnealOffset(offset)
+        self.offset_list, self.offset_tag = AO.fcn(
+            hi_for_offset, offset_min, offset_range
+        )
+        self.s2o = s_to_offset(fill_value, anneal_curve)
+
+    def C(self, s):
+        C = self.s2o.interpC(s)
+        C_offset = C + self.offset_list
+        return C_offset
+
+    def A(self, s):
+        C = self.C(s)
+        return self.s2o.interpA(C)
+
+    def B(self, s):
+        C = self.C(s)
+        return self.s2o.interpB(C)
+
+    def plot(
+        self,
+        normalized_time: float,
+        ax: Optional["Axes"] = None,
+        outfile: Optional[str] = "./coefficient.pdf",
+        **kwargs,
+    ):
+        """Plots the anneal schedule for A(s) and B(s).
+
+        Arguments:
+            normalized_time: End value for s
+            ax: Axes to plot in. If not given, creates new one.
+            outfile: Store result to file if given.
+            kwargs: For errorbar plot.
+            """
+        if ax is None:
+            _, ax = subplots()
+
+        X = linspace(*normalized_time)
+        yA = array([self.A(Xi) for Xi in X])
+        yB = array([self.B(Xi) for Xi in X])
+        for qubit in range(len(yA[0])):
+            ax.errorbar(x=X, y=yA[:, qubit], **kwargs)
+            ax.errorbar(x=X, y=yB[:, qubit], ls="--", **kwargs)
+        ax.set_xlabel("normalized time")
+        ax.set_ylabel("energy/h [GHz]")
+
+        if outfile is not None:
+            savefig(outfile, bbox_inches="tight")
+
         draw()
         show()

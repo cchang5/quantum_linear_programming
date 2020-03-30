@@ -11,40 +11,7 @@ from pandas import read_excel
 
 import matplotlib.pyplot as plt
 
-from qlp.mds.mds_qlpdb import AnnealOffset
-
-from qlp.tdse.schedule import s_to_offset
-
-
-class AnnealSchedule:
-    def __init__(
-        self,
-        offset,
-        hi_for_offset,
-        offset_min,
-        offset_range,
-        fill_value="extrapolate",
-        anneal_curve="linear",
-        **kwargs,
-    ):
-        AO = AnnealOffset(offset)
-        self.offset_list, self.offset_tag = AO.fcn(
-            hi_for_offset, offset_min, offset_range
-        )
-        self.s2o = s_to_offset(fill_value, anneal_curve)
-
-    def C(self, s):
-        C = self.s2o.interpC(s)
-        C_offset = C + self.offset_list
-        return C_offset
-
-    def A(self, s):
-        C = self.C(s)
-        return self.s2o.interpA(C)
-
-    def B(self, s):
-        C = self.C(s)
-        return self.s2o.interpB(C)
+from qlp.tdse.schedule import AnnealSchedule
 
 
 class TDSE:
@@ -245,22 +212,6 @@ class pure_sol_interface:
     def __init__(self, y1):
         self.t = np.zeros((0))
         self.y = np.zeros((y1.size, 0))
-
-
-def plot_anneal_schedule(tdse, normalized_time):
-    plt.figure()
-    ax = plt.axes()
-    X = np.linspace(*normalized_time)
-    yA = np.array([tdse.AS.A(Xi) for Xi in X])
-    yB = np.array([tdse.AS.B(Xi) for Xi in X])
-    for qubit in range(len(yA[0])):
-        ax.errorbar(x=X, y=yA[:, qubit])
-        ax.errorbar(x=X, y=yB[:, qubit], ls="--")
-    ax.set_xlabel("normalized time")
-    ax.set_ylabel("energy/h [GHz]")
-    plt.savefig("./coefficient.pdf")
-    plt.draw()
-    plt.show()
 
 
 def embed_qubo_example(nvertices):
