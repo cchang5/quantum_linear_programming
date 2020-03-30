@@ -314,18 +314,20 @@ class TDSE:
 
     def f_densitymatrix2(self, t, y):
         """Define time-dependent Schrodinger equation for density matrix"""
-        #f = -1j * np.dot(self.annealingH_densitymatrix(t), y)
-        #print('waht', type(self.Focksize))
-        #print(self.Focksize)
-        ymat=y.reshape((self.Focksize,self.Focksize))
-        H=self.annealingH(t)
-        ymat= -1j *( np.dot(H, ymat)-np.dot(ymat, H))
-        f=ymat.reshape(self.Focksize**2)
+        # f = -1j * np.dot(self.annealingH_densitymatrix(t), y)
+        # print('waht', type(self.Focksize))
+        # print(self.Focksize)
+        ymat = y.reshape((self.Focksize, self.Focksize))
+        H = self.annealingH(t)
+        ymat = -1j * (np.dot(H, ymat) - np.dot(ymat, H))
+        f = ymat.reshape(self.Focksize ** 2)
         return f
 
     def solve_mixed(self, rho):
         self.Focksize = int(np.sqrt(len(rho)))
-        sol = solve_ivp(self.f_densitymatrix2, self.offset_params["normalized_time"], rho)
+        sol = solve_ivp(
+            self.f_densitymatrix2, self.offset_params["normalized_time"], rho
+        )
         return sol
 
 
@@ -333,6 +335,7 @@ class pure_sol_interface:
     def __init__(self, y1):
         self.t = np.zeros((0))
         self.y = np.zeros((y1.size, 0))
+
 
 def plot_anneal_schedule(tdse, normalized_time):
     plt.figure()
