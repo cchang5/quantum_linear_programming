@@ -3,6 +3,9 @@
 
 This module contains the core computations
 """
+from typing import Dict, Any
+
+from numpy import ndarray
 import numpy as np
 from numpy.linalg import eigh
 
@@ -28,7 +31,38 @@ ID2, SIG_X, SIG_Z = _set_up_pauli()
 
 
 class TDSE:
-    def __init__(self, n, ising_params, offset_params, solver_params):
+    """Time dependent Schrödinger equation solver class
+
+    Usage:
+    ```
+    tdse = TDSE(n, ising_params, offset_params, solver_params)
+
+    # Get thermodynamical state density
+    temperature=15e-3
+    initial_wavefunction = "true"
+    rho = tdse.init_densitymatrix(temperature, initial_wavefunction)
+
+    # Compute anneal
+    sol_densitymatrix = tdse.solve_mixed(rho)
+    ```
+    """
+
+    def __init__(
+        self,
+        n: int,
+        ising_params: Dict[str, Any],
+        offset_params: Dict[str, Any],
+        solver_params: Dict[str, Any],
+    ):
+        """Init the class with
+
+        Arguments:
+            n: Number of qubits
+            ising_params: Parameters for the ising model, e.g., keys are
+                {"Jij", "hi", "c", "energyscale"}.
+            offset_params: Parameters for AnnealSchedule
+            solver_params: Parameters for solve_ivp
+        """
         self.n = n
         self.ising = ising_params
         self.offset_params = offset_params
@@ -40,10 +74,9 @@ class TDSE:
             self.Bij(self.AS.B(1)) * self.ising["Jij"], self.AS.B(1) * self.ising["hi"]
         )
 
-    def tdse(self, t, y):
-        """Define time-dependent Schrodinger equation"""
-        f = -1j * np.dot(self.annealingH(t), y)
-        return f
+    def apply_H(self, t, psi: ndarray) -> ndarray:
+        """Computes `i H(t) psi`"""
+        return -1j * np.dot(self.annealingH(t), psi)
 
     def ground_state_degeneracy(self, H, degeneracy_tol=1e-6, debug=False):
         eigval, eigv = eigh(H)
@@ -168,7 +201,7 @@ class TDSE:
         for jj in range(ngrid - 1):
             y1 = y1 / (np.sqrt(np.absolute(np.dot(np.conj(y1), y1))))
             tempsol = solve_ivp(
-                self.tdse, [interval[jj], interval[jj + 1]], y1, **self.solver_params
+                self.apply_H, [interval[jj], interval[jj + 1]], y1, **self.solver_params
             )
             y1 = tempsol.y[:, tempsol.t.size - 1]
             sol.t = np.hstack((sol.t, tempsol.t))
