@@ -6,3 +6,4 @@ tqdm
 scipy
 seaborn
 networkx
+xlrd
