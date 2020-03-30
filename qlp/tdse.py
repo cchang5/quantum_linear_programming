@@ -15,25 +15,54 @@ from qlp.mds.mds_qlpdb import AnnealOffset
 
 # Get DWave anneal schedule
 class s_to_offset:
-    def __init__(self, fill_value, anneal_curve):
+    """Class which provides anneal curves for A(s), B(s), C(s) over normalized
+    anneal time s in GHz.
+
+    Attributes:
+        maxB: float
+            Max Dwave magnet field coefficient in GHz.
+        anneal_schedule: Dict[str, List[int, int]]
+            Boundaries for anneal parameters.
+        interpA: np.ndarray
+            Interpolated curve for C(s) in GHz.
+        interpB: np.ndarray
+            Interpolated curve for C(s) in GHz.
+        interpC: np.ndarray
+            Interpolated curve for C(s) in GHz.
+    """
+
+    maxB = 11.8604700
+
+    def __init__(self, fill_value: str, anneal_curve: str):
+        """Allocates offset curves A(s), B(s), C(s) over normalized anneal time s in GHz.
+
+        Arguments:
+            fill_value: If normalized time (s) is extended beyond (0, 1),
+                this option decides whether to extrapolate the anneal schedule,
+                or truncate it at the nearest value.
+                Options are "extrapolate" or "truncate".
+            anneal_curve: Curve normalized time follows.
+                Options are "linear", "logistic" or "dwave" (reads in excel file).
+
+        Raises:
+            KeyError: If one of the inputs is not reckognized
+        """
         if anneal_curve == "linear":
-            # Max Dwave coefficient = 11.8604700 GHz
-            maxB = 11.8604700
+
             self.anneal_schedule = {
                 "s": [0, 1],
                 "C (normalized)": [0, 1],
-                "A(s) (GHz)": [maxB, 0],
-                "B(s) (GHz)": [0, maxB],
+                "A(s) (GHz)": [self.maxB, 0],
+                "B(s) (GHz)": [0, self.maxB],
             }
-        if anneal_curve == "logistic":
-            maxB = 11.8604700
+        elif anneal_curve == "logistic":
             # DWave approx 10 GHz
             s = np.linspace(0, 1)
             self.anneal_schedule = {
                 "s": s,
                 "C (normalized)": s,
-                "A(s) (GHz)": maxB / (1.0 + np.exp(10.0 * (s - 0.5))),
-                "B(s) (GHz)": maxB / (1.0 + np.exp(-10.0 * (s - 0.5))),
+                "A(s) (GHz)": self.maxB / (1.0 + np.exp(10.0 * (s - 0.5))),
+                "B(s) (GHz)": self.maxB / (1.0 + np.exp(-10.0 * (s - 0.5))),
             }
         elif anneal_curve == "dwave":
             anneal_schedule = read_excel(
@@ -42,6 +71,9 @@ class s_to_offset:
             self.anneal_schedule = {
                 key: anneal_schedule[key].values for key in anneal_schedule.columns
             }
+        else:
+            raise KeyError(f"Anneal curve {anneal_curve} not reckognized")
+
         if fill_value == "extrapolate":
             fill_valueA = "extrapolate"
             fill_valueB = "extrapolate"
@@ -54,6 +86,9 @@ class s_to_offset:
                 self.anneal_schedule["B(s) (GHz)"][0],
                 self.anneal_schedule["B(s) (GHz)"][-1],
             )
+        else:
+            raise KeyError(f"Fill value {fill_value} not reckognized")
+
         paramsA = {
             "kind": "linear",
             "bounds_error": False,
@@ -80,10 +115,15 @@ class s_to_offset:
         )
 
     def sanity_check(self):
-        # Sanity check: The data and interpolation should match
+        """Plots anneal schedules for A, B and C
+
+        Sanity check: The data and interpolation should match
+
+        Todo:
+            Provide better naming for method.
+        """
         # Interpolate C
-        plt.figure()
-        ax = plt.axes()
+        _, ax = plt.subplots()
         x = np.linspace(0, 1)
         ax.errorbar(
             x=self.anneal_schedule["s"], y=self.anneal_schedule["C (normalized)"]
