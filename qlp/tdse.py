@@ -1,9 +1,13 @@
-# Library to solve the time dependent schrodinger equation in the many-body Fock space.
-from pandas import read_excel
+"""Library to solve the time dependent schrodinger equation in the many-body Fock space.
+"""
 import numpy as np
 from numpy.linalg import eigh
+
 from scipy.integrate import solve_ivp
 from scipy.interpolate import interp1d
+
+from pandas import read_excel
+
 import matplotlib.pyplot as plt
 
 from qlp.mds.mds_qlpdb import AnnealOffset
