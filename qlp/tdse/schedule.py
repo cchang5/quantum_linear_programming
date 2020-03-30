@@ -1,10 +1,10 @@
-# pylint: disable=C0103, R0903
+# pylint: disable=C0103, R0903, R0913
 
 """Functions and classes which define TDSE anneal schedule setups
 """
 from typing import Optional
 
-from numpy import linspace, exp, array
+from numpy import linspace, exp, array, ndarray
 from scipy.interpolate import interp1d
 from pandas import read_excel
 
@@ -14,7 +14,8 @@ from qlp.mds.mds_qlpdb import AnnealOffset
 
 
 class s_to_offset:
-    """Class which provides anneal curves for A(s), B(s), C(s) over normalized
+    """Class which provides anneal curves for A(s) (original Hamiltonian coefficient),
+    B(s) (final Hamiltonian coefficient) and C(s) (anneal time) over normalized
     anneal time s in GHz.
 
     Attributes:
@@ -23,11 +24,11 @@ class s_to_offset:
         anneal_schedule: Dict[str, List[int, int]]
             Boundaries for anneal parameters.
         interpA: np.ndarray
-            Interpolated curve for C(s) in GHz.
+            Interpolated curve for A(s) in GHz.
         interpB: np.ndarray
-            Interpolated curve for C(s) in GHz.
+            Interpolated curve for B(s) in GHz.
         interpC: np.ndarray
-            Interpolated curve for C(s) in GHz.
+            Interpolated curve for C(s).
     """
 
     maxB = 11.8604700
@@ -150,32 +151,49 @@ class s_to_offset:
 
 
 class AnnealSchedule:
+    """Class for obtaining anneal parameters for given anneal schedule parameters.
+    """
+
     def __init__(
         self,
         offset,
         hi_for_offset,
         offset_min,
         offset_range,
-        fill_value="extrapolate",
-        anneal_curve="linear",
+        fill_value: str = "extrapolate",
+        anneal_curve: str = "linear",
         **kwargs,
     ):
+        """Initializes offset curves
+
+        Arguments:
+            offset, hi_for_offset, offset_min, offset_range: Parameters for AnnealOffset
+            fill_value, anneal_curve: Parameters for s_to_offset
+        """
         AO = AnnealOffset(offset)
         self.offset_list, self.offset_tag = AO.fcn(
             hi_for_offset, offset_min, offset_range
         )
         self.s2o = s_to_offset(fill_value, anneal_curve)
 
-    def C(self, s):
+    def C(self, s: float) -> ndarray:
+        """Returns anneal time for given normalized time including offset
+        """
         C = self.s2o.interpC(s)
         C_offset = C + self.offset_list
         return C_offset
 
-    def A(self, s):
+    def A(self, s: float) -> ndarray:
+        """Converts normalized anneal time to anneal time and returns corresponding
+        value for initial Hamiltonian parameter.
+        """
         C = self.C(s)
         return self.s2o.interpA(C)
 
-    def B(self, s):
+    def B(self, s: float) -> ndarray:
+        """Converts normalized anneal time to anneal time and returns corresponding
+        value for final Hamiltonian parameter.
+        """
         C = self.C(s)
         return self.s2o.interpB(C)
 
