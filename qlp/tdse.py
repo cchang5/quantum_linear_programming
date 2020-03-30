@@ -1,3 +1,4 @@
+# pylint: disable=C0103, R0903
 """Library to solve the time dependent schrodinger equation in the many-body Fock space.
 """
 import numpy as np
