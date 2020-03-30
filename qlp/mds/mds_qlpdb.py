@@ -13,6 +13,8 @@ import yaml
 
 
 class AnnealOffset:
+    """https://docs.dwavesys.com/docs/latest/c_qpu_0.html#anneal-offsets
+    """
     def __init__(self, tag):
         self.tag = tag
 

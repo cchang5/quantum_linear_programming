@@ -5,6 +5,7 @@
 \usepackage{xcolor}
 \usepackage{graphicx}
 \graphicspath{ {./figs/} }
+\usepackage{hyperref}
 
 \newcommand{\argmax}[1]{\text{arg}\hspace{-2pt}\max\limits_{#1}}
 \newcommand{\bvec}[1]{\boldsymbol{#1}}
@@ -553,6 +554,7 @@ This notebook is to solve for time evolution dynamics of quantum annealing Hamil
 
 Time dependent Hamiltoniain is
 \begin{align}
+\label{eq:annealH}
 H_{anneal}(t) =  - \sum_i  A_i(t)\sigma^x_i +  \sum_{i>j} \sqrt{B_{i}(t)B_{j}(t)} J_{ij} \sigma^z_i \sigma^z_j +\sum_i B_{i}(t) h_i \sigma^z_i  ,
 \end{align}
 where $A_i(t)$ and $B_{i}(t)$ are site-dependent annealing schedule functions. The site-dependence taking into account of possible annealing offsets.
@@ -611,16 +613,88 @@ Now the equation we are solving is
  i \hbar \frac{d}{dt}\psi = H \psi .
 \end{equation}
 
-The Hamiltonian is $H=N_H \times GHz \times h =N_H \times 10^9  \times h/( sec)$ where $N_H$ is the dimensionless numerical value. Use
+The dimension of the Hamiltonian is $[H]=N_H \times GHz \times h =N_H \times 10^9  \times h/( sec)$ where $N_H$ is the dimensionless numerical value. See 
+\href{https://docs.dwavesys.com/docs/latest/c_qpu_0.html#quantum-annealing-with-ising-spins-in-a-transverse-field}{DWave documentation} Fig. 72. The Hamiltonian of Eq.~(\ref{eq:annealH}) only has units in $A(s)$ and $B(s)$ and are given by DWave as GHz, or $\mathrm{energy}/h$ and not $\hbar$.
+Use
 \begin{equation}
 \frac{d}{dt}\psi = \frac{d}{Tds}\psi .
 \end{equation}
 So the equation is
 \begin{align}
   \frac{d}{ds}\psi  &=  -i \frac{H\times T}{\hbar} \psi  &\\
-   &=  -i \frac{N_H \times 10^9 \times h \times N_T \times 10^{-6} sec \times 2\pi }{h\times sec  } \psi &  \\
+   &=  -i \frac{N_H \times 10^9 \times h \times N_T \times 10^{-6} sec}{ sec  }\frac{2\pi}{h} \psi &  \\
   &= -i N_H \times N_T \times 10^{3} \times (2\pi) \psi  &.
 \end{align}
 and this is why the factor $10^{3} \times (2\pi)$.
+
+\subsection{Simulating DWave}
+We allow the ability to define arbitrary annealing schedules as shown in Fig.~\ref{fig:anneal_schedules}. We also allow for per qubit offsets as suggested by Eq.~(\ref{eq:annealH}), with an example annealing schedule shown in Fig.~\ref{fig:anneal_offset} as well. For DWave's implementation, anneal offset yields systematic errors because the qubits no longer all start and end with the same coefficients. For our simulation, we allow for extended anneal schedules, which allow all qubits to undergo the full annealing process, yielding a true temporal offset for inhomogeneous driving fields.
+
+At the level of the scripts the problem that we solve are MDS for graph problems. In there, there is an option
+\begin{itemize}
+	\item \texttt{embed}: This embeds the QUBO into a chimera graph. Currently there is only an explicit result from G(2). I will in the future actually embed with DWave minorminer.
+\end{itemize}
+
+The options for controlling the annealing time and annealing schedule are:
+\begin{itemize}
+	\item \texttt{annealing\_time}: annealing time as defined from $s=[0, 1]$ in microseconds
+	\item \texttt{normalized\_time}: this is $s$. Set it to $<0$ or $>1$ if offset is used to allow for a complete annealing schedule. The total time in microseconds will increase accordingly.
+	\item \texttt{offset}: This is a string argument to the \texttt{fcn} method of the class \texttt{AnnealOffset} in \texttt{qlp.mds.mds\_qlpdb}. Define your own anneal offset routine here or call an existing one. E-mail me if you need more explanation.
+	\item \texttt{fill\_value}: If \texttt{normalized\_time} is extended beyond (0, 1), this option decides whether to extrapolate the anneal schedule, or truncate it at the nearest value.
+	\item \texttt{offset\_min}: Argument to \texttt{AnnealOffset} class.
+	\item \texttt{offset\_range}: Argument to \texttt{AnnealOffset} class.
+\end{itemize}
+
+\begin{figure}[htb]
+	\centering
+	\includegraphics[width=0.49\textwidth]{coefficient_dwave.pdf}
+	\includegraphics[width=0.49\textwidth]{coefficient_linear.pdf}
+	\caption{\label{fig:anneal_schedules} Examples of anneal schedules. In figure are value of $A(s)$ and $B(s)$ as a function of normalized time $s$. The DWave schedule (left), and a idealized linear annealing schedule (right).
+	}
+\end{figure}
+
+\begin{figure}[htb]
+	\centering
+	\includegraphics[width=0.49\textwidth]{coefficient_dwave_offset.pdf}
+	\includegraphics[width=0.49\textwidth]{coefficient_dwave_offset_full.pdf}
+	\caption{\label{fig:anneal_offset} (left) Dwave schedule with offset. Note that the values of $A(s)$ and $B(s)$ are no longer the same for all qubits at the start and end of the anneal. (right) An extended anneal schedule that allows all qubits to start and end with the same coefficients.
+	}
+\end{figure}
+
+The ODE solver we currently call is from \texttt{scipy.integrate.solve\_ivp}. In the future, we should consider migrating this to use \texttt{qutip.ssesolve} or some equivalent. See \href{http://qutip.org/docs/latest/guide/dynamics/dynamics-time.html}{QuTiP time-dependent solvers Documentation}. For now, the solver parameters are
+\begin{itemize}
+	\item \texttt{method}: The default is RK45, which is a 5th order Runge-Kutta algorithm.
+	\item \texttt{rtol}: The relative tolerance for the solver.
+	\item \texttt{atol}: The absolute tolerance.
+\end{itemize}
+
+We have also implemented both a pure-state simulation, as well as a mixed-state simulation.
+These can be chosen with the following parameters:
+
+\begin{itemize}
+	\item \texttt{pure\_tdse}: This is a boolean (True / False) flag and runs the pure state solver.
+	\item \texttt{mixed\_tdse}: This boolean flag runs the mixed state solver.
+	\item \texttt{temp}: This sets the temperature for the mixed state solver in kelvins.
+	\item \texttt{initial\_wavefunction}: For the pure state solver, the initial wavefunction can be chosen to be the ground state of $\sum_i \sigma_i^x$ (\texttt{transverse}) or $H(0)$ (\texttt{real}). For the DWave anneal schedule, or when annealing offsets are used without extended annealing times, these two options are not the same.
+	\item \texttt{degeneracy\_tol}: This sets the numerical tolerance as to when an excited-state is labeled as degenerate to the ground state. This is important for graphs with degenerate ground states.
+\end{itemize}
+
+A quick study below. We run a simulation with anneal offsets similar to what we ran on DWave (Fig.~\ref{dwave_result}). We see that if we apply a delay on qubits with small values and advance qubits with of $h_i$ (binary), then the performance improves. And vice versa. This is completely unexpected from the point of view of many-body localization. Because this result was so surprising, we wrote this simulator. Under DWave conditions (embedded problem, non-linear anneal schedule, truncating offset), we are able to reproduce this behavior (fig~\ref{fig:proba_dwave}). Here I note that if we run the idealized scenario (more importantly, without embedding), the behavior is reverse, and is consistent with what is expected due to many-body localization.
+
+\begin{figure}[htb]
+	\centering
+	\includegraphics[width=0.8\textwidth]{scaling_full_0p10.pdf}
+	\caption{\label{fig:dwave_result} DWave results.
+	}
+\end{figure}
+
+
+\begin{figure}[htb]
+	\centering
+	\includegraphics[width=0.49\textwidth]{proba_binary.pdf}
+	\includegraphics[width=0.49\textwidth]{proba_negbinary.pdf}
+	\caption{\label{fig:proba_dwave} (left) Binary offset and (right) NegBinary offset.
+	}
+\end{figure}
 
 \end{document}

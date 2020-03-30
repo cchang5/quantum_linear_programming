@@ -343,6 +343,9 @@ def plot_anneal_schedule(tdse, normalized_time):
     for qubit in range(len(yA[0])):
         ax.errorbar(x=X, y=yA[:, qubit])
         ax.errorbar(x=X, y=yB[:, qubit], ls="--")
+    ax.set_xlabel("normalized time")
+    ax.set_ylabel("energy/h [GHz]")
+    plt.savefig("./coefficient.pdf")
     plt.draw()
     plt.show()
 
