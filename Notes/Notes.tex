@@ -570,9 +570,9 @@ The time period is set to $[0,1]$.
 
 The probability to get the ground state at measurement is
 \begin{align}
-P =\sum_i | \langle \psi (t)  | \mbox{gnd}_i \rangle |^2 ,
+P =\sum_{i\in G} | \langle \psi (t)  | \mbox{gnd}_i \rangle |^2 ,
 \end{align}
-where the summation runs over degenerated ground states.
+where $\{ | \mbox{gnd}_i \rangle | i \in G \}$ forms an orthonormal basis for the degenerated ground states subspace.
 
 
 \begin{figure}[htb]
@@ -599,7 +599,7 @@ The probability to get the ground state at measurement is
 \begin{align}
 P =  \mbox{Tr} \{  \rho (t) \pi_{\mbox{gnd}} \}  ,
 \end{align}
-where the projection operator onto the ground state subspace is $\pi_{\mbox{gnd}}=\sum_i |\mbox{gnd}_i\rangle \langle \mbox{gnd}_i| $.
+where the projection operator onto the degenerated ground states subspace is $\pi_{\mbox{gnd}}=\sum_{i\in G} |\mbox{gnd}_i\rangle \langle \mbox{gnd}_i| $.
 
 \subsection{unit conversion}
 
