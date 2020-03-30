@@ -3,7 +3,7 @@
 
 This module contains the core computations
 """
-from typing import Dict, Any
+from typing import Dict, Any, Tuple
 
 from numpy import ndarray
 import numpy as np
@@ -67,14 +67,14 @@ class TDSE:
         self.ising = ising_params
         self.offset_params = offset_params
         self.solver_params = solver_params
-        self.FockX, self.FockZ, self.FockZZ = self.init_Fock()
+        self.FockX, self.FockZ, self.FockZZ = self._init_Fock()
         self.Focksize = None
         self.AS = AnnealSchedule(**offset_params)
-        self.IsingH = self.constructIsingH(
-            self.Bij(self.AS.B(1)) * self.ising["Jij"], self.AS.B(1) * self.ising["hi"]
+        self.IsingH = self._constructIsingH(
+            self._Bij(self.AS.B(1)) * self.ising["Jij"], self.AS.B(1) * self.ising["hi"]
         )
 
-    def apply_H(self, t, psi: ndarray) -> ndarray:
+    def _apply_H(self, t, psi: ndarray) -> ndarray:
         """Computes `i H(t) psi`"""
         return -1j * np.dot(self.annealingH(t), psi)
 
@@ -94,7 +94,11 @@ class TDSE:
             np.absolute([np.dot(np.conj(psi1[:, idx]), psi2) for idx in degen_idx]) ** 2
         )
 
-    def init_eigen(self, dtype):
+    def init_eigen(self, dtype: str) -> Tuple[ndarray, ndarray]:
+        """Computes eigenvalue and vector of initial Hamiltonian either as a pure
+        eigenstate of `H_init` (transverse) or a s a superposition of
+        `A(s) H_init + B(s) H_final` (true).
+        """
         if dtype == "true":
             # true ground state
             eigvalue, eigvector = eigh(
@@ -105,19 +109,31 @@ class TDSE:
             eigvalue, eigvector = eigh(
                 -1
                 * self.ising["energyscale"]
-                * self.constructtransverseH(self.AS.A(0) * np.ones(self.n))
+                * self._constructtransverseH(self.AS.A(0) * np.ones(self.n))
             )
         else:
             raise TypeError("Undefined initial wavefunction.")
         return eigvalue, eigvector
 
-    def init_wavefunction(self, dtype="transverse"):
+    def init_wavefunction(self, dtype="transverse") -> ndarray:
+        """Returns wave function for first eigenstate of Hamiltonian of dtype.
+        """
         _, eigvector = self.init_eigen(dtype)
         return (1.0 + 0.0j) * eigvector[:, 0]
 
-    def init_densitymatrix(self, temp=13e-3, dtype="transverse", debug=False):
-        """Initial density matrix
-        temperature in kelvins
+    def init_densitymatrix(
+        self, temp: float = 13e-3, dtype: str = "transverse", debug: bool = False
+    ) -> ndarray:
+        """Returns density matrix for s=0
+
+        ```
+        rho(s=0) = exp(- beta H(0)) / Tr(exp(- beta H(0)))
+        ```
+
+        Arguments:
+            temp: Temperature in K
+            dtype: Kind of inital wave function (true or transverse)
+            debug: More output messages
         """
         kb = 8.617333262145e-5  # Boltzmann constant [eV / K]
         h = 4.135667696e-15  # Plank constant [eV s] (no 2 pi)
@@ -140,8 +156,14 @@ class TDSE:
         rho = (1.0 + 0.0j) * rho
         return rho
 
-    def init_Fock(self):
-        """Finish all the operators here and store them"""
+    def _init_Fock(self) -> Tuple[ndarray, ndarray, ndarray]:
+        r"""Computes pauli matrix tensor products
+
+        Returns:
+            `sigma^x_i \otimes 1`,
+            `sigma^z_i \otimes 1`,
+            `sigma_z_i \otimes sigma^z_j \otimes 1`
+        """
         FockX = [self.pushtoFock(i, SIG_X) for i in range(self.n)]
         FockZ = [self.pushtoFock(i, SIG_Z) for i in range(self.n)]
         FockZZ = [
@@ -149,8 +171,13 @@ class TDSE:
         ]
         return FockX, FockZ, FockZZ
 
-    def pushtoFock(self, i, local):
-        """Push local operator to many-body Fock space"""
+    def pushtoFock(self, i: int, local: ndarray) -> ndarray:
+        """Tensor product of `local` at particle index i with 1 in fock space
+
+        Arguments:
+            i: particle index of matrix local
+            local: matrix operator
+        """
         fock = np.identity(1)
         for j in range(self.n):
             if j == i:
@@ -159,8 +186,8 @@ class TDSE:
                 fock = np.kron(fock, ID2)
         return fock
 
-    def constructIsingH(self, Jij, hi):
-        """Hamiltonian (J_ij is i < j, i.e., upper diagonal"""
+    def _constructIsingH(self, Jij: ndarray, hi: ndarray) -> ndarray:
+        """Computes Hamiltonian (J_ij is i < j, i.e., upper diagonal"""
         IsingH = np.zeros((2 ** self.n, 2 ** self.n))
         for i in range(self.n):
             IsingH += hi[i] * self.FockZ[i]
@@ -168,25 +195,35 @@ class TDSE:
                 IsingH += Jij[j, i] * self.FockZZ[i][j]
         return IsingH
 
-    def constructtransverseH(self, hxi):
+    def _constructtransverseH(self, hxi: ndarray) -> ndarray:
+        r"""Construct sum of tensor products of `\sigma^x_i \otimes 1`
+        """
         transverseH = np.zeros((2 ** self.n, 2 ** self.n))
         for i in range(self.n):
             transverseH += hxi[i] * self.FockX[i]
         return transverseH
 
-    def Bij(self, B):
-        """Annealing Hamiltonian
-        https://www.dwavesys.com/sites/default/files/14-1002A_B_tr_Boosting_integer_factorization_via_quantum_annealing_offsets.pdf
+    def _Bij(self, B: ndarray) -> ndarray:
+        """J_ij coefficients for final Annealing Hamiltonian
+
+        https://www.dwavesys.com/sites/default/files/
+          14-1002A_B_tr_Boosting_integer_factorization_via_quantum_annealing_offsets.pdf
+
         Equation (1)
+
+        Arguments:
+            B: Anneal coefficients for given schedule.
         """
         return np.asarray(
             [[np.sqrt(B[i] * B[j]) for i in range(self.n)] for j in range(self.n)]
         )
 
-    def annealingH(self, s):
-        AxtransverseH = self.constructtransverseH(self.AS.A(s) * np.ones(self.n))
-        BxIsingH = self.constructIsingH(
-            self.Bij(self.AS.B(s)) * self.ising["Jij"], self.AS.B(s) * self.ising["hi"]
+    def annealingH(self, s: float) -> ndarray:
+        """Computes `H(s) = A(s) H_init + B(s) H_final` in units of ising["energyscale"]
+        """
+        AxtransverseH = self._constructtransverseH(self.AS.A(s) * np.ones(self.n))
+        BxIsingH = self._constructIsingH(
+            self._Bij(self.AS.B(s)) * self.ising["Jij"], self.AS.B(s) * self.ising["hi"]
         )
         H = self.ising["energyscale"] * (-1 * AxtransverseH + BxIsingH)
         return H
@@ -201,7 +238,10 @@ class TDSE:
         for jj in range(ngrid - 1):
             y1 = y1 / (np.sqrt(np.absolute(np.dot(np.conj(y1), y1))))
             tempsol = solve_ivp(
-                self.apply_H, [interval[jj], interval[jj + 1]], y1, **self.solver_params
+                self._apply_H,
+                [interval[jj], interval[jj + 1]],
+                y1,
+                **self.solver_params,
             )
             y1 = tempsol.y[:, tempsol.t.size - 1]
             sol.t = np.hstack((sol.t, tempsol.t))
@@ -234,12 +274,13 @@ class TDSE:
         f = ymat.reshape(self.Focksize ** 2)
         return f
 
-    def solve_mixed(self, rho):
+    def solve_mixed(self, rho: ndarray) -> ndarray:
+        """Solves the TDSE
+        """
         self.Focksize = int(np.sqrt(len(rho)))
-        sol = solve_ivp(
+        return solve_ivp(
             self.f_densitymatrix2, self.offset_params["normalized_time"], rho
         )
-        return sol
 
 
 class pure_sol_interface:
