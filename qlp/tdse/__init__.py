@@ -12,6 +12,7 @@ from pandas import read_excel
 import matplotlib.pyplot as plt
 
 from qlp.tdse.schedule import AnnealSchedule
+from qlp.tdse.example import embed_qubo_example
 
 
 class TDSE:
@@ -212,35 +213,3 @@ class pure_sol_interface:
     def __init__(self, y1):
         self.t = np.zeros((0))
         self.y = np.zeros((y1.size, 0))
-
-
-def embed_qubo_example(nvertices):
-    if nvertices == 2:
-        """This is a NN(2) graph embedded in Chimera"""
-        q = """640 640 2.5
-641 641 6.0
-643 643 6.0
-645 645 -3.0
-647 647 10.5
-640 645 8.0
-641 645 -4.0
-643 645 -4.0
-640 647 -16.0
-641 647 -4.0
-643 647 -4.0"""
-        embedding = {0: [645], 1: [647, 640], 2: [641], 3: [643]}
-    else:
-        raise ValueError("No embedded graph defined.")
-    q = np.array([[float(i) for i in qn.split(" ")] for qn in q.split("\n")])
-    from scipy.sparse import dok_matrix
-
-    remap = {
-        key: idx
-        for idx, key in enumerate(np.unique(np.concatenate((q[:, 0], q[:, 1]), axis=0)))
-    }
-    qubo = dok_matrix((len(np.unique(q[:, 0])), len(np.unique(q[:, 0]))), dtype=float)
-    for qi in q:
-        i = remap[qi[0]]
-        j = remap[qi[1]]
-        qubo[i, j] = qi[2]
-    return qubo, embedding
