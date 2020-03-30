@@ -1,4 +1,4 @@
-# pylint: disable=C0103, R0903
+# pylint: disable=C0103, R0902, R0903
 """Library to solve the time dependent schrodinger equation in the many-body Fock space.
 
 This module contains the core computations
@@ -11,14 +11,30 @@ from scipy.integrate import solve_ivp
 from qlp.tdse.schedule import AnnealSchedule
 
 
+def _set_up_pauli():
+    """Creates Pauli matrices and identity
+    """
+    sigx = np.zeros((2, 2))
+    sigz = np.zeros((2, 2))
+    id2 = np.identity(2)
+    sigx[0, 1] = 1.0
+    sigx[1, 0] = 1.0
+    sigz[0, 0] = 1.0
+    sigz[1, 1] = -1.0
+    return id2, sigx, sigz
+
+
+ID2, SIG_X, SIG_Z = _set_up_pauli()
+
+
 class TDSE:
     def __init__(self, n, ising_params, offset_params, solver_params):
         self.n = n
         self.ising = ising_params
         self.offset_params = offset_params
         self.solver_params = solver_params
-        self.id2, self.sigx, self.sigz = self.pauli()
         self.FockX, self.FockZ, self.FockZZ = self.init_Fock()
+        self.Focksize = None
         self.AS = AnnealSchedule(**offset_params)
         self.IsingH = self.constructIsingH(
             self.Bij(self.AS.B(1)) * self.ising["Jij"], self.AS.B(1) * self.ising["hi"]
@@ -28,17 +44,6 @@ class TDSE:
         """Define time-dependent Schrodinger equation"""
         f = -1j * np.dot(self.annealingH(t), y)
         return f
-
-    def pauli(self):
-        """Pauli matrices"""
-        sigx = np.zeros((2, 2))
-        sigz = np.zeros((2, 2))
-        id2 = np.identity(2)
-        sigx[0, 1] = 1.0
-        sigx[1, 0] = 1.0
-        sigz[0, 0] = 1.0
-        sigz[1, 1] = -1.0
-        return id2, sigx, sigz
 
     def ground_state_degeneracy(self, H, degeneracy_tol=1e-6, debug=False):
         eigval, eigv = eigh(H)
@@ -50,19 +55,19 @@ class TDSE:
             )
         return gs_idx, eigval, eigv
 
-    def calculate_overlap(self, psi1, psi2, degen_idx):
-        overlap = sum(
+    @staticmethod
+    def calculate_overlap(psi1, psi2, degen_idx):
+        return sum(
             np.absolute([np.dot(np.conj(psi1[:, idx]), psi2) for idx in degen_idx]) ** 2
         )
-        return overlap
 
-    def init_eigen(self, type):
-        if type == "true":
+    def init_eigen(self, dtype):
+        if dtype == "true":
             # true ground state
             eigvalue, eigvector = eigh(
                 self.annealingH(s=self.offset_params["normalized_time"][0])
             )
-        elif type == "transverse":
+        elif dtype == "transverse":
             # DWave initial wave function
             eigvalue, eigvector = eigh(
                 -1
@@ -73,12 +78,11 @@ class TDSE:
             raise TypeError("Undefined initial wavefunction.")
         return eigvalue, eigvector
 
-    def init_wavefunction(self, type="transverse"):
-        eigvalue, eigvector = self.init_eigen(type)
-        y1 = (1.0 + 0.0j) * eigvector[:, 0]
-        return y1
+    def init_wavefunction(self, dtype="transverse"):
+        _, eigvector = self.init_eigen(dtype)
+        return (1.0 + 0.0j) * eigvector[:, 0]
 
-    def init_densitymatrix(self, temp=13e-3, type="transverse", debug=False):
+    def init_densitymatrix(self, temp=13e-3, dtype="transverse", debug=False):
         """Initial density matrix
         temperature in kelvins
         """
@@ -88,7 +92,7 @@ class TDSE:
         beta = 1 / (temp * kb / h * one)  # inverse temperature [h/GHz]
 
         # construct initial density matrix
-        eigvalue, eigvector = self.init_eigen(type)
+        eigvalue, eigvector = self.init_eigen(dtype)
 
         dE = eigvalue[:] - eigvalue[0]
         pr = np.exp(-beta * dE)
@@ -105,8 +109,8 @@ class TDSE:
 
     def init_Fock(self):
         """Finish all the operators here and store them"""
-        FockX = [self.pushtoFock(i, self.sigx) for i in range(self.n)]
-        FockZ = [self.pushtoFock(i, self.sigz) for i in range(self.n)]
+        FockX = [self.pushtoFock(i, SIG_X) for i in range(self.n)]
+        FockZ = [self.pushtoFock(i, SIG_Z) for i in range(self.n)]
         FockZZ = [
             [np.dot(FockZ[i], FockZ[j]) for j in range(self.n)] for i in range(self.n)
         ]
@@ -119,7 +123,7 @@ class TDSE:
             if j == i:
                 fock = np.kron(fock, local)
             else:
-                fock = np.kron(fock, self.id2)
+                fock = np.kron(fock, ID2)
         return fock
 
     def constructIsingH(self, Jij, hi):
@@ -206,6 +210,13 @@ class TDSE:
 
 
 class pure_sol_interface:
+    """Interface for a pure state solution
+
+    Attributes:
+        t: array
+        y: array
+    """
+
     def __init__(self, y1):
         self.t = np.zeros((0))
         self.y = np.zeros((y1.size, 0))
