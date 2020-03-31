@@ -12,28 +12,15 @@ Install via pip
 pip install [-e] [--user] .
 ```
 
-## Run
-For example
-```python
-from sympy import symbols
-from qlp import eqns_to_matrix
-
-a1, a2, b1, b2, x = symbols("a1, a2, b1, b2, x")
-
-eqns = [
-    a1 * x <= b1,
-    a2 * x >= b2,
-]
-
-m, v, s = eqns_to_matrix(eqns, [x])
-
-m @ deps + v + s
+## Compile the doc
+Run once to get dependencies
+```bash
+pip install [-e] [--user] .
+pip install -r requirements-dev.txt
 ```
-returns
+Compile the docs
+```bash
+cd docs
+make html
+open build/html/index.html
 ```
-a1 x - b1 - s1
-a2 x - b2 - s2
-```
-
-## Authors
-* {author}

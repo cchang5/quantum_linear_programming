@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
 import hashlib
-from qlpdb.graph.models import Graph as graph_Graph
-from qlpdb.experiment.models import Experiment as experiment_Experiment
-from qlpdb.data.models import Data as data_Data
+
+# from qlpdb.graph.models import Graph as graph_Graph
+# from qlpdb.experiment.models import Experiment as experiment_Experiment
+# from qlpdb.data.models import Data as data_Data
 
 from minorminer import find_embedding
 from dwave.system.composites import EmbeddingComposite, FixedEmbeddingComposite
@@ -15,6 +16,7 @@ import yaml
 class AnnealOffset:
     """https://docs.dwavesys.com/docs/latest/c_qpu_0.html#anneal-offsets
     """
+
     def __init__(self, tag):
         self.tag = tag
 
@@ -23,7 +25,10 @@ class AnnealOffset:
         fullrange = max(h) - min(h)
 
         if self.tag == "constant":
-            return np.zeros(len(h)), f"FixEmbedding_Constant_{offset_min}_{offset_range}_v3_1"
+            return (
+                np.zeros(len(h)),
+                f"FixEmbedding_Constant_{offset_min}_{offset_range}_v3_1",
+            )
         if self.tag == "binary":
             offset_tag = f"FixEmbedding_Binary_{offset_min}_{offset_range}_v3_1"
             offset_fcn = []
@@ -52,7 +57,7 @@ class AnnealOffset:
             return offset_fcn, offset_tag
         if self.tag == "negshiftlinear":
             offset_tag = f"FixEmbedding_NegShiftLinear_{offset_min}_{offset_range}"
-            invhnorm = -1*(abs(h) - max(abs(h))) / abshrange
+            invhnorm = -1 * (abs(h) - max(abs(h))) / abshrange
             offset_fcn = invhnorm * offset_range + offset_min
             return offset_fcn, offset_tag
         if self.tag == "signedshiftlinear":
@@ -62,8 +67,10 @@ class AnnealOffset:
             offset_fcn = normh * offset_range + offset_min
             return offset_fcn, offset_tag
         if self.tag == "signednegshiftlinear":
-            offset_tag = f"FixEmbedding_SignedNegShiftLinear_{offset_min}_{offset_range}"
-            shifth = -1*(h - max(h)) / fullrange
+            offset_tag = (
+                f"FixEmbedding_SignedNegShiftLinear_{offset_min}_{offset_range}"
+            )
+            shifth = -1 * (h - max(h)) / fullrange
             offset_fcn = shifth * offset_range + offset_min
             return offset_fcn, offset_tag
         if self.tag == "linear":
@@ -106,9 +113,7 @@ def retry_embedding(
 ):
     def get_embed_min_max_offset(sampler, embedding):
         embed = FixedEmbeddingComposite(sampler, embedding)
-        embedding_idx = [
-            idx for embed_list in embedding.values() for idx in embed_list
-        ]
+        embedding_idx = [idx for embed_list in embedding.values() for idx in embed_list]
         anneal_offset_ranges = np.array(
             embed.properties["child_properties"]["anneal_offset_ranges"]
         )
@@ -182,6 +187,10 @@ def find_offset(h, fcn, embedding, offset_min, offset_range):
 
 
 def insert_result(graph_params, experiment_params, data_params):
+    from qlpdb.graph.models import Graph as graph_Graph
+    from qlpdb.experiment.models import Experiment as experiment_Experiment
+    from qlpdb.data.models import Data as data_Data
+
     # select or insert row in graph
     graph, created = graph_Graph.objects.get_or_create(
         tag=graph_params["tag"],  # Tag for graph type (e.g. Hamming(n,m) or K(n,m))

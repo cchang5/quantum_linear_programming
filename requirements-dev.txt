@@ -1,1 +1,4 @@
 sphinx
+sphinx_markdown_tables
+recommonmark
+sphinx_autodoc_typehints

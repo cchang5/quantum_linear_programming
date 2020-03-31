@@ -10,7 +10,10 @@ from seaborn import heatmap
 
 import networkx as nx
 from networkx.algorithms import bipartite
-from networkx.generators.random_graphs import fast_gnp_random_graph, newman_watts_strogatz_graph
+from networkx.generators.random_graphs import (
+    fast_gnp_random_graph,
+    newman_watts_strogatz_graph,
+)
 
 
 def generate_graph(
@@ -165,20 +168,23 @@ def generate_bipartite_graph(p: int, q: int) -> Tuple[Set[Tuple[int, int]], Text
 
     return set(bipartite.complete_bipartite_graph(p, q).edges), f"K({p},{q})"
 
+
 def generate_erdos_renyi_graph(n: int, p: float) -> Tuple[Set[Tuple[int, int]], Text]:
     """Return edges of a Erdos Renyi graph.
+
     A generalized random graph.
     Can be disconnected
 
     The following statements are true on average
-    ======
-    np < 1 has O(log(n)) clusters
-    np = 1 has O(n^2/3) clusters
-    np -> c > 1 will cluster to one large component, sub clusters have O(log(n)) vertices
 
-    p < ln(n)/n the graph will be disconnected
-    p > ln(n)/n the graph will be connected
-    ======
+    ``
+        np < 1 has O(log(n)) clusters
+        np = 1 has O(n^2/3) clusters
+        np -> c > 1 will cluster to one large component, sub clusters have O(log(n)) vertices
+
+        p < ln(n)/n the graph will be disconnected
+        p > ln(n)/n the graph will be connected
+    ``
 
     G(n,p)
 
@@ -189,7 +195,10 @@ def generate_erdos_renyi_graph(n: int, p: float) -> Tuple[Set[Tuple[int, int]], 
     G = fast_gnp_random_graph(n, p)
     return set(G.edges), f"G({n},{p})"
 
-def generate_newman_watts_strogatz_graph(n: int, k: int, p: float) -> Tuple[Set[Tuple[int, int]], Text]:
+
+def generate_newman_watts_strogatz_graph(
+    n: int, k: int, p: float
+) -> Tuple[Set[Tuple[int, int]], Text]:
     """Returns edges of a NWS small-world graph.
 
     NWS graph is a knn ring graph + random connections.
@@ -203,7 +212,8 @@ def generate_newman_watts_strogatz_graph(n: int, k: int, p: float) -> Tuple[Set[
         p: Probability of spawning new edge on top of base ring
 
     """
-    return set(newman_watts_strogatz_graph(n,k,p).edges), f"WS({n},{k},{p})"
+    return set(newman_watts_strogatz_graph(n, k, p).edges), f"WS({n},{k},{p})"
+
 
 def generate_nn_graph(v: int) -> Tuple[Set[Tuple[int, int]], Text]:
     """Returns edges of a 1 dimensional nearest neighbor graph.
@@ -213,6 +223,7 @@ def generate_nn_graph(v: int) -> Tuple[Set[Tuple[int, int]], Text]:
     """
     graph = {(i - 1, i) for i in range(1, v)}
     return graph, f"NN({v})"
+
 
 def generate_corona_graph(k: int, n: int) -> Tuple[Set[Tuple[int, int]], Text]:
     """Returns edges of a n-shortcut 3k-ring graph with broken rotational symmetry.
@@ -224,24 +235,26 @@ def generate_corona_graph(k: int, n: int) -> Tuple[Set[Tuple[int, int]], Text]:
         n: number of shortcuts. must be < 3*k - 2 for this definition
     """
 
-    if n >= factorial(3*k-2):
-        raise ValueError("n >= (3k-2)!: More shortcuts than allowed for graph.\n Choose a smaller number.")
+    if n >= factorial(3 * k - 2):
+        raise ValueError(
+            "n >= (3k-2)!: More shortcuts than allowed for graph.\n Choose a smaller number."
+        )
 
     # construct base ring
-    ring, _ = generate_nn_graph(3*k)
-    ring.add((3*k-1, 0))
+    ring, _ = generate_nn_graph(3 * k)
+    ring.add((3 * k - 1, 0))
 
     # add antigen
-    antigen = ((3*i+1,3*k+i) for i in range(k))
+    antigen = ((3 * i + 1, 3 * k + i) for i in range(k))
     ring.update(antigen)
 
     # add shortcuts
     count = 0
     for nidx in range(k):
-        for kidx in range(3*k):
+        for kidx in range(3 * k):
             if count < n:
                 start = kidx
-                end = (kidx+nidx+2)%(3*k)
+                end = (kidx + nidx + 2) % (3 * k)
                 ring.add((start, end))
                 count += 1
             else:
@@ -262,7 +275,9 @@ def generate_limited_corona_graph(k: int, n: int):
     """
 
     if n >= factorial(3 * k - 2):
-        raise ValueError("n >= (3k-2)!: More shortcuts than allowed for graph.\n Choose a smaller number.")
+        raise ValueError(
+            "n >= (3k-2)!: More shortcuts than allowed for graph.\n Choose a smaller number."
+        )
 
     # construct base ring
     ring, _ = generate_nn_graph(3 * k)
@@ -278,7 +293,11 @@ def generate_limited_corona_graph(k: int, n: int):
         connections[3 * i + 1] += 1
 
     # add shortcuts
-    shortcuts = [(kidx, (kidx + nidx + 2) % (3 * k)) for nidx in range(k) for kidx in range(3 * k)]
+    shortcuts = [
+        (kidx, (kidx + nidx + 2) % (3 * k))
+        for nidx in range(k)
+        for kidx in range(3 * k)
+    ]
     count = 0
     minconnections = min(connections.values())
     while count < n:
@@ -300,6 +319,7 @@ def generate_limited_corona_graph(k: int, n: int):
         if idx == len(shortcuts) - 1 and deadend:
             minconnections += 1
     return ring, f"lC19({k},{n})"
+
 
 def get_plot_mpl(
     graph: Set[Tuple[int]],
@@ -332,7 +352,7 @@ def get_plot_mpl(
 
     if seed is not None:
         pos = nx.spring_layout(G, seed=seed)
-        #pos = nx.spectral_layout(G)
+        # pos = nx.spectral_layout(G)
 
     nx.draw(
         G,

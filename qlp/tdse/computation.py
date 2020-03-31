@@ -119,7 +119,7 @@ class TDSE:
     def calculate_overlap(psi1: ndarray, psi2: ndarray, degen_idx: List[int]) -> float:
         """Computes overlaps of states in psi1 with psi2 (can be multiple)
 
-        Overlap is defined as `sum(<psi1_i | psi2>, i in degen_idx)`. This allows to
+        Overlap is defined as ``sum(<psi1_i | psi2>, i in degen_idx)``. This allows to
         compute overlap in presence of degeneracy. See als eq. (57) in the notes.
 
         Arguments:
@@ -164,9 +164,8 @@ class TDSE:
     ) -> ndarray:
         """Returns density matrix for s=0
 
-        ```
-        rho(s=0) = exp(- beta H(0)) / Tr(exp(- beta H(0)))
-        ```
+        ``rho(s=0) = exp(- beta H(0)) / Tr(exp(- beta H(0)))``
+
 
         Arguments:
             temp: Temperature in K
@@ -198,9 +197,9 @@ class TDSE:
         r"""Computes pauli matrix tensor products
 
         Returns:
-            `sigma^x_i \otimes 1`,
-            `sigma^z_i \otimes 1`,
-            `sigma_z_i \otimes sigma^z_j \otimes 1`
+            ``sigma^x_i \otimes 1``,
+            ``sigma^z_i \otimes 1``,
+            ``sigma^z_i \otimes sigma^z_j \otimes 1``
         """
         FockX = [self.pushtoFock(i, SIG_X) for i in range(self.n)]
         FockZ = [self.pushtoFock(i, SIG_Z) for i in range(self.n)]
@@ -225,7 +224,7 @@ class TDSE:
         return fock
 
     def _constructIsingH(self, Jij: ndarray, hi: ndarray) -> ndarray:
-        """Computes Hamiltonian (J_ij is i < j, i.e., upper diagonal"""
+        """Computes Hamiltonian (``J_ij is i < j``, i.e., upper diagonal"""
         IsingH = np.zeros((2 ** self.n, 2 ** self.n))
         for i in range(self.n):
             IsingH += hi[i] * self.FockZ[i]
@@ -234,7 +233,7 @@ class TDSE:
         return IsingH
 
     def _constructtransverseH(self, hxi: ndarray) -> ndarray:
-        r"""Construct sum of tensor products of `\sigma^x_i \otimes 1`
+        r"""Construct sum of tensor products of ``\sigma^x_i \otimes 1``
         """
         transverseH = np.zeros((2 ** self.n, 2 ** self.n))
         for i in range(self.n):
@@ -257,7 +256,7 @@ class TDSE:
         )
 
     def annealingH(self, s: float) -> ndarray:
-        """Computes `H(s) = A(s) H_init + B(s) H_final` in units of ising["energyscale"]
+        """Computes ``H(s) = A(s) H_init + B(s) H_final`` in units of "energyscale"
         """
         AxtransverseH = self._constructtransverseH(self.AS.A(s) * np.ones(self.n))
         BxIsingH = self._constructIsingH(
@@ -299,18 +298,20 @@ class TDSE:
     def _annealingH_densitymatrix(self, s: float) -> ndarray:
         """Tensor product of commutator of annealing Hamiltonian with id in Fock space
 
-        ```H(s) otimes 1 - 1 otimes H(s)```
+        Code:
+            H(s) otimes 1 - 1 otimes H(s)
         """
         Fockid = np.identity(self.Focksize)
         return np.kron(self.annealingH(s), Fockid) - np.kron(Fockid, self.annealingH(s))
 
     def _apply_tdse_dense(self, t: float, y: ndarray) -> ndarray:
-        """Computes `-i [H(s), rho(s)]` for density vector `y`"""
+        """Computes ``-i [H(s), rho(s)]`` for density vector `y`"""
         f = -1j * np.dot(self._annealingH_densitymatrix(t), y)
         return f
 
     def _apply_tdse_dense2(self, t: float, y: ndarray) -> ndarray:
-        """Computes `-i [H(s), rho(s)]` for density vector `y` by reshaping `y` first"""
+        """Computes ``-i [H(s), rho(s)]`` for density vector ``y`` by reshaping ``y``
+        """
         # f = -1j * np.dot(self.annealingH_densitymatrix(t), y)
         # print('waht', type(self.Focksize))
         # print(self.Focksize)
