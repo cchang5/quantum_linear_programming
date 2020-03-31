@@ -46,18 +46,17 @@ class PureSolutionInterface:
 class TDSE:
     """Time dependent Schrödinger equation solver class
 
-    Usage:
-    ```
-    tdse = TDSE(n, ising_params, offset_params, solver_params)
+    .. code-block:: python
 
-    # Get thermodynamical state density
-    temperature=15e-3
-    initial_wavefunction = "true"
-    rho = tdse.init_densitymatrix(temperature, initial_wavefunction)
+        tdse = TDSE(n, ising_params, offset_params, solver_params)
 
-    # Compute anneal
-    sol_densitymatrix = tdse.solve_mixed(rho)
-    ```
+        # Get thermodynamical state density
+        temperature=15e-3
+        initial_wavefunction = "true"
+        rho = tdse.init_densitymatrix(temperature, initial_wavefunction)
+
+        # Compute anneal
+        sol_densitymatrix = tdse.solve_mixed(rho)
     """
 
     def __init__(
