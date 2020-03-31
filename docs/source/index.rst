@@ -10,11 +10,5 @@ Welcome to Solutions to Integer Programming from Quantum Annealing's documentati
    :maxdepth: 2
    :caption: Contents:
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   README
+   api/index
