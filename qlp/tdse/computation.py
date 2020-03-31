@@ -3,7 +3,7 @@
 
 This module contains the core computations
 """
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, List
 
 from numpy import ndarray
 import numpy as np
@@ -28,6 +28,19 @@ def _set_up_pauli():
 
 
 ID2, SIG_X, SIG_Z = _set_up_pauli()
+
+
+class PureSolutionInterface:
+    """Interface for a pure state solution
+
+    Attributes:
+        t: array
+        y: array
+    """
+
+    def __init__(self, y1):
+        self.t = np.zeros((0))
+        self.y = np.zeros((y1.size, 0))
 
 
 class TDSE:
@@ -78,18 +91,43 @@ class TDSE:
         """Computes `i H(t) psi`"""
         return -1j * np.dot(self.annealingH(t), psi)
 
-    def ground_state_degeneracy(self, H, degeneracy_tol=1e-6, debug=False):
+    def ground_state_degeneracy(
+        self, H: ndarray, degeneracy_tol: float = 1e-6, debug: bool = False
+    ) -> Tuple[ndarray, ndarray, ndarray]:
+        """Computes the number of degenerate ground states
+
+        Identifies degeneracy by comparing closeness to smallest eigenvalule.
+
+        Arguments:
+            H: Hamiltonian to compute eigen vectors off
+            degeneracy_tol: Precision of comparison to GS
+            debug: More output
+
+        Returns: Ids for gs vectors, all eigenvalues, all eigenvectors
+        """
         eigval, eigv = eigh(H)
         mask = [abs((ei - eigval[0]) / eigval[0]) < degeneracy_tol for ei in eigval]
         gs_idx = np.arange(len(eigval))[mask]
         if debug:
             print(
-                f"Num. degenerate states @ s={self.offset_params['normalized_time'][1]}: {len(gs_idx)}"
+                f"Num. degenerate states @"
+                f" s={self.offset_params['normalized_time'][1]}: {len(gs_idx)}"
             )
         return gs_idx, eigval, eigv
 
     @staticmethod
-    def calculate_overlap(psi1, psi2, degen_idx):
+    def calculate_overlap(psi1: ndarray, psi2: ndarray, degen_idx: List[int]) -> float:
+        """Computes overlaps of states in psi1 with psi2 (can be multiple)
+
+        Overlap is defined as `sum(<psi1_i | psi2>, i in degen_idx)`. This allows to
+        compute overlap in presence of degeneracy. See als eq. (57) in the notes.
+
+        Arguments:
+            psi1: Set of wave vectors. Shape is (size_vector, n_vectors).
+            psi2: Vector to compare against.
+            degen_idx: Index for psi1 vectors.
+
+        """
         return sum(
             np.absolute([np.dot(np.conj(psi1[:, idx]), psi2) for idx in degen_idx]) ** 2
         )
@@ -228,12 +266,16 @@ class TDSE:
         H = self.ising["energyscale"] * (-1 * AxtransverseH + BxIsingH)
         return H
 
-    def solve_pure(self, y1, ngrid=11, debug=False):
+    def solve_pure(
+        self, y1: ndarray, ngrid: int = 11, debug: bool = False
+    ) -> PureSolutionInterface:
+        """Solves time depepdent Schrödinger equation for pure inital state
+        """
         start = self.offset_params["normalized_time"][0]
         end = self.offset_params["normalized_time"][1]
         interval = np.linspace(start, end, ngrid)
 
-        sol = pure_sol_interface(y1)
+        sol = PureSolutionInterface(y1)
 
         for jj in range(ngrid - 1):
             y1 = y1 / (np.sqrt(np.absolute(np.dot(np.conj(y1), y1))))
@@ -254,17 +296,21 @@ class TDSE:
             )
         return sol
 
-    def annealingH_densitymatrix(self, s):
+    def _annealingH_densitymatrix(self, s: float) -> ndarray:
+        """Tensor product of commutator of annealing Hamiltonian with id in Fock space
+
+        ```H(s) otimes 1 - 1 otimes H(s)```
+        """
         Fockid = np.identity(self.Focksize)
         return np.kron(self.annealingH(s), Fockid) - np.kron(Fockid, self.annealingH(s))
 
-    def f_densitymatrix(self, t, y):
-        """Define time-dependent Schrodinger equation for density matrix"""
-        f = -1j * np.dot(self.annealingH_densitymatrix(t), y)
+    def _apply_tdse_dense(self, t: float, y: ndarray) -> ndarray:
+        """Computes `-i [H(s), rho(s)]` for density vector `y`"""
+        f = -1j * np.dot(self._annealingH_densitymatrix(t), y)
         return f
 
-    def f_densitymatrix2(self, t, y):
-        """Define time-dependent Schrodinger equation for density matrix"""
+    def _apply_tdse_dense2(self, t: float, y: ndarray) -> ndarray:
+        """Computes `-i [H(s), rho(s)]` for density vector `y` by reshaping `y` first"""
         # f = -1j * np.dot(self.annealingH_densitymatrix(t), y)
         # print('waht', type(self.Focksize))
         # print(self.Focksize)
@@ -279,18 +325,5 @@ class TDSE:
         """
         self.Focksize = int(np.sqrt(len(rho)))
         return solve_ivp(
-            self.f_densitymatrix2, self.offset_params["normalized_time"], rho
+            self._apply_tdse_dense2, self.offset_params["normalized_time"], rho
         )
-
-
-class pure_sol_interface:
-    """Interface for a pure state solution
-
-    Attributes:
-        t: array
-        y: array
-    """
-
-    def __init__(self, y1):
-        self.t = np.zeros((0))
-        self.y = np.zeros((y1.size, 0))
