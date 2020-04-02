@@ -636,10 +636,9 @@ In our simulation we also allow to define arbitrary annealing schedules as shown
 
 Another systematic error is introduced when allowing different qubit-wise anneal schedules $A(s) \to A_i(s)$ and $B(s) \to B_i(s)$.
 If $B_i(0) \neq B_j(0)$ for $i \neq j$ the initial Hamiltonian, and if $B_i(1) \neq B_j(1)$ for $i \neq j$ the final Hamiltonian is effectively different from what was implemented.
-Therefore shifted anneal schedules on DWave cannot be set too large.
+Therefore shifted anneal schedules on DWave cannot be set too large. We also allow our simulations to incorporate different qubit offsets as suggested by Eq.~(\ref{eq:annealH}), with an example annealing schedule shown in Fig.~\ref{fig:anneal_offset} as well.
 It in principle possible to extend the anneal schedule beyond the range $s \in [s_I, s_F]$ with $s_I < 0$ and $s_F > 1$ such that, depending on how the $B_i$ are extrapolated, $B_i(s_I) = B_j(s_I)$ and $B_i(s_F) = B_j(s_F)$ for $i \neq j$ and equivalently for the $A_i$.
-We also allow our simulations to incorporate different qubit offsets as suggested by Eq.~(\ref{eq:annealH}), with an example annealing schedule shown in Fig.~\ref{fig:anneal_offset} as well.
-Additionally, we allow for extended anneal schedules, which allow all qubits to undergo the full annealing process, yielding a true temporal offset for inhomogeneous driving fields.
+Therefore, we allow for extended anneal schedules, which allow all qubits to undergo the full annealing process, yielding a true temporal offset for inhomogeneous driving fields.
 
 At the level of the scripts the problem that we solve are MDS for graph problems. In there, there is an option
 \begin{itemize}
@@ -690,7 +689,7 @@ These can be chosen with the following parameters:
 	\item \texttt{degeneracy\_tol}: This sets the numerical tolerance as to when an excited-state is labeled as degenerate to the ground state. This is important for graphs with degenerate ground states.
 \end{itemize}
 
-A quick study below. We run a simulation with anneal offsets similar to what we ran on DWave (Fig.~\ref{dwave_result}). We see that if we apply a delay on qubits with small values and advance qubits with of $h_i$ (binary), then the performance improves. And vice versa. This is completely unexpected from the point of view of many-body localization. Because this result was so surprising, we wrote this simulator. Under DWave conditions (embedded problem, non-linear anneal schedule, truncating offset), we are able to reproduce this behavior (fig~\ref{fig:proba_dwave}). Here I note that if we run the idealized scenario (more importantly, without embedding), the behavior is reverse, and is consistent with what is expected due to many-body localization.
+A quick study below. We run a simulation with anneal offsets similar to what we ran on DWave (Fig.~\ref{fig:dwave_result}). We see that if we apply a delay on qubits with small values and advance qubits with of $h_i$ (binary), then the performance improves. And vice versa. This is completely unexpected from the point of view of many-body localization. Because this result was so surprising, we wrote this simulator. Under DWave conditions (embedded problem, non-linear anneal schedule, truncating offset), we are able to reproduce this behavior (fig~\ref{fig:proba_dwave}). Here I note that if we run the idealized scenario (more importantly, without embedding), the behavior is reverse, and is consistent with what is expected due to many-body localization.
 
 \begin{figure}[htb]
 	\centering
