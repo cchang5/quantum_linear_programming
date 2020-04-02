@@ -561,7 +561,7 @@ where $A_i(t)$ and $B_{i}(t)$ are site-dependent annealing schedule functions. T
 
 The goal is to solve the time-dependent Schrodinger equation 
 \begin{align}
-i \partial_t \psi(t) = H(t) \psi(t) .
+i \hbar \partial_t \psi(t) = H(t) \psi(t) .
 \end{align}
 
 The initial condition is the ground state of $H(s=0)$. This state is slightly different from the pure transverse  field eigenstate $\psi(t=0)= \otimes_i  |\rightarrow \rangle_i$, because the annealing schedule $B_i(s=0)> 0$.
@@ -572,7 +572,7 @@ The probability to get the ground state at measurement is
 \begin{align}
 P =\sum_{i\in G} | \langle \psi (t)  | \mbox{gnd}_i \rangle |^2 ,
 \end{align}
-where $\{ | \mbox{gnd}_i \rangle | i \in G \}$ forms an orthonormal basis for the degenerated ground states subspace.
+where $\{ | \mbox{gnd}_i \rangle | i \in G \}$ forms an orthonormal basis, e.g. $\langle \mbox{gnd}_j | \mbox{gnd}_i \rangle = \delta_{ij}$,  for the degenerated ground states subspace.
 
 
 \begin{figure}[htb]
@@ -591,7 +591,7 @@ For mixed state simulation the initial density matrix is the Gibbs canonical ens
 \end{equation}
 The time evolution of density matrix is governed by von Neumann equation
 \begin{align}
-i \partial_t \rho (t) = [H(t) , \rho(t)] ,
+i \hbar \partial_t \rho (t) = [H(t) , \rho(t)] ,
 \end{align}
 where $[,]$ denotes the Lie bracket.
 
@@ -628,7 +628,18 @@ So the equation is
 and this is why the factor $10^{3} \times (2\pi)$.
 
 \subsection{Simulating DWave}
-We allow the ability to define arbitrary annealing schedules as shown in Fig.~\ref{fig:anneal_schedules}. We also allow for per qubit offsets as suggested by Eq.~(\ref{eq:annealH}), with an example annealing schedule shown in Fig.~\ref{fig:anneal_offset} as well. For DWave's implementation, anneal offset yields systematic errors because the qubits no longer all start and end with the same coefficients. For our simulation, we allow for extended anneal schedules, which allow all qubits to undergo the full annealing process, yielding a true temporal offset for inhomogeneous driving fields.
+To simulate DWave, we have to consider multiple systematic effects which cause deviation from exact solutions of the Schrödinger equation.
+For example, interactions of the final Hamiltonian are present at the beginning of the anneal schedule due to non-zero anneal coefficients $B(s)$.
+We expect a contamination of the ground state at the order of $B(0) \sim 5\%$ and allow to include these effects in our simulation by computing the ground state of the pure (only $H_\mathrm{init}$) or mixed (both $A(0) H_\mathrm{init} + B(0) H_\mathrm{final}$) system.
+The Hamiltonian at the end of the anneal is less contaminated with $A(1) \sim 10^{-7}$.
+In our simulation we also allow to define arbitrary annealing schedules as shown in Fig.~\ref{fig:anneal_schedules}.
+
+Another systematic error is introduced when allowing different qubit-wise anneal schedules $A(s) \to A_i(s)$ and $B(s) \to B_i(s)$.
+If $B_i(0) \neq B_j(0)$ for $i \neq j$ the initial Hamiltonian, and if $B_i(1) \neq B_j(1)$ for $i \neq j$ the final Hamiltonian is effectively different from what was implemented.
+Therefore shifted anneal schedules on DWave cannot be set too large.
+It in principle possible to extend the anneal schedule beyond the range $s \in [s_I, s_F]$ with $s_I < 0$ and $s_F > 1$ such that, depending on how the $B_i$ are extrapolated, $B_i(s_I) = B_j(s_I)$ and $B_i(s_F) = B_j(s_F)$ for $i \neq j$ and equivalently for the $A_i$.
+We also allow our simulations to incorporate different qubit offsets as suggested by Eq.~(\ref{eq:annealH}), with an example annealing schedule shown in Fig.~\ref{fig:anneal_offset} as well.
+Additionally, we allow for extended anneal schedules, which allow all qubits to undergo the full annealing process, yielding a true temporal offset for inhomogeneous driving fields.
 
 At the level of the scripts the problem that we solve are MDS for graph problems. In there, there is an option
 \begin{itemize}
