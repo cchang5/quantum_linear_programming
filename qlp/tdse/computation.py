@@ -327,3 +327,44 @@ class TDSE:
         return solve_ivp(
             self._apply_tdse_dense2, self.offset_params["normalized_time"], rho
         )
+
+    # Compute Correlations
+    # One time correlation function
+    def cZ(self, ti, xi, sol_densitymatrix):
+        return np.trace(
+            np.dot(
+                self.FockZ[xi],
+                sol_densitymatrix.y[:, ti].reshape(2 ** self.n, 2 ** self.n),
+            )
+        )
+
+    def cZZ(self, ti, xi, xj, sol_densitymatrix):
+        return np.trace(
+            np.dot(
+                self.FockZZ[xi][xj],
+                sol_densitymatrix.y[:, ti].reshape(2 ** self.n, 2 ** self.n),
+            )
+        )
+
+    def cZZd(self, ti, xi, xj, sol_densitymatrix):
+        return self.cZZ(ti, xi, xj, sol_densitymatrix) - self.cZ(
+            ti, xi, sol_densitymatrix
+        ) * self.cZ(ti, xj, sol_densitymatrix)
+
+    # Two time correlation function
+    # http://qutip.org/docs/latest/guide/guide-correlation.html
+    def cZZt2(self, ti, xi, sol_densitymatrixt2):
+        return np.trace(
+            np.dot(
+                self.FockZ[xi],
+                sol_densitymatrixt2.y[:, ti].reshape(2 ** self.n, 2 ** self.n),
+            )
+        )
+
+    def cZZt2d(self, ti, xi, tj, xj, sol_densitymatrix, sol_densitymatrixt2):
+        return np.trace(
+            np.dot(
+                self.FockZ[xi],
+                sol_densitymatrixt2.y[:, ti].reshape(2 ** self.n, 2 ** self.n),
+            )
+        ) - self.cZ(ti, xi, sol_densitymatrix) * self.cZ(tj, xj, sol_densitymatrix)
