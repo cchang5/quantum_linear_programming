@@ -20,14 +20,18 @@ def _set_up_pauli():
     sigx = np.zeros((2, 2))
     sigz = np.zeros((2, 2))
     id2 = np.identity(2)
+    proj0 = np.zeros((2, 2))
+    proj1 = np.zeros((2, 2))
     sigx[0, 1] = 1.0
     sigx[1, 0] = 1.0
     sigz[0, 0] = 1.0
     sigz[1, 1] = -1.0
-    return id2, sigx, sigz
+    proj0[0, 0] = 1.0
+    proj1[1, 1] = 1.0
+    return id2, sigx, sigz, proj0, proj1
 
 
-ID2, SIG_X, SIG_Z = _set_up_pauli()
+ID2, SIG_X, SIG_Z, PROJ_0, PROJ_1 = _set_up_pauli()
 
 
 class PureSolutionInterface:
@@ -205,7 +209,9 @@ class TDSE:
         FockZZ = [
             [np.dot(FockZ[i], FockZ[j]) for j in range(self.n)] for i in range(self.n)
         ]
-        return FockX, FockZ, FockZZ
+        Fockproj0 = [self.pushtoFock(i, PROJ_0) for i in range(self.n)]
+        Fockproj1 = [self.pushtoFock(i, PROJ_1) for i in range(self.n)]
+        return FockX, FockZ, FockZZ, Fockproj0, Fockproj1
 
     def pushtoFock(self, i: int, local: ndarray) -> ndarray:
         """Tensor product of `local` at particle index i with 1 in fock space
@@ -334,6 +340,22 @@ class TDSE:
         return np.trace(
             np.dot(
                 self.FockZ[xi],
+                sol_densitymatrix.y[:, ti].reshape(2 ** self.n, 2 ** self.n),
+            )
+        )
+
+    def c0(self, ti, xi, sol_densitymatrix):
+        return np.trace(
+            np.dot(
+                self.Fockproj0[xi],
+                sol_densitymatrix.y[:, ti].reshape(2 ** self.n, 2 ** self.n),
+            )
+        )
+
+    def c1(self, ti, xi, sol_densitymatrix):
+        return np.trace(
+            np.dot(
+                self.Fockproj1[xi],
                 sol_densitymatrix.y[:, ti].reshape(2 ** self.n, 2 ** self.n),
             )
         )
