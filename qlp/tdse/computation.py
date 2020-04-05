@@ -83,7 +83,7 @@ class TDSE:
         self.ising = ising_params
         self.offset_params = offset_params
         self.solver_params = solver_params
-        self.FockX, self.FockZ, self.FockZZ = self._init_Fock()
+        self.FockX, self.FockZ, self.FockZZ, self.Fockproj0, self.Fockproj1 = self._init_Fock()
         self.Focksize = None
         self.AS = AnnealSchedule(**offset_params)
         self.IsingH = self._constructIsingH(
