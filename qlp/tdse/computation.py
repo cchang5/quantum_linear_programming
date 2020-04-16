@@ -10,6 +10,7 @@ import numpy as np
 from numpy.linalg import eigh
 
 from scipy.integrate import solve_ivp
+from scipy.linalg import logm
 
 from qlp.tdse.schedule import AnnealSchedule
 
@@ -83,7 +84,9 @@ class TDSE:
         self.ising = ising_params
         self.offset_params = offset_params
         self.solver_params = solver_params
-        self.FockX, self.FockZ, self.FockZZ, self.Fockproj0, self.Fockproj1 = self._init_Fock()
+        self.FockX, self.FockZ, self.FockZZ, self.Fockproj0, self.Fockproj1 = (
+            self._init_Fock()
+        )
         self.Focksize = None
         self.AS = AnnealSchedule(**offset_params)
         self.IsingH = self._constructIsingH(
@@ -390,3 +393,262 @@ class TDSE:
                 sol_densitymatrixt2.y[:, ti].reshape(2 ** self.n, 2 ** self.n),
             )
         ) - self.cZ(ti, xi, sol_densitymatrix) * self.cZ(tj, xj, sol_densitymatrix)
+
+    # entanglement entropy
+
+    def ent_entropy(self, rho, nA, indicesA, reg):
+        """
+        calculate the entanglement entropy
+        input:
+           rho: density matrix
+           n: number of qubits
+           nA: number of qubits in partition A
+           indicesA: einsum string for partial trace
+           reg: infinitesimal regularization
+        """
+        tensorrho = rho.reshape(tuple([2 for i in range(2 * self.n)]))
+        rhoA = np.einsum(indicesA, tensorrho)
+        matrhoA = rhoA.reshape(2 ** nA, 2 ** nA) + reg * np.identity(2 ** nA)
+        s = -np.trace(np.dot(matrhoA, logm(matrhoA) / np.log(2)))
+        return s
+
+    def find_partition(self) -> Tuple[int, str]:
+        """
+        Assumes that offset range is symmetric around zero.
+        Splits partition to positive and negative offsets.
+        Returns a np.einsum index string
+
+        Example:
+        nA = 2  # how many qubits in partition A
+        indicesA = "ijmnijkl"  # einsum '1234 1234' qubits ie. if nA = 1 I trace out 3 out of 4 qubits
+        """
+        from string import ascii_lowercase as abc
+        if self.offset_params["offset_min"] == 0:
+            """
+            If the offset if zero, partition same qubits as problems with offset.
+            """
+            op = dict(self.offset_params)
+            op["offset_min"] = -0.1
+            op["offset_range"] = 0.2
+            A = AnnealSchedule(**op)
+            offsets = A.offset_list
+        else:
+            offsets = self.AS.offset_list
+        einidx1 = ""
+        einidx2 = ""
+        idx = 0
+        nA = 0
+        for offset in offsets:
+            if offset < 0:
+                einidx1 += abc[idx]
+                einidx2 += abc[idx]
+                idx += 1
+            else:
+                einidx1 += abc[idx]
+                idx += 1
+                einidx2 += abc[idx]
+                idx += 1
+                nA += 1
+        einidx = einidx1 + einidx2
+        return nA, einidx
+
+
+"""
+# CODE FOR KL DIVERGENCE
+# copied from Jupyter to here
+
+        # KL divergence
+        from scipy import special
+        from scipy.special import rel_entr
+
+        # print('hello',rel_entr(np.zeros(2),np.zeros(2)))
+        nt = 11
+        tgrid = np.linspace(0, 1, nt)
+        dimH = 2 ** n
+        # print(n)
+        KLdiv = np.zeros(nt)
+        KLdiv2 = np.zeros(nt)
+        KLdiv3 = np.zeros(nt)
+        KLdiv4 = np.zeros(nt)
+        for i in range(nt):
+            energy, evec = np.linalg.eigh(tdse.annealingH(tgrid[i]))
+            midn = int(dimH / 2)
+            # print(midn)
+            # the KL divergence between mid eigens state and nearby eigen state distribution
+            p = np.absolute(np.conj(evec[:, midn]) * evec[:, midn])
+            q = np.absolute(np.conj(evec[:, midn - 1]) * evec[:, midn - 1])
+            KLdiv[i] = np.sum(rel_entr(p, q))
+            KLdiv2[i] = np.sum(rel_entr(q, p))
+
+            # the KL divergence between 1st and gnd state distribution
+            p = np.absolute(np.conj(evec[:, 0]) * evec[:, 0])
+            q = np.absolute(np.conj(evec[:, 1]) * evec[:, 1])
+            KLdiv3[i] = np.sum(rel_entr(p, q))
+            KLdiv4[i] = np.sum(rel_entr(q, p))
+
+        plt.figure()
+        plt.plot(tgrid, KLdiv)
+        plt.plot(tgrid, KLdiv2)
+        plt.plot(tgrid, KLdiv3)
+        plt.plot(tgrid, KLdiv4)
+        plt.legend(['mid/mid-1', 'mid-1/mid', 'gnd/1st', '1st/gnd'])
+        plt.title('KL divergence')
+        # end KL divergence
+
+        # correlation functions
+        xgrid = np.arange(n)
+        # print(qubo.todense())
+
+        plt.figure()
+        data = np.asarray(
+            [
+                [
+                    np.absolute(tdse.cZ(t, xgrid[x], sol_densitymatrix))
+                    for t in range(sol_densitymatrix.t.size)
+                ]
+                for x in range(n)
+            ]
+        )
+
+        # how correlated with sigma_z
+        plt.figure("Z_i")
+        ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+        for idx, datai in enumerate(data):
+            ax.errorbar(x=sol_densitymatrix.t, y=datai, label=f"qubit {idx}")
+        ax.set_title(r"$|< Z_i >|$")
+        ax.set_xlabel(r"$t_i$")
+        ax.set_ylabel(r"$x_i$")
+"""
+"""
+# PLOT CORRELATION FUNCTIONS
+        plt.figure()
+        data = np.asarray(
+            [
+                [
+                    np.absolute(tdse.cZZ(t, xj, xgrid[x], sol_densitymatrix))
+                    for t in range(sol_densitymatrix.t.size)
+                ]
+                for x in range(n)
+            ]
+        )
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        pos = ax.imshow(data)
+        ax.set_aspect("auto")
+        ax.set_title(r"$|< Z_i Z_j >|$")
+        ax.set_xlabel(r"$t_i$")
+        ax.set_ylabel(r"$x_i$")
+        fig.colorbar(pos)
+
+        plt.figure()
+        data = np.asarray(
+            [
+                [
+                    np.absolute(tdse.cZZd(t, xgrid[x], xj, sol_densitymatrix))
+                    for t in range(sol_densitymatrix.t.size)
+                ]
+                for x in range(n)
+            ]
+        )
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        pos = ax.imshow(data)
+        ax.set_aspect("auto")
+        ax.set_title(r"$|< Z_i Z_j>-< Z_i >< Z_j >|$")
+        ax.set_xlabel(r"$t_i$")
+        ax.set_ylabel(r"$x_i$")
+        fig.colorbar(pos)
+
+
+        plt.figure()
+        t = 0
+        data = np.asarray(
+            [
+                [
+                    np.absolute(tdse.cZZd(t, xgrid[xi], xgrid[xj], sol_densitymatrix))
+                    for xi in range(n)
+                ]
+                for xj in range(n)
+            ]
+        )
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        pos = ax.imshow(data)
+        ax.set_aspect("auto")
+        ax.set_title(r"$|< Z_i Z_j>-< Z_i >< Z_j >|$, initial")
+        ax.set_xlabel(r"$x_j$")
+        ax.set_ylabel(r"$x_i$")
+        fig.colorbar(pos)
+
+        plt.figure()
+        t = sol_densitymatrix.t.size - 1
+        data = np.asarray(
+            [
+                [
+                    np.absolute(tdse.cZZd(t, xgrid[xi], xgrid[xj], sol_densitymatrix))
+                    for xi in range(n)
+                ]
+                for xj in range(n)
+            ]
+        )
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        pos = ax.imshow(data)
+        ax.set_aspect("auto")
+        ax.set_title(r"$|< Z_i Z_j>-< Z_i >< Z_j >|$, final")
+        ax.set_xlabel(r"$x_j$")
+        ax.set_ylabel(r"$x_i$")
+        fig.colorbar(pos)
+
+
+        # two time correlation functions
+        # need to solve again using different initial density matrix...
+
+        # choose one xj... if you want other xj you have to do this for each xj
+        tj = 0
+        xj = 0
+        rho2 = np.dot(tdse.FockZ[xj], rho.reshape(2 ** n, 2 ** n))
+        sol_densitymatrixt2 = tdse.solve_mixed(rho2.reshape(4 ** n))
+
+        plt.figure()
+        data = np.asarray(
+            [
+                [
+                    np.absolute(tdse.cZZt2(t, xgrid[x], sol_densitymatrixt2))
+                    for t in range(sol_densitymatrix.t.size)
+                ]
+                for x in range(n)
+            ]
+        )
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        pos = ax.imshow(data)
+        ax.set_aspect("auto")
+        ax.set_title(r"$ double time |< Z_i(t) Z_j>|$")
+        ax.set_xlabel(r"$t_i$")
+        ax.set_ylabel(r"$x_i$")
+        fig.colorbar(pos)
+
+        plt.figure()
+        data = np.asarray(
+            [
+                [
+                    np.absolute(
+                        tdse.cZZt2d(
+                            t, xgrid[x], tj, xj, sol_densitymatrix, sol_densitymatrixt2
+                        )
+                    )
+                    for t in range(sol_densitymatrix.t.size)
+                ]
+                for x in range(n)
+            ]
+        )
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        pos = ax.imshow(data)
+        ax.set_aspect("auto")
+        ax.set_title(r"$ double time |< Z_i(t) Z_j>-< Z_i(t) >< Z_j >|$")
+        ax.set_xlabel(r"$t_i$")
+        ax.set_ylabel(r"$x_i$")
+        fig.colorbar(pos)
+"""
