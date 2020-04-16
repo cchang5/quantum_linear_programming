@@ -5,7 +5,6 @@ from typing import List, Dict
 from django.db import models
 from espressodb.base.models import Base
 from django.contrib.postgres.fields import JSONField
-from django.contrib.postgres.fields import ArrayField
 
 from django.db.models import Count, Avg
 
@@ -21,7 +20,7 @@ class Experiment(Base):
     settings_hash = models.TextField(
         null=False,
         blank=False,
-        help_text="md5 hash of key sorted normalized machine, settings, p, fact dictionary",
+        help_text="md5 hash of key sorted normalized machine, settings, p, dictionary",
     )
     p = models.DecimalField(
         null=False,

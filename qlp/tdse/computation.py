@@ -93,6 +93,40 @@ class TDSE:
             self._Bij(self.AS.B(1)) * self.ising["Jij"], self.AS.B(1) * self.ising["hi"]
         )
 
+    def summary(self, tag, penalty, ising_params, offset_params, solver_params, wave_params, time, probability, entropy):
+        """
+        output dictionary used to store tdse run into EspressodB
+
+        tag: user-defined string (e.g. NN(3)_negbinary_-0.5_1.0_mixed_
+        penalty: strength of penalty for slack variables
+        ising_params: Jij, hi, c, energyscale (unit conversion from GHz)
+        solver_params: method, rtol, atol
+        offset_params:normalized_time, offset, hi_for_offset, offset_min, offset_range, fill_value, anneal_curve
+        wave_params: pure or mixed, temp, initial_wavefunction. If pure, temp = 0
+        """
+        from qlpdb.graph.models import Graph
+        from qlpdb.tdse.models import Tdse
+
+        # select or insert row in graph
+        graph, created = Graph.objects.get_or_create(
+            tag=graph_params["tag"],  # Tag for graph type (e.g. Hamming(n,m) or K(n,m))
+            total_vertices=graph_params[
+                "total_vertices"
+            ],  # Total number of vertices in graph
+            total_edges=graph_params["total_edges"],  # Total number of edges in graph
+            max_edges=graph_params["max_edges"],  # Maximum number of edges per vertex
+            adjacency=graph_params[
+                "adjacency"
+            ],  # Sorted adjacency matrix of dimension [N, 2]
+            adjacency_hash=graph_params[
+                "adjacency_hash"
+            ],  # md5 hash of adjacency list used for unique constraint
+        )
+
+
+
+
+
     def _apply_H(self, t, psi: ndarray) -> ndarray:
         """Computes `i H(t) psi`"""
         return -1j * np.dot(self.annealingH(t), psi)

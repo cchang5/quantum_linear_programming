@@ -3,5 +3,6 @@ PROJECT_APPS:
   - qlpdb.graph
   - qlpdb.experiment
   - qlpdb.data
+  - qlpdb.tdse
 ALLOWED_HOSTS: []
 DEBUG: True
