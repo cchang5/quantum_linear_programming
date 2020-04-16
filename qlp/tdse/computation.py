@@ -107,6 +107,10 @@ class TDSE:
         from qlpdb.graph.models import Graph
         from qlpdb.tdse.models import Tdse
 
+        # make tdse inputs
+        tdse_params = dict()
+        tdse_params["tag"] = f"{graph_params['tag']}_"
+
         # select or insert row in graph
         graph, created = Graph.objects.get_or_create(
             tag=graph_params["tag"],  # Tag for graph type (e.g. Hamming(n,m) or K(n,m))
@@ -122,6 +126,7 @@ class TDSE:
                 "adjacency_hash"
             ],  # md5 hash of adjacency list used for unique constraint
         )
+
 
 
 

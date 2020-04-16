@@ -51,6 +51,14 @@ class Tdse(Base):
         null=False,
         help_text="Ising ground state probability vs. time",
     )
+    nA = models.PositiveSmallIntegerField(
+        null=False,
+        help_text="Number of qubits in partition A"
+    )
+    indicesA = models.TextField(
+        null=False,
+        help_text="einsum index string for entropy calculation"
+    )
     entropy = ArrayField(
         models.FloatField(null=False),
         null=False,
