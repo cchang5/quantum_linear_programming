@@ -16,5 +16,12 @@ Including another URLconf
 """
 from django.urls import path
 
+from qlpdb.tdse.views import TdseView, TdseSummaryView
+
 app_name = "tdse"
 urlpatterns = []
+
+urlpatterns = [
+    path("summary/", TdseSummaryView.as_view(), name="Tdse Summary"),
+    path("detail/<int:pk>/", TdseView.as_view(), name="Tdse Detail"),
+]

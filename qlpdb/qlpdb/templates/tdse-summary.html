@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+{% load base_extras %}
+{% load experiments_extras %}
+
+{% block head-extra %}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
+
+{% endblock %}
+
+
+{% block content %}
+<div class="jumbotron">
+    <h1>Experiment Summary</h1>
+    <h5>Here are some useful informations.</h5>
+    <p>Use <code>Shift-Click</code> to sort multiple columns at once.</p>
+</div>
+<div class="container">
+        <table class="table table-hover" id="tdse-table">
+          <thead>
+            <tr>
+              <th scope="col">Graph Tag</th>
+              <th scope="col">TDSE Tag</th>
+              <th scope="col">solver</th>
+              <th scope="col">Offset</th>
+              <th scope="col">Wave</th>
+              <th scope="col"><code>P(1)</code></th>
+              <th scope="col"><code>S(1)</code></th>
+              <th scope="col"><code>max(S)</code></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for tdse in tdse_list %}
+            <tr>
+                <td>{{tdse.graph.tag}}</td>
+                <td>{{tdse.tag}}</td>
+                <td>
+                    <ul class="text-monospace" style="font-size: 0.8rem;">
+                    {% for item in tdse.solver.items %}
+                    <li>{{item.0}}={{item.1}}</li>
+                    {% endfor %}
+                    </ul>
+                </td>
+                <td>
+                    <ul class="text-monospace" style="font-size: 0.8rem;">
+                    {% for item in tdse.offset.items %}
+                    {% if item.0 != "hi_for_offset" %}<li>{{item.0}}={{item.1}}</li>{% endif %}
+                    {% endfor %}
+                    </ul>
+                </td>
+                <td>
+                    <ul class="text-monospace" style="font-size: 0.8rem;">
+                    {% for item in tdse.wave.items %}
+                    <li>{{item.0}}={{item.1}}</li>
+                    {% endfor %}
+                    </ul>
+                </td>
+                <td>{{tdse.prob|last}}</td>
+                <td>{{tdse.entropy|last}}</td>
+                <td>{{tdse.entropy_max}}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#tdse-table').DataTable({
+    });
+});
+</script>
+
+{% endblock %}

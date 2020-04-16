@@ -1,8 +1,7 @@
 """Models of tdse
 """
 
-# Note: if you want your models to use espressodb features, they must inherit from Base
-
+import numpy as np
 from django.db import models
 from espressodb.base.models import Base
 from django.contrib.postgres.fields import JSONField
@@ -52,18 +51,20 @@ class Tdse(Base):
         help_text="Ising ground state probability vs. time",
     )
     nA = models.PositiveSmallIntegerField(
-        null=False,
-        help_text="Number of qubits in partition A"
+        null=False, help_text="Number of qubits in partition A"
     )
     indicesA = models.TextField(
-        null=False,
-        help_text="einsum index string for entropy calculation"
+        null=False, help_text="einsum index string for entropy calculation"
     )
     entropy = ArrayField(
         models.FloatField(null=False),
         null=False,
         help_text="von Neumann entropy vs. time",
     )
+
+    @property
+    def entropy_max(self):
+        return np.max(self.entropy)
 
     class Meta:
         constraints = [
