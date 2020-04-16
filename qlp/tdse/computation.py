@@ -93,7 +93,20 @@ class TDSE:
             self._Bij(self.AS.B(1)) * self.ising["Jij"], self.AS.B(1) * self.ising["hi"]
         )
 
-    def summary(self, tag, penalty, ising_params, offset_params, solver_params, wave_params, time, probability, entropy):
+    def summary(
+        self,
+        graph_params,
+        penalty,
+        ising_params,
+        offset_params,
+        solver_params,
+        wave_params,
+        time,
+        probability,
+        nA,
+        indicesA,
+        entropy,
+    ):
         """
         output dictionary used to store tdse run into EspressodB
 
@@ -104,33 +117,52 @@ class TDSE:
         offset_params:normalized_time, offset, hi_for_offset, offset_min, offset_range, fill_value, anneal_curve
         wave_params: pure or mixed, temp, initial_wavefunction. If pure, temp = 0
         """
+        import hashlib
         from qlpdb.graph.models import Graph
         from qlpdb.tdse.models import Tdse
 
+        def hash_dict(d):
+            hash = hashlib.md5(
+                str([[key, d[key]] for key in sorted(d)])
+                .replace(" ", "")
+                .encode("utf-8")
+            ).hexdigest()
+            return hash
+
         # make tdse inputs
         tdse_params = dict()
-        tdse_params["tag"] = f"{graph_params['tag']}_"
+        wf_type = wave_params["type"]
+        a_time = offset_params["annealing_time"]
+        offset_type = offset_params["offset"]
+        omin = offset_params["offset_min"]
+        orange = offset_params["offset_range"]
+        tdse_params["tag"] = f"{wf_type}_{a_time}us_{offset_type}_{omin}_{orange}"
+        tdse_params["penalty"] = penalty
+        ising_params["Jij"] = [list(row) for row in ising_params["Jij"]]
+        ising_params["hi"] = list(ising_params["hi"])
+        tdse_params["ising"] = ising_params
+        tdse_params["ising_hash"] = hash_dict(tdse_params["ising"])
+        offset_params["hi_for_offset"] = list(offset_params["hi_for_offset"])
+        tdse_params["offset"] = offset_params
+        tdse_params["offset_hash"] = hash_dict(tdse_params["offset"])
+        tdse_params["solver"] = solver_params
+        tdse_params["solver_hash"] = hash_dict(tdse_params["solver"])
+        tdse_params["wave"] = wave_params
+        tdse_params["wave_hash"] = hash_dict(tdse_params["wave"])
+        tdse_params["time"] = list(time)
+        tdse_params["prob"] = list(probability)
+        tdse_params["nA"] = nA
+        tdse_params["indicesA"] = indicesA
+        tdse_params["entropy"] = list(entropy)
 
         # select or insert row in graph
-        graph, created = Graph.objects.get_or_create(
-            tag=graph_params["tag"],  # Tag for graph type (e.g. Hamming(n,m) or K(n,m))
-            total_vertices=graph_params[
-                "total_vertices"
-            ],  # Total number of vertices in graph
-            total_edges=graph_params["total_edges"],  # Total number of edges in graph
-            max_edges=graph_params["max_edges"],  # Maximum number of edges per vertex
-            adjacency=graph_params[
-                "adjacency"
-            ],  # Sorted adjacency matrix of dimension [N, 2]
-            adjacency_hash=graph_params[
-                "adjacency_hash"
-            ],  # md5 hash of adjacency list used for unique constraint
-        )
-
-
-
-
-
+        gp = {key: graph_params[key] for key in graph_params if key not in ["total_qubits"]}
+        print(gp)
+        graph, _ = Graph.objects.get_or_create(**gp)
+        print("END GET GRAPH")
+        # select or insert row in tdse
+        tdse, _ = Tdse.objects.get_or_create(graph=graph, **tdse_params)
+        return tdse
 
     def _apply_H(self, t, psi: ndarray) -> ndarray:
         """Computes `i H(t) psi`"""
@@ -462,6 +494,7 @@ class TDSE:
         indicesA = "ijmnijkl"  # einsum '1234 1234' qubits ie. if nA = 1 I trace out 3 out of 4 qubits
         """
         from string import ascii_lowercase as abc
+
         if self.offset_params["offset_min"] == 0:
             """
             If the offset if zero, partition same qubits as problems with offset.
