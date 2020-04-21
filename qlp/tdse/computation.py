@@ -51,6 +51,14 @@ class PureSolutionInterface:
         self.t = np.zeros((0))
         self.y = np.zeros((y1.size, 0))
 
+def convert_params(params):
+    for key in params:
+        if key in ["hi_for_offset", "hi"]:
+            params[key] = list(params[key])
+        elif key in ["Jij"]:
+            params[key] = [list(row) for row in params["Jij"]]
+    return params
+
 class TDSE:
     """Time dependent Schrödinger equation solver class
 
@@ -102,14 +110,6 @@ class TDSE:
             .encode("utf-8")
         ).hexdigest()
         return hash
-
-    def convert_params(self, params):
-        for key in params:
-            if key in ["hi_for_offset", "hi"]:
-                params[key] = list(params[key])
-            elif key in ["Jij"]:
-                params[key] = [list(row) for row in params["Jij"]]
-        return params
 
     def summary(
         self,

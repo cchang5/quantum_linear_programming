@@ -3,4 +3,4 @@
 
 from qlp.tdse.schedule import AnnealSchedule
 from qlp.tdse.example import embed_qubo_example
-from qlp.tdse.computation import TDSE
+from qlp.tdse.computation import TDSE, convert_params
