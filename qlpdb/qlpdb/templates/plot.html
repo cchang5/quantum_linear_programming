@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load static %}
+{% load base_extras %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1>Here are some plots</h1>
+</div>
+<div class="container">
+    {% if graph %}
+    <div style="width:600;height:500">
+    {{ graph|safe }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
