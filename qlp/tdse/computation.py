@@ -5,6 +5,8 @@ This module contains the core computations
 """
 from typing import Dict, Any, Tuple, List
 
+import hashlib
+
 from numpy import ndarray
 import numpy as np
 from numpy.linalg import eigh
@@ -14,6 +16,8 @@ from scipy.linalg import logm
 
 from qlp.tdse.schedule import AnnealSchedule
 
+from qlpdb.graph.models import Graph
+from qlpdb.tdse.models import Tdse
 
 def _set_up_pauli():
     """Creates Pauli matrices and identity
@@ -46,7 +50,6 @@ class PureSolutionInterface:
     def __init__(self, y1):
         self.t = np.zeros((0))
         self.y = np.zeros((y1.size, 0))
-
 
 class TDSE:
     """Time dependent Schrödinger equation solver class
@@ -92,6 +95,21 @@ class TDSE:
         self.IsingH = self._constructIsingH(
             self._Bij(self.AS.B(1)) * self.ising["Jij"], self.AS.B(1) * self.ising["hi"]
         )
+    def hash_dict(self, d):
+        hash = hashlib.md5(
+            str([[key, d[key]] for key in sorted(d)])
+            .replace(" ", "")
+            .encode("utf-8")
+        ).hexdigest()
+        return hash
+
+    def convert_params(self, params):
+        for key in params:
+            if key in ["hi_for_offset", "hi"]:
+                params[key] = list(params[key])
+            elif key in ["Jij"]:
+                params[key] = [list(row) for row in params["Jij"]]
+        return params
 
     def summary(
         self,
@@ -117,18 +135,6 @@ class TDSE:
         offset_params:normalized_time, offset, hi_for_offset, offset_min, offset_range, fill_value, anneal_curve
         wave_params: pure or mixed, temp, initial_wavefunction. If pure, temp = 0
         """
-        import hashlib
-        from qlpdb.graph.models import Graph
-        from qlpdb.tdse.models import Tdse
-
-        def hash_dict(d):
-            hash = hashlib.md5(
-                str([[key, d[key]] for key in sorted(d)])
-                .replace(" ", "")
-                .encode("utf-8")
-            ).hexdigest()
-            return hash
-
         # make tdse inputs
         tdse_params = dict()
         wf_type = wave_params["type"]
@@ -141,14 +147,14 @@ class TDSE:
         ising_params["Jij"] = [list(row) for row in ising_params["Jij"]]
         ising_params["hi"] = list(ising_params["hi"])
         tdse_params["ising"] = ising_params
-        tdse_params["ising_hash"] = hash_dict(tdse_params["ising"])
+        tdse_params["ising_hash"] = self.hash_dict(tdse_params["ising"])
         offset_params["hi_for_offset"] = list(offset_params["hi_for_offset"])
         tdse_params["offset"] = offset_params
-        tdse_params["offset_hash"] = hash_dict(tdse_params["offset"])
+        tdse_params["offset_hash"] = self.hash_dict(tdse_params["offset"])
         tdse_params["solver"] = solver_params
-        tdse_params["solver_hash"] = hash_dict(tdse_params["solver"])
+        tdse_params["solver_hash"] = self.hash_dict(tdse_params["solver"])
         tdse_params["wave"] = wave_params
-        tdse_params["wave_hash"] = hash_dict(tdse_params["wave"])
+        tdse_params["wave_hash"] = self.hash_dict(tdse_params["wave"])
         tdse_params["time"] = list(time)
         tdse_params["prob"] = list(probability)
         tdse_params["nA"] = nA
@@ -157,9 +163,7 @@ class TDSE:
 
         # select or insert row in graph
         gp = {key: graph_params[key] for key in graph_params if key not in ["total_qubits"]}
-        print(gp)
         graph, _ = Graph.objects.get_or_create(**gp)
-        print("END GET GRAPH")
         # select or insert row in tdse
         tdse, _ = Tdse.objects.get_or_create(graph=graph, **tdse_params)
         return tdse
