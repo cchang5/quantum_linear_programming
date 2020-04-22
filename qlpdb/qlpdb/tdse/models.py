@@ -8,6 +8,7 @@ from django.contrib.postgres.fields import JSONField
 from django.contrib.postgres.fields import ArrayField
 from picklefield.fields import PickledObjectField
 
+
 class Tdse(Base):
     tag = models.TextField(null=False, help_text="User-defined tag for easy searches")
     graph = models.ForeignKey(
@@ -41,6 +42,7 @@ class Tdse(Base):
         null=False, blank=False, help_text="md5 hash for wave parameters"
     )
     instance = PickledObjectField(help_text="save instance of class")
+
     time = ArrayField(
         models.FloatField(null=False),
         null=False,
@@ -62,6 +64,7 @@ class Tdse(Base):
         null=False,
         help_text="von Neumann entropy vs. time",
     )
+
     @property
     def entropy_max(self):
         return np.max(self.entropy)
@@ -77,8 +80,9 @@ class Tdse(Base):
                     "offset_hash",
                     "solver_hash",
                     "wave_hash",
+                    "nA",
+                    "indicesA",
                 ],
                 name="unique_tdse",
             )
         ]
-
