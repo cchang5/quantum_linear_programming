@@ -73,6 +73,7 @@ def plot_aggregate(adata):
     plt.figure("probability")
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
     for key in adata:
+        print(len(adata[key].time))
         ax.errorbar(x=adata[key].time, y=adata[key].prob)
     plt.draw()
 

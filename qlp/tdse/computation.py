@@ -19,6 +19,7 @@ from qlp.tdse.schedule import AnnealSchedule
 from qlpdb.graph.models import Graph
 from qlpdb.tdse.models import Tdse
 
+
 def _set_up_pauli():
     """Creates Pauli matrices and identity
     """
@@ -51,6 +52,7 @@ class PureSolutionInterface:
         self.t = np.zeros((0))
         self.y = np.zeros((y1.size, 0))
 
+
 def convert_params(params):
     for key in params:
         if key in ["hi_for_offset", "hi"]:
@@ -58,6 +60,7 @@ def convert_params(params):
         elif key in ["Jij"]:
             params[key] = [list(row) for row in params["Jij"]]
     return params
+
 
 class TDSE:
     """Time dependent Schrödinger equation solver class
@@ -103,11 +106,10 @@ class TDSE:
         self.IsingH = self._constructIsingH(
             self._Bij(self.AS.B(1)) * self.ising["Jij"], self.AS.B(1) * self.ising["hi"]
         )
+
     def hash_dict(self, d):
         hash = hashlib.md5(
-            str([[key, d[key]] for key in sorted(d)])
-            .replace(" ", "")
-            .encode("utf-8")
+            str([[key, d[key]] for key in sorted(d)]).replace(" ", "").encode("utf-8")
         ).hexdigest()
         return hash
 
@@ -162,7 +164,11 @@ class TDSE:
         tdse_params["entropy"] = list(entropy)
 
         # select or insert row in graph
-        gp = {key: graph_params[key] for key in graph_params if key not in ["total_qubits"]}
+        gp = {
+            key: graph_params[key]
+            for key in graph_params
+            if key not in ["total_qubits"]
+        }
         graph, _ = Graph.objects.get_or_create(**gp)
         # select or insert row in tdse
         tdse, _ = Tdse.objects.get_or_create(graph=graph, **tdse_params)
@@ -404,13 +410,18 @@ class TDSE:
         f = ymat.reshape(self.Focksize ** 2)
         return f
 
-    def solve_mixed(self, rho: ndarray) -> ndarray:
+    def solve_mixed(self, rho: ndarray, ) -> ndarray:
         """Solves the TDSE
         """
         self.Focksize = int(np.sqrt(len(rho)))
-        return solve_ivp(
-            self._apply_tdse_dense2, self.offset_params["normalized_time"], rho
+        sol = solve_ivp(
+            fun=self._apply_tdse_dense2,
+            t_span=self.offset_params["normalized_time"],
+            y0=rho,
+            t_eval=np.linspace(*normalized_time),
+            **self.solver_params,
         )
+        return sol
 
     # Compute Correlations
     # One time correlation function
