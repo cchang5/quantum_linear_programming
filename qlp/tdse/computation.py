@@ -6,6 +6,7 @@ This module contains the core computations
 from typing import Dict, Any, Tuple, List
 
 import hashlib
+import pickle
 
 from numpy import ndarray
 import numpy as np
@@ -121,6 +122,7 @@ class TDSE:
         offset_params,
         solver_params,
         wave_params,
+        instance,
         time,
         probability,
         nA,
@@ -136,6 +138,12 @@ class TDSE:
         solver_params: method, rtol, atol
         offset_params:normalized_time, offset, hi_for_offset, offset_min, offset_range, fill_value, anneal_curve
         wave_params: pure or mixed, temp, initial_wavefunction. If pure, temp = 0
+        instance: instance of tdse class
+        time: solver time step
+        probability: prob of Ising ground state
+        nA: number of qubits in partition A
+        indicesA: einsum notation
+        entropy: entropy between partition A and B
         """
         # make tdse inputs
         tdse_params = dict()
@@ -157,6 +165,7 @@ class TDSE:
         tdse_params["solver_hash"] = self.hash_dict(tdse_params["solver"])
         tdse_params["wave"] = wave_params
         tdse_params["wave_hash"] = self.hash_dict(tdse_params["wave"])
+        tdse_params["instance"] = pickle.dumps(instance)
         tdse_params["time"] = list(time)
         tdse_params["prob"] = list(probability)
         tdse_params["nA"] = nA
@@ -418,7 +427,7 @@ class TDSE:
             fun=self._apply_tdse_dense2,
             t_span=self.offset_params["normalized_time"],
             y0=rho,
-            t_eval=np.linspace(*normalized_time),
+            t_eval=np.linspace(*self.offset_params["normalized_time"]),
             **self.solver_params,
         )
         return sol

@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import pickle
 
 from qlpdb.tdse.models import Tdse
 
@@ -25,11 +26,11 @@ class Data():
         # wave params
         wave_params = dict()
         wave_params["type"] = "mixed"
-        wave_params["temp"] = 15e-3
+        wave_params["temp"] = 1
         wave_params["initial_wavefunction"] = "true"
 
         # graph params
-        nvertices = 3
+        nvertices = 2
         graph, tag = gt.generate_nn_graph(nvertices)
         directed = False
         penalty = 2
@@ -87,4 +88,6 @@ def plot_aggregate(adata):
 
 if __name__ == "__main__":
     adata = aggregate()
-    plot_aggregate(adata)
+    tdse = pickle.loads(adata[0.0003].instance)
+    tdse.AS.plot(adata[0.0003].offset["normalized_time"])
+    #plot_aggregate(adata)
