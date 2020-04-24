@@ -377,9 +377,10 @@ class TDSE:
         for jj in range(ngrid - 1):
             y1 = y1 / (np.sqrt(np.absolute(np.dot(np.conj(y1), y1))))
             tempsol = solve_ivp(
-                self._apply_H,
-                [interval[jj], interval[jj + 1]],
-                y1,
+                fun=self._apply_H,
+                t_span=[interval[jj], interval[jj + 1]],
+                y0=y1,
+                t_eval=np.linspace(*self.offset_params["normalized_time"], num=100),
                 **self.solver_params,
             )
             y1 = tempsol.y[:, tempsol.t.size - 1]
@@ -427,7 +428,7 @@ class TDSE:
             fun=self._apply_tdse_dense2,
             t_span=self.offset_params["normalized_time"],
             y0=rho,
-            t_eval=np.linspace(*self.offset_params["normalized_time"]),
+            t_eval=np.linspace(*self.offset_params["normalized_time"], num=100),
             **self.solver_params,
         )
         return sol
