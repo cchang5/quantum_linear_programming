@@ -125,8 +125,7 @@ class TDSE:
         instance,
         time,
         probability,
-        nA,
-        indicesA,
+        entropy_params,
         entropy,
     ):
         """
@@ -168,8 +167,8 @@ class TDSE:
         tdse_params["instance"] = pickle.dumps(instance)
         tdse_params["time"] = list(time)
         tdse_params["prob"] = list(probability)
-        tdse_params["nA"] = nA
-        tdse_params["indicesA"] = indicesA
+        tdse_params["entropy_params"] = entropy_params
+        tdse_params["entropy_params_hash"] = self.hash_dict(tdse_params["entropy_params"])
         tdse_params["entropy"] = list(entropy)
 
         # select or insert row in graph

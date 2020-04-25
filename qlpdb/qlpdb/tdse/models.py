@@ -36,7 +36,7 @@ class Tdse(Base):
         null=False, blank=False, help_text="md5 hash for solver parameters"
     )
     wave = JSONField(
-        help_text="Wavefunction: type (mixed or pure), temp, initial wavefunction (True or transverse"
+        help_text="Wavefunction: type (mixed or pure), temp, initial wavefunction (True or transverse)"
     )
     wave_hash = models.TextField(
         null=False, blank=False, help_text="md5 hash for wave parameters"
@@ -53,11 +53,11 @@ class Tdse(Base):
         null=False,
         help_text="Ising ground state probability vs. time",
     )
-    nA = models.PositiveSmallIntegerField(
-        null=False, help_text="Number of qubits in partition A"
+    entropy_params = JSONField(
+        help_text="Entropy parameters: nA (number of qubits in partition A), indicesA (einsum index notation), reg"
     )
-    indicesA = models.TextField(
-        null=False, help_text="einsum index string for entropy calculation"
+    entropy_params_hash = models.TextField(
+        null=False, blank=False, help_text="md5 hash for entropy parameters"
     )
     entropy = ArrayField(
         models.FloatField(null=False),
@@ -80,8 +80,7 @@ class Tdse(Base):
                     "offset_hash",
                     "solver_hash",
                     "wave_hash",
-                    "nA",
-                    "indicesA",
+                    "entropy_params_hash",
                 ],
                 name="unique_tdse",
             )
