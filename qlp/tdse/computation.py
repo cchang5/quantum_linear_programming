@@ -81,7 +81,7 @@ class TDSE:
 
     def __init__(
         self,
-        n: int,
+        graph_params: Dict[str, Any],
         ising_params: Dict[str, Any],
         offset_params: Dict[str, Any],
         solver_params: Dict[str, Any],
@@ -89,21 +89,21 @@ class TDSE:
         """Init the class with
 
         Arguments:
-            n: Number of qubits
+            graph_params: Parameters of input graph
             ising_params: Parameters for the ising model, e.g., keys are
                 {"Jij", "hi", "c", "energyscale"}.
             offset_params: Parameters for AnnealSchedule
             solver_params: Parameters for solve_ivp
         """
-        self.n = n
+        self.graph = graph_params
         self.ising = ising_params
-        self.offset_params = offset_params
-        self.solver_params = solver_params
+        self.offset = offset_params
+        self.solver = solver_params
         self.FockX, self.FockZ, self.FockZZ, self.Fockproj0, self.Fockproj1 = (
             self._init_Fock()
         )
         self.Focksize = None
-        self.AS = AnnealSchedule(**offset_params)
+        self.AS = AnnealSchedule(**offset_params, graph_params=graph_params)
         self.IsingH = self._constructIsingH(
             self._Bij(self.AS.B(1)) * self.ising["Jij"], self.AS.B(1) * self.ising["hi"]
         )
@@ -116,11 +116,6 @@ class TDSE:
 
     def summary(
         self,
-        graph_params,
-        penalty,
-        ising_params,
-        offset_params,
-        solver_params,
         wave_params,
         instance,
         time,
@@ -147,20 +142,22 @@ class TDSE:
         # make tdse inputs
         tdse_params = dict()
         wf_type = wave_params["type"]
-        a_time = offset_params["annealing_time"]
-        offset_type = offset_params["offset"]
-        omin = offset_params["offset_min"]
-        orange = offset_params["offset_range"]
+        a_time = self.offset["annealing_time"]
+        offset_type = self.offset["offset"]
+        omin = self.offset["offset_min"]
+        orange = self.offset["offset_range"]
         tdse_params["tag"] = f"{wf_type}_{a_time}us_{offset_type}_{omin}_{orange}"
-        tdse_params["penalty"] = penalty
-        ising_params["Jij"] = [list(row) for row in ising_params["Jij"]]
-        ising_params["hi"] = list(ising_params["hi"])
-        tdse_params["ising"] = ising_params
+        ising = dict(self.ising)
+        ising["Jij"] = [list(row) for row in ising["Jij"]]
+        ising["hi"] = list(ising["hi"])
+        tdse_params["ising"] = ising
         tdse_params["ising_hash"] = self.hash_dict(tdse_params["ising"])
-        offset_params["hi_for_offset"] = list(offset_params["hi_for_offset"])
-        tdse_params["offset"] = offset_params
+        offset = dict(self.offset)
+        offset["hi_for_offset"] = list(offset["hi_for_offset"])
+        tdse_params["offset"] = offset
         tdse_params["offset_hash"] = self.hash_dict(tdse_params["offset"])
-        tdse_params["solver"] = solver_params
+        solver = dict(self.solver)
+        tdse_params["solver"] = solver
         tdse_params["solver_hash"] = self.hash_dict(tdse_params["solver"])
         tdse_params["wave"] = wave_params
         tdse_params["wave_hash"] = self.hash_dict(tdse_params["wave"])
@@ -173,8 +170,8 @@ class TDSE:
 
         # select or insert row in graph
         gp = {
-            key: graph_params[key]
-            for key in graph_params
+            key: self.graph[key]
+            for key in self.graph
             if key not in ["total_qubits"]
         }
         graph, _ = Graph.objects.get_or_create(**gp)
@@ -206,7 +203,7 @@ class TDSE:
         if debug:
             print(
                 f"Num. degenerate states @"
-                f" s={self.offset_params['normalized_time'][1]}: {len(gs_idx)}"
+                f" s={self.offset['normalized_time'][1]}: {len(gs_idx)}"
             )
         return gs_idx, eigval, eigv
 
@@ -235,14 +232,14 @@ class TDSE:
         if dtype == "true":
             # true ground state
             eigvalue, eigvector = eigh(
-                self.annealingH(s=self.offset_params["normalized_time"][0])
+                self.annealingH(s=self.offset["normalized_time"][0])
             )
         elif dtype == "transverse":
             # DWave initial wave function
             eigvalue, eigvector = eigh(
                 -1
                 * self.ising["energyscale"]
-                * self._constructtransverseH(self.AS.A(0) * np.ones(self.n))
+                * self._constructtransverseH(self.AS.A(0) * np.ones(self.graph["total_qubits"]))
             )
         else:
             raise TypeError("Undefined initial wavefunction.")
@@ -296,13 +293,13 @@ class TDSE:
             ``sigma^z_i \otimes 1``,
             ``sigma^z_i \otimes sigma^z_j \otimes 1``
         """
-        FockX = [self.pushtoFock(i, SIG_X) for i in range(self.n)]
-        FockZ = [self.pushtoFock(i, SIG_Z) for i in range(self.n)]
+        FockX = [self.pushtoFock(i, SIG_X) for i in range(self.graph["total_qubits"])]
+        FockZ = [self.pushtoFock(i, SIG_Z) for i in range(self.graph["total_qubits"])]
         FockZZ = [
-            [np.dot(FockZ[i], FockZ[j]) for j in range(self.n)] for i in range(self.n)
+            [np.dot(FockZ[i], FockZ[j]) for j in range(self.graph["total_qubits"])] for i in range(self.graph["total_qubits"])
         ]
-        Fockproj0 = [self.pushtoFock(i, PROJ_0) for i in range(self.n)]
-        Fockproj1 = [self.pushtoFock(i, PROJ_1) for i in range(self.n)]
+        Fockproj0 = [self.pushtoFock(i, PROJ_0) for i in range(self.graph["total_qubits"])]
+        Fockproj1 = [self.pushtoFock(i, PROJ_1) for i in range(self.graph["total_qubits"])]
         return FockX, FockZ, FockZZ, Fockproj0, Fockproj1
 
     def pushtoFock(self, i: int, local: ndarray) -> ndarray:
@@ -313,7 +310,7 @@ class TDSE:
             local: matrix operator
         """
         fock = np.identity(1)
-        for j in range(self.n):
+        for j in range(self.graph["total_qubits"]):
             if j == i:
                 fock = np.kron(fock, local)
             else:
@@ -322,8 +319,8 @@ class TDSE:
 
     def _constructIsingH(self, Jij: ndarray, hi: ndarray) -> ndarray:
         """Computes Hamiltonian (``J_ij is i < j``, i.e., upper diagonal"""
-        IsingH = np.zeros((2 ** self.n, 2 ** self.n))
-        for i in range(self.n):
+        IsingH = np.zeros((2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]))
+        for i in range(self.graph["total_qubits"]):
             IsingH += hi[i] * self.FockZ[i]
             for j in range(i):
                 IsingH += Jij[j, i] * self.FockZZ[i][j]
@@ -332,8 +329,8 @@ class TDSE:
     def _constructtransverseH(self, hxi: ndarray) -> ndarray:
         r"""Construct sum of tensor products of ``\sigma^x_i \otimes 1``
         """
-        transverseH = np.zeros((2 ** self.n, 2 ** self.n))
-        for i in range(self.n):
+        transverseH = np.zeros((2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]))
+        for i in range(self.graph["total_qubits"]):
             transverseH += hxi[i] * self.FockX[i]
         return transverseH
 
@@ -349,13 +346,13 @@ class TDSE:
             B: Anneal coefficients for given schedule.
         """
         return np.asarray(
-            [[np.sqrt(B[i] * B[j]) for i in range(self.n)] for j in range(self.n)]
+            [[np.sqrt(B[i] * B[j]) for i in range(self.graph["total_qubits"])] for j in range(self.graph["total_qubits"])]
         )
 
     def annealingH(self, s: float) -> ndarray:
         """Computes ``H(s) = A(s) H_init + B(s) H_final`` in units of "energyscale"
         """
-        AxtransverseH = self._constructtransverseH(self.AS.A(s) * np.ones(self.n))
+        AxtransverseH = self._constructtransverseH(self.AS.A(s) * np.ones(self.graph["total_qubits"]))
         BxIsingH = self._constructIsingH(
             self._Bij(self.AS.B(s)) * self.ising["Jij"], self.AS.B(s) * self.ising["hi"]
         )
@@ -367,8 +364,8 @@ class TDSE:
     ) -> PureSolutionInterface:
         """Solves time depepdent Schrödinger equation for pure inital state
         """
-        start = self.offset_params["normalized_time"][0]
-        end = self.offset_params["normalized_time"][1]
+        start = self.offset["normalized_time"][0]
+        end = self.offset["normalized_time"][1]
         interval = np.linspace(start, end, ngrid)
 
         sol = PureSolutionInterface(y1)
@@ -379,8 +376,8 @@ class TDSE:
                 fun=self._apply_H,
                 t_span=[interval[jj], interval[jj + 1]],
                 y0=y1,
-                t_eval=np.linspace(*self.offset_params["normalized_time"], num=100),
-                **self.solver_params,
+                t_eval=np.linspace(*self.offset["normalized_time"], num=100),
+                **self.solver,
             )
             y1 = tempsol.y[:, tempsol.t.size - 1]
             sol.t = np.hstack((sol.t, tempsol.t))
@@ -425,10 +422,10 @@ class TDSE:
         self.Focksize = int(np.sqrt(len(rho)))
         sol = solve_ivp(
             fun=self._apply_tdse_dense2,
-            t_span=self.offset_params["normalized_time"],
+            t_span=self.offset["normalized_time"],
             y0=rho,
-            t_eval=np.linspace(*self.offset_params["normalized_time"], num=100),
-            **self.solver_params,
+            t_eval=np.linspace(*self.offset["normalized_time"], num=100),
+            **self.solver,
         )
         return sol
 
@@ -438,7 +435,7 @@ class TDSE:
         return np.trace(
             np.dot(
                 self.FockZ[xi],
-                sol_densitymatrix.y[:, ti].reshape(2 ** self.n, 2 ** self.n),
+                sol_densitymatrix.y[:, ti].reshape(2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]),
             )
         )
 
@@ -446,7 +443,7 @@ class TDSE:
         return np.trace(
             np.dot(
                 self.Fockproj0[xi],
-                sol_densitymatrix.y[:, ti].reshape(2 ** self.n, 2 ** self.n),
+                sol_densitymatrix.y[:, ti].reshape(2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]),
             )
         )
 
@@ -454,7 +451,7 @@ class TDSE:
         return np.trace(
             np.dot(
                 self.Fockproj1[xi],
-                sol_densitymatrix.y[:, ti].reshape(2 ** self.n, 2 ** self.n),
+                sol_densitymatrix.y[:, ti].reshape(2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]),
             )
         )
 
@@ -462,7 +459,7 @@ class TDSE:
         return np.trace(
             np.dot(
                 self.FockZZ[xi][xj],
-                sol_densitymatrix.y[:, ti].reshape(2 ** self.n, 2 ** self.n),
+                sol_densitymatrix.y[:, ti].reshape(2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]),
             )
         )
 
@@ -477,7 +474,7 @@ class TDSE:
         return np.trace(
             np.dot(
                 self.FockZ[xi],
-                sol_densitymatrixt2.y[:, ti].reshape(2 ** self.n, 2 ** self.n),
+                sol_densitymatrixt2.y[:, ti].reshape(2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]),
             )
         )
 
@@ -485,7 +482,7 @@ class TDSE:
         return np.trace(
             np.dot(
                 self.FockZ[xi],
-                sol_densitymatrixt2.y[:, ti].reshape(2 ** self.n, 2 ** self.n),
+                sol_densitymatrixt2.y[:, ti].reshape(2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]),
             )
         ) - self.cZ(ti, xi, sol_densitymatrix) * self.cZ(tj, xj, sol_densitymatrix)
 
@@ -501,7 +498,7 @@ class TDSE:
            indicesA: einsum string for partial trace
            reg: infinitesimal regularization
         """
-        tensorrho = rho.reshape(tuple([2 for i in range(2 * self.n)]))
+        tensorrho = rho.reshape(tuple([2 for i in range(2 * self.graph["total_qubits"])]))
         rhoA = np.einsum(indicesA, tensorrho)
         matrhoA = rhoA.reshape(2 ** nA, 2 ** nA) + reg * np.identity(2 ** nA)
         s = -np.trace(np.dot(matrhoA, logm(matrhoA) / np.log(2)))
@@ -519,14 +516,14 @@ class TDSE:
         """
         from string import ascii_lowercase as abc
 
-        if self.offset_params["offset_min"] == 0:
+        if self.offset["offset_min"] == 0:
             """
             If the offset if zero, partition same qubits as problems with offset.
             """
-            op = dict(self.offset_params)
+            op = dict(self.offset)
             op["offset_min"] = -0.1
             op["offset_range"] = 0.2
-            A = AnnealSchedule(**op)
+            A = AnnealSchedule(**op, graph_params=self.graph)
             offsets = A.offset_list
         else:
             offsets = self.AS.offset_list

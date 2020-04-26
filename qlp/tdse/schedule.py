@@ -162,6 +162,7 @@ class AnnealSchedule:
         offset_range,
         fill_value: str = "extrapolate",
         anneal_curve: str = "linear",
+        graph_params={},
         **kwargs,
     ):
         """Initializes offset curves
@@ -170,7 +171,7 @@ class AnnealSchedule:
             offset, hi_for_offset, offset_min, offset_range: Parameters for AnnealOffset
             fill_value, anneal_curve: Parameters for s_to_offset
         """
-        AO = AnnealOffset(offset)
+        AO = AnnealOffset(offset, graph_params)
         self.offset_list, self.offset_tag = AO.fcn(
             hi_for_offset, offset_min, offset_range
         )

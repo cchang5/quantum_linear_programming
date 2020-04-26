@@ -17,13 +17,30 @@ class AnnealOffset:
     """https://docs.dwavesys.com/docs/latest/c_qpu_0.html#anneal-offsets
     """
 
-    def __init__(self, tag):
+    def __init__(self, tag, graph_params={}):
         self.tag = tag
+        self.graph_params = graph_params
 
     def fcn(self, h, offset_min, offset_range):
         abshrange = max(abs(h)) - min(abs(h))
         fullrange = max(h) - min(h)
 
+        if self.tag == "advproblem":
+            offset_tag = f"FixEmbedding_AdvanceProblem_{offset_min}_{offset_range}"
+            adv = offset_min + offset_range
+            offset_fcn = [adv for q in range(self.graph_params["total_vertices"])]
+            nconstraint = self.graph_params["total_qubits"] - self.graph_params["total_vertices"]
+            offset_constraint = [offset_min for q in range(nconstraint)]
+            offset_fcn.extend(offset_constraint)
+            return offset_fcn, offset_tag
+        if self.tag == "advconstraint":
+            offset_tag = f"FixEmbedding_AdvanceConstraint_{offset_min}_{offset_range}"
+            offset_fcn = [offset_min for q in range(self.graph_params["total_vertices"])]
+            adv = offset_min + offset_range
+            nconstraint = self.graph_params["total_qubits"] - self.graph_params["total_vertices"]
+            offset_constraint = [adv for q in range(nconstraint)]
+            offset_fcn.extend(offset_constraint)
+            return offset_fcn, offset_tag
         if self.tag == "constant":
             return (
                 np.zeros(len(h)),

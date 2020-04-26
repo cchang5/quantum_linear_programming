@@ -14,13 +14,6 @@ class Tdse(Base):
     graph = models.ForeignKey(
         "graph.Graph", on_delete=models.CASCADE, help_text=r"Foreign Key to `graph`"
     )
-
-    penalty = models.DecimalField(
-        null=False,
-        max_digits=6,
-        decimal_places=2,
-        help_text="Coefficient of penalty term, 0 to 9999.99",
-    )
     ising = JSONField(help_text="Ising parameters: Jij, hi, c, energyscale")
     ising_hash = models.TextField(
         null=False, blank=False, help_text="md5 hash for Ising parameters"
@@ -75,7 +68,6 @@ class Tdse(Base):
                 fields=[
                     "tag",
                     "graph",
-                    "penalty",
                     "ising_hash",
                     "offset_hash",
                     "solver_hash",
