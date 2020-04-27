@@ -312,7 +312,7 @@ class TDSE:
             ``sigma^z_i \otimes sigma^z_j \otimes 1``
         """
         FockX, FockZ, FockProj_0, Fockproj1 = (
-            [sp.csr_matrix(mmat) for mmat in mat]
+            [sp.csr_matrix(mmat, dtype=np.int8) for mmat in mat]
             for mat in _init_Fock(self.graph["total_qubits"])
         )
         FockZZ = [[m1 @ m2 for m1 in FockZ] for m2 in FockZ]
@@ -594,7 +594,7 @@ def _pushtoFock(i: int, local: ndarray, total_qubits: int) -> ndarray:
         i: particle index of matrix local
         local: matrix operator
     """
-    fock = np.array([[1]])
+    fock = np.array([[True]], dtype=np.bool_)
     for j in range(total_qubits):
         if j == i:
             fock = np.kron(fock, local)
@@ -603,18 +603,10 @@ def _pushtoFock(i: int, local: ndarray, total_qubits: int) -> ndarray:
     return fock
 
 
-_SIG_X = SIG_X.astype(np.int)
-_SIG_Z = SIG_Z.astype(np.int)
-_PROJ_0 = PROJ_0.astype(np.int)
-_PROJ_1 = PROJ_1.astype(np.int)
-
-
-@jit(nopython=True)
-def dot(v1, v2):
-    out = 0
-    for nn in v1.shape[1]:
-        out += v1[:, nn] * v2[nn, :]
-    return out
+_SIG_X = SIG_X.astype(np.bool_)
+_SIG_Z = SIG_Z.astype(np.bool_)
+_PROJ_0 = PROJ_0.astype(np.bool_)
+_PROJ_1 = PROJ_1.astype(np.bool_)
 
 
 @jit(nopython=True)
@@ -627,7 +619,7 @@ def _init_Fock(total_qubits: int) -> Tuple[ndarray, ndarray, ndarray]:
         ``sigma^z_i \otimes sigma^z_j \otimes 1``
     """
     FockX = FockZ = Fockproj0 = Fockproj1 = np.zeros(
-        (total_qubits, 2 ** total_qubits, 2 ** total_qubits), dtype=np.int8
+        (total_qubits, 2 ** total_qubits, 2 ** total_qubits), dtype=np.bool_
     )
     for i in range(total_qubits):
         print(i, total_qubits)
