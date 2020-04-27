@@ -14,6 +14,10 @@ from numpy.linalg import eigh
 
 from scipy.integrate import solve_ivp
 from scipy.linalg import logm
+from scipy import sparse as sp
+
+from numba import jit
+
 
 from qlp.tdse.schedule import AnnealSchedule
 
@@ -101,9 +105,13 @@ class TDSE:
         self.ising = ising_params
         self.offset = offset_params
         self.solver = solver_params
-        self.FockX, self.FockZ, self.FockZZ, self.Fockproj0, self.Fockproj1 = (
-            self._init_Fock()
-        )
+        (
+            self.FockX,
+            self.FockZ,
+            self.FockZZ,
+            self.Fockproj0,
+            self.Fockproj1,
+        ) = self._init_Fock()
         self.Focksize = None
         self.AS = AnnealSchedule(**offset_params, graph_params=graph_params)
         self.IsingH = self._constructIsingH(
@@ -308,19 +316,12 @@ class TDSE:
             ``sigma^z_i \otimes 1``,
             ``sigma^z_i \otimes sigma^z_j \otimes 1``
         """
-        FockX = [self.pushtoFock(i, SIG_X) for i in range(self.graph["total_qubits"])]
-        FockZ = [self.pushtoFock(i, SIG_Z) for i in range(self.graph["total_qubits"])]
-        FockZZ = [
-            [np.dot(FockZ[i], FockZ[j]) for j in range(self.graph["total_qubits"])]
-            for i in range(self.graph["total_qubits"])
-        ]
-        Fockproj0 = [
-            self.pushtoFock(i, PROJ_0) for i in range(self.graph["total_qubits"])
-        ]
-        Fockproj1 = [
-            self.pushtoFock(i, PROJ_1) for i in range(self.graph["total_qubits"])
-        ]
-        return FockX, FockZ, FockZZ, Fockproj0, Fockproj1
+        FockX, FockZ, FockProj_0, Fockproj1 = (
+            [sp.csr_matrix(mmat) for mmat in mat]
+            for mat in _init_Fock(self.graph["total_qubits"])
+        )
+        FockZZ = [[m1 @ m2 for m1 in FockZ] for m2 in FockZ]
+        return FockX, FockZ, FockZZ, FockProj_0, Fockproj1
 
     def pushtoFock(self, i: int, local: ndarray) -> ndarray:
         """Tensor product of `local` at particle index i with 1 in fock space
@@ -388,6 +389,7 @@ class TDSE:
         H = self.ising["energyscale"] * (-1 * AxtransverseH + BxIsingH)
         return H
 
+    # @jit(nopython=True)
     def solve_pure(
         self, y1: ndarray, ngrid: int = 11, debug: bool = False
     ) -> PureSolutionInterface:
@@ -588,6 +590,55 @@ class TDSE:
         einidx = einidx1 + einidx2
         return nA, einidx
 
+
+@jit(nopython=True)
+def _pushtoFock(i: int, local: ndarray, total_qubits: int) -> ndarray:
+    """Tensor product of `local` at particle index i with 1 in fock space
+
+    Arguments:
+        i: particle index of matrix local
+        local: matrix operator
+    """
+    fock = np.array([[1]], dtype=np.int8)
+    for j in range(total_qubits):
+        if j == i:
+            fock = np.kron(fock, local)
+        else:
+            fock = np.kron(fock, ID2)
+    return fock
+
+
+_SIG_X = SIG_X.astype(np.int8)
+_SIG_Z = SIG_Z.astype(np.int8)
+_PROJ_0 = PROJ_0.astype(np.int8)
+_PROJ_1 = PROJ_1.astype(np.int8)
+
+
+@jit(nopython=True)
+def _init_Fock(total_qubits: int) -> Tuple[ndarray, ndarray, ndarray]:
+    r"""Computes pauli matrix tensor products
+
+    Returns:
+        ``sigma^x_i \otimes 1``,
+        ``sigma^z_i \otimes 1``,
+        ``sigma^z_i \otimes sigma^z_j \otimes 1``
+    """
+    shape = (total_qubits, 2 ** total_qubits, 2 ** total_qubits)
+    FockX = np.empty(shape, dtype=np.int8)
+    FockZ = np.empty(shape, dtype=np.int8)
+    Fockproj0 = np.empty(shape, dtype=np.int8)
+    Fockproj1 = np.empty(shape, dtype=np.int8)
+    for i in range(total_qubits):
+        print(i, total_qubits)
+        FockX[i] = _pushtoFock(i, _SIG_X, total_qubits)
+        FockZ[i] = _pushtoFock(i, _SIG_Z, total_qubits)
+        Fockproj0[i] = _pushtoFock(i, _PROJ_0, total_qubits)
+        Fockproj1[i] = _pushtoFock(i, _PROJ_1, total_qubits)
+
+    return FockX, FockZ, Fockproj0, Fockproj1
+
+
+_init_Fock(1)
 
 """
 # CODE FOR KL DIVERGENCE
