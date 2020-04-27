@@ -117,7 +117,7 @@ class TDSE:
         return hash
 
     def summary(
-        self, wave_params, instance, time, probability, entropy_params, entropy
+        self, wave_params, instance, solution, time, probability, entropy_params, entropy
     ):
         """
         output dictionary used to store tdse run into EspressodB
@@ -183,6 +183,11 @@ class TDSE:
             }
         )
         tdse.instance.save(tdsehash, fid)
+        fid.close()
+        # save pickled solution
+        content = pickle.dumps(solution)
+        fid = ContentFile(content)
+        tdse.solution.save(tdsehash, fid)
         fid.close()
 
         return tdse

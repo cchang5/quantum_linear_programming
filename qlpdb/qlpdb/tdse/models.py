@@ -34,8 +34,8 @@ class Tdse(Base):
     wave_hash = models.TextField(
         null=False, blank=False, help_text="md5 hash for wave parameters"
     )
-    instance = models.FileField(upload_to="tdse/", help_text="save instance of class")
-
+    instance = models.FileField(upload_to="instance/", help_text="save pickled instance of class")
+    solution = models.FileField(upload_to="solution/", help_text="save pickled solution")
     time = ArrayField(
         models.FloatField(null=False),
         null=False,
