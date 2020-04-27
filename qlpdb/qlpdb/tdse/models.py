@@ -6,7 +6,7 @@ from django.db import models
 from espressodb.base.models import Base
 from django.contrib.postgres.fields import JSONField
 from django.contrib.postgres.fields import ArrayField
-from picklefield.fields import PickledObjectField
+#from picklefield.fields import PickledObjectField
 
 
 class Tdse(Base):
@@ -34,7 +34,7 @@ class Tdse(Base):
     wave_hash = models.TextField(
         null=False, blank=False, help_text="md5 hash for wave parameters"
     )
-    instance = PickledObjectField(help_text="save instance of class")
+    instance = models.FileField(upload_to="tdse/", help_text="save instance of class")
 
     time = ArrayField(
         models.FloatField(null=False),

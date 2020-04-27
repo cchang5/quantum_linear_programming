@@ -20,6 +20,8 @@ from qlp.tdse.schedule import AnnealSchedule
 from qlpdb.graph.models import Graph
 from qlpdb.tdse.models import Tdse
 
+from django.core.files.base import ContentFile
+
 
 def _set_up_pauli():
     """Creates Pauli matrices and identity
@@ -115,13 +117,7 @@ class TDSE:
         return hash
 
     def summary(
-        self,
-        wave_params,
-        instance,
-        time,
-        probability,
-        entropy_params,
-        entropy,
+        self, wave_params, instance, time, probability, entropy_params, entropy
     ):
         """
         output dictionary used to store tdse run into EspressodB
@@ -161,22 +157,34 @@ class TDSE:
         tdse_params["solver_hash"] = self.hash_dict(tdse_params["solver"])
         tdse_params["wave"] = wave_params
         tdse_params["wave_hash"] = self.hash_dict(tdse_params["wave"])
-        tdse_params["instance"] = pickle.dumps(instance)
         tdse_params["time"] = list(time)
         tdse_params["prob"] = list(probability)
         tdse_params["entropy_params"] = entropy_params
-        tdse_params["entropy_params_hash"] = self.hash_dict(tdse_params["entropy_params"])
+        tdse_params["entropy_params_hash"] = self.hash_dict(
+            tdse_params["entropy_params"]
+        )
         tdse_params["entropy"] = list(entropy)
 
         # select or insert row in graph
-        gp = {
-            key: self.graph[key]
-            for key in self.graph
-            if key not in ["total_qubits"]
-        }
+        gp = {key: self.graph[key] for key in self.graph if key not in ["total_qubits"]}
         graph, _ = Graph.objects.get_or_create(**gp)
         # select or insert row in tdse
         tdse, _ = Tdse.objects.get_or_create(graph=graph, **tdse_params)
+        # save pickled class instance
+        content = pickle.dumps(instance)
+        fid = ContentFile(content)
+        tdsehash = self.hash_dict(
+            {
+                "ising": tdse_params["ising_hash"],
+                "offset": tdse_params["offset_hash"],
+                "solver": tdse_params["solver_hash"],
+                "wave": tdse_params["wave_hash"],
+                "entropy": tdse_params["entropy_params_hash"],
+            }
+        )
+        tdse.instance.save(tdsehash, fid)
+        fid.close()
+
         return tdse
 
     def _apply_H(self, t, psi: ndarray) -> ndarray:
@@ -239,7 +247,9 @@ class TDSE:
             eigvalue, eigvector = eigh(
                 -1
                 * self.ising["energyscale"]
-                * self._constructtransverseH(self.AS.A(0) * np.ones(self.graph["total_qubits"]))
+                * self._constructtransverseH(
+                    self.AS.A(0) * np.ones(self.graph["total_qubits"])
+                )
             )
         else:
             raise TypeError("Undefined initial wavefunction.")
@@ -296,10 +306,15 @@ class TDSE:
         FockX = [self.pushtoFock(i, SIG_X) for i in range(self.graph["total_qubits"])]
         FockZ = [self.pushtoFock(i, SIG_Z) for i in range(self.graph["total_qubits"])]
         FockZZ = [
-            [np.dot(FockZ[i], FockZ[j]) for j in range(self.graph["total_qubits"])] for i in range(self.graph["total_qubits"])
+            [np.dot(FockZ[i], FockZ[j]) for j in range(self.graph["total_qubits"])]
+            for i in range(self.graph["total_qubits"])
         ]
-        Fockproj0 = [self.pushtoFock(i, PROJ_0) for i in range(self.graph["total_qubits"])]
-        Fockproj1 = [self.pushtoFock(i, PROJ_1) for i in range(self.graph["total_qubits"])]
+        Fockproj0 = [
+            self.pushtoFock(i, PROJ_0) for i in range(self.graph["total_qubits"])
+        ]
+        Fockproj1 = [
+            self.pushtoFock(i, PROJ_1) for i in range(self.graph["total_qubits"])
+        ]
         return FockX, FockZ, FockZZ, Fockproj0, Fockproj1
 
     def pushtoFock(self, i: int, local: ndarray) -> ndarray:
@@ -319,7 +334,9 @@ class TDSE:
 
     def _constructIsingH(self, Jij: ndarray, hi: ndarray) -> ndarray:
         """Computes Hamiltonian (``J_ij is i < j``, i.e., upper diagonal"""
-        IsingH = np.zeros((2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]))
+        IsingH = np.zeros(
+            (2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"])
+        )
         for i in range(self.graph["total_qubits"]):
             IsingH += hi[i] * self.FockZ[i]
             for j in range(i):
@@ -329,7 +346,9 @@ class TDSE:
     def _constructtransverseH(self, hxi: ndarray) -> ndarray:
         r"""Construct sum of tensor products of ``\sigma^x_i \otimes 1``
         """
-        transverseH = np.zeros((2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]))
+        transverseH = np.zeros(
+            (2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"])
+        )
         for i in range(self.graph["total_qubits"]):
             transverseH += hxi[i] * self.FockX[i]
         return transverseH
@@ -346,13 +365,18 @@ class TDSE:
             B: Anneal coefficients for given schedule.
         """
         return np.asarray(
-            [[np.sqrt(B[i] * B[j]) for i in range(self.graph["total_qubits"])] for j in range(self.graph["total_qubits"])]
+            [
+                [np.sqrt(B[i] * B[j]) for i in range(self.graph["total_qubits"])]
+                for j in range(self.graph["total_qubits"])
+            ]
         )
 
     def annealingH(self, s: float) -> ndarray:
         """Computes ``H(s) = A(s) H_init + B(s) H_final`` in units of "energyscale"
         """
-        AxtransverseH = self._constructtransverseH(self.AS.A(s) * np.ones(self.graph["total_qubits"]))
+        AxtransverseH = self._constructtransverseH(
+            self.AS.A(s) * np.ones(self.graph["total_qubits"])
+        )
         BxIsingH = self._constructIsingH(
             self._Bij(self.AS.B(s)) * self.ising["Jij"], self.AS.B(s) * self.ising["hi"]
         )
@@ -416,7 +440,7 @@ class TDSE:
         f = ymat.reshape(self.Focksize ** 2)
         return f
 
-    def solve_mixed(self, rho: ndarray, ) -> ndarray:
+    def solve_mixed(self, rho: ndarray) -> ndarray:
         """Solves the TDSE
         """
         self.Focksize = int(np.sqrt(len(rho)))
@@ -435,7 +459,9 @@ class TDSE:
         return np.trace(
             np.dot(
                 self.FockZ[xi],
-                sol_densitymatrix.y[:, ti].reshape(2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]),
+                sol_densitymatrix.y[:, ti].reshape(
+                    2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]
+                ),
             )
         )
 
@@ -443,7 +469,9 @@ class TDSE:
         return np.trace(
             np.dot(
                 self.Fockproj0[xi],
-                sol_densitymatrix.y[:, ti].reshape(2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]),
+                sol_densitymatrix.y[:, ti].reshape(
+                    2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]
+                ),
             )
         )
 
@@ -451,7 +479,9 @@ class TDSE:
         return np.trace(
             np.dot(
                 self.Fockproj1[xi],
-                sol_densitymatrix.y[:, ti].reshape(2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]),
+                sol_densitymatrix.y[:, ti].reshape(
+                    2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]
+                ),
             )
         )
 
@@ -459,7 +489,9 @@ class TDSE:
         return np.trace(
             np.dot(
                 self.FockZZ[xi][xj],
-                sol_densitymatrix.y[:, ti].reshape(2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]),
+                sol_densitymatrix.y[:, ti].reshape(
+                    2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]
+                ),
             )
         )
 
@@ -474,7 +506,9 @@ class TDSE:
         return np.trace(
             np.dot(
                 self.FockZ[xi],
-                sol_densitymatrixt2.y[:, ti].reshape(2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]),
+                sol_densitymatrixt2.y[:, ti].reshape(
+                    2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]
+                ),
             )
         )
 
@@ -482,7 +516,9 @@ class TDSE:
         return np.trace(
             np.dot(
                 self.FockZ[xi],
-                sol_densitymatrixt2.y[:, ti].reshape(2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]),
+                sol_densitymatrixt2.y[:, ti].reshape(
+                    2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]
+                ),
             )
         ) - self.cZ(ti, xi, sol_densitymatrix) * self.cZ(tj, xj, sol_densitymatrix)
 
@@ -498,7 +534,9 @@ class TDSE:
            indicesA: einsum string for partial trace
            reg: infinitesimal regularization
         """
-        tensorrho = rho.reshape(tuple([2 for i in range(2 * self.graph["total_qubits"])]))
+        tensorrho = rho.reshape(
+            tuple([2 for i in range(2 * self.graph["total_qubits"])])
+        )
         rhoA = np.einsum(indicesA, tensorrho)
         matrhoA = rhoA.reshape(2 ** nA, 2 ** nA) + reg * np.identity(2 ** nA)
         s = -np.trace(np.dot(matrhoA, logm(matrhoA) / np.log(2)))
