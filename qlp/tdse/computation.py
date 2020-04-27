@@ -14,6 +14,7 @@ from numpy.linalg import eigh
 
 from scipy.integrate import solve_ivp
 from scipy.linalg import logm
+from scipy import sparse as sp
 
 from numba import jit
 
@@ -310,7 +311,12 @@ class TDSE:
             ``sigma^z_i \otimes 1``,
             ``sigma^z_i \otimes sigma^z_j \otimes 1``
         """
-        return _init_Fock(self.graph["total_qubits"])
+        FockX, FockZ, FockProj_0, Fockproj1 = (
+            [sp.csr_matrix(mmat) for mmat in mat]
+            for mat in _init_Fock(self.graph["total_qubits"])
+        )
+        FockZZ = [[m1 @ m2 for m1 in FockZ] for m2 in FockZ]
+        return FockX, FockZ, FockZZ, FockProj_0, Fockproj1
 
     def pushtoFock(self, i: int, local: ndarray) -> ndarray:
         """Tensor product of `local` at particle index i with 1 in fock space
@@ -606,8 +612,8 @@ _PROJ_1 = PROJ_1.astype(np.int)
 @jit(nopython=True)
 def dot(v1, v2):
     out = 0
-    for vv1, vv2 in zip(v1, v2):
-        out += vv1 * vv2
+    for nn in v1.shape[1]:
+        out += v1[:, nn] * v2[nn, :]
     return out
 
 
@@ -620,16 +626,17 @@ def _init_Fock(total_qubits: int) -> Tuple[ndarray, ndarray, ndarray]:
         ``sigma^z_i \otimes 1``,
         ``sigma^z_i \otimes sigma^z_j \otimes 1``
     """
-    FockX = [_pushtoFock(i, _SIG_X, total_qubits) for i in range(total_qubits)]
-    FockZ = [_pushtoFock(i, _SIG_Z, total_qubits) for i in range(total_qubits)]
-    FockZZ = [
-        [np.sum(FockZ[i] * FockZ[j]) for j in range(total_qubits)]
-        for i in range(total_qubits)
-    ]
+    FockX = FockZ = Fockproj0 = Fockproj1 = np.zeros(
+        (total_qubits, 2 ** total_qubits, 2 ** total_qubits), dtype=np.int8
+    )
+    for i in range(total_qubits):
+        print(i, total_qubits)
+        FockX[i] = _pushtoFock(i, _SIG_X, total_qubits)
+        FockZ[i] = _pushtoFock(i, _SIG_Z, total_qubits)
+        Fockproj0[i] = _pushtoFock(i, _PROJ_0, total_qubits)
+        Fockproj1[i] = _pushtoFock(i, _PROJ_1, total_qubits)
 
-    Fockproj0 = [_pushtoFock(i, _PROJ_0, total_qubits) for i in range(total_qubits)]
-    Fockproj1 = [_pushtoFock(i, _PROJ_1, total_qubits) for i in range(total_qubits)]
-    return FockX, FockZ, FockZZ, Fockproj0, Fockproj1
+    return FockX, FockZ, Fockproj0, Fockproj1
 
 
 _init_Fock(1)
