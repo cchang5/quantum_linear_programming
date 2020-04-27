@@ -588,13 +588,27 @@ def _pushtoFock(i: int, local: ndarray, total_qubits: int) -> ndarray:
         i: particle index of matrix local
         local: matrix operator
     """
-    fock = np.identity(1)
+    fock = np.array([[1]])
     for j in range(total_qubits):
         if j == i:
             fock = np.kron(fock, local)
         else:
             fock = np.kron(fock, ID2)
     return fock
+
+
+_SIG_X = SIG_X.astype(np.int)
+_SIG_Z = SIG_Z.astype(np.int)
+_PROJ_0 = PROJ_0.astype(np.int)
+_PROJ_1 = PROJ_1.astype(np.int)
+
+
+@jit(nopython=True)
+def dot(v1, v2):
+    out = 0
+    for vv1, vv2 in zip(v1, v2):
+        out += vv1 * vv2
+    return out
 
 
 @jit(nopython=True)
@@ -606,15 +620,15 @@ def _init_Fock(total_qubits: int) -> Tuple[ndarray, ndarray, ndarray]:
         ``sigma^z_i \otimes 1``,
         ``sigma^z_i \otimes sigma^z_j \otimes 1``
     """
-    FockX = [_pushtoFock(i, SIG_X, total_qubits) for i in range(total_qubits)]
-    FockZ = [_pushtoFock(i, SIG_Z, total_qubits) for i in range(total_qubits)]
+    FockX = [_pushtoFock(i, _SIG_X, total_qubits) for i in range(total_qubits)]
+    FockZ = [_pushtoFock(i, _SIG_Z, total_qubits) for i in range(total_qubits)]
     FockZZ = [
-        [np.dot(FockZ[i], FockZ[j]) for j in range(total_qubits)]
+        [np.sum(FockZ[i] * FockZ[j]) for j in range(total_qubits)]
         for i in range(total_qubits)
     ]
 
-    Fockproj0 = [_pushtoFock(i, PROJ_0, total_qubits) for i in range(total_qubits)]
-    Fockproj1 = [_pushtoFock(i, PROJ_1, total_qubits) for i in range(total_qubits)]
+    Fockproj0 = [_pushtoFock(i, _PROJ_0, total_qubits) for i in range(total_qubits)]
+    Fockproj1 = [_pushtoFock(i, _PROJ_1, total_qubits) for i in range(total_qubits)]
     return FockX, FockZ, FockZZ, Fockproj0, Fockproj1
 
 
