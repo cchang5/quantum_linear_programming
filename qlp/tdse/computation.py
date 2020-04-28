@@ -69,6 +69,17 @@ def convert_params(params):
     return params
 
 
+def get_or_create(Model, save=False, **kwargs):
+    if save:
+        obj, _ = Model.get_or_create(**kwargs)
+    else:
+        try:
+            obj = Model.objects.get(**kwargs)
+        except Model.DoesNotExist:
+            obj = Model(**dict((k, v) for (k, v) in kwargs.items() if "__" not in k))
+    return obj
+
+
 class TDSE:
     """Time dependent Schrödinger equation solver class
 
@@ -125,7 +136,15 @@ class TDSE:
         return hash
 
     def summary(
-        self, wave_params, instance, solution, time, probability, entropy_params, entropy
+        self,
+        wave_params,
+        instance,
+        solution,
+        time,
+        probability,
+        entropy_params,
+        entropy,
+        save=False,
     ):
         """
         output dictionary used to store tdse run into EspressodB
@@ -175,9 +194,10 @@ class TDSE:
 
         # select or insert row in graph
         gp = {key: self.graph[key] for key in self.graph if key not in ["total_qubits"]}
-        graph, _ = Graph.objects.get_or_create(**gp)
+        graph = get_or_create(Model=Graph, save=save, **gp)
+        tdse_params["graph"] = graph
         # select or insert row in tdse
-        tdse, _ = Tdse.objects.get_or_create(graph=graph, **tdse_params)
+        tdse = get_or_create(Model = Tdse, save = save, **tdse_params)
         # save pickled class instance
         content = pickle.dumps(instance)
         fid = ContentFile(content)
@@ -629,7 +649,6 @@ def _init_Fock(total_qubits: int) -> Tuple[ndarray, ndarray, ndarray]:
     Fockproj0 = np.empty(shape, dtype=np.int8)
     Fockproj1 = np.empty(shape, dtype=np.int8)
     for i in range(total_qubits):
-        print(i, total_qubits)
         FockX[i] = _pushtoFock(i, _SIG_X, total_qubits)
         FockZ[i] = _pushtoFock(i, _SIG_Z, total_qubits)
         Fockproj0[i] = _pushtoFock(i, _PROJ_0, total_qubits)
