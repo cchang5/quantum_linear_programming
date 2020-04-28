@@ -13,3 +13,4 @@ paper/main.pdf
 paper/main.synctex.gz
 *.synctex.gz
 __pycache__/
+qlpdb/media/
