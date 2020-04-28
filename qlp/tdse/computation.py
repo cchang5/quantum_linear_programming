@@ -220,7 +220,7 @@ class TDSE:
 
     def _apply_H(self, t, psi: ndarray) -> ndarray:
         """Computes `i H(t) psi`"""
-        return -1j * np.dot(self.annealingH(t), psi)
+        return -1j * self.annealingH(t) @ psi
 
     def ground_state_degeneracy(
         self, H: ndarray, degeneracy_tol: float = 1e-6, debug: bool = False
@@ -259,9 +259,7 @@ class TDSE:
             degen_idx: Index for psi1 vectors.
 
         """
-        return sum(
-            np.absolute([np.dot(np.conj(psi1[:, idx]), psi2) for idx in degen_idx]) ** 2
-        )
+        return sum(np.absolute([psi1[:, idx].conj() @ psi2 for idx in degen_idx]) ** 2)
 
     def init_eigen(self, dtype: str) -> Tuple[ndarray, ndarray]:
         """Computes eigenvalue and vector of initial Hamiltonian either as a pure
@@ -445,12 +443,12 @@ class TDSE:
         Code:
             H(s) otimes 1 - 1 otimes H(s)
         """
-        Fockid = np.identity(self.Focksize)
-        return np.kron(self.annealingH(s), Fockid) - np.kron(Fockid, self.annealingH(s))
+        Fockid = sp.eye(self.Focksize)
+        return sp.kron(self.annealingH(s), Fockid) - sp.kron(Fockid, self.annealingH(s))
 
     def _apply_tdse_dense(self, t: float, y: ndarray) -> ndarray:
         """Computes ``-i [H(s), rho(s)]`` for density vector `y`"""
-        f = -1j * np.dot(self._annealingH_densitymatrix(t), y)
+        f = -1j * self._annealingH_densitymatrix(t) @ y
         return f
 
     def _apply_tdse_dense2(self, t: float, y: ndarray) -> ndarray:
@@ -461,7 +459,7 @@ class TDSE:
         # print(self.Focksize)
         ymat = y.reshape((self.Focksize, self.Focksize))
         H = self.annealingH(t)
-        ymat = -1j * (np.dot(H, ymat) - np.dot(ymat, H))
+        ymat = -1j * (H @ ymat - ymat @ H)
         f = ymat.reshape(self.Focksize ** 2)
         return f
 
@@ -482,42 +480,34 @@ class TDSE:
     # One time correlation function
     def cZ(self, ti, xi, sol_densitymatrix):
         return np.trace(
-            np.dot(
-                self.FockZ[xi],
-                sol_densitymatrix.y[:, ti].reshape(
-                    2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]
-                ),
-            )
+            self.FockZ[xi]
+            @ sol_densitymatrix.y[:, ti].reshape(
+                2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]
+            ),
         )
 
     def c0(self, ti, xi, sol_densitymatrix):
         return np.trace(
-            np.dot(
-                self.Fockproj0[xi],
-                sol_densitymatrix.y[:, ti].reshape(
-                    2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]
-                ),
-            )
+            self.Fockproj0[xi]
+            @ sol_densitymatrix.y[:, ti].reshape(
+                2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]
+            ),
         )
 
     def c1(self, ti, xi, sol_densitymatrix):
         return np.trace(
-            np.dot(
-                self.Fockproj1[xi],
-                sol_densitymatrix.y[:, ti].reshape(
-                    2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]
-                ),
-            )
+            self.Fockproj1[xi]
+            @ sol_densitymatrix.y[:, ti].reshape(
+                2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]
+            ),
         )
 
     def cZZ(self, ti, xi, xj, sol_densitymatrix):
         return np.trace(
-            np.dot(
-                self.FockZZ[xi][xj],
-                sol_densitymatrix.y[:, ti].reshape(
-                    2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]
-                ),
-            )
+            self.FockZZ[xi][xj]
+            @ sol_densitymatrix.y[:, ti].reshape(
+                2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]
+            ),
         )
 
     def cZZd(self, ti, xi, xj, sol_densitymatrix):
@@ -529,22 +519,18 @@ class TDSE:
     # http://qutip.org/docs/latest/guide/guide-correlation.html
     def cZZt2(self, ti, xi, sol_densitymatrixt2):
         return np.trace(
-            np.dot(
-                self.FockZ[xi],
-                sol_densitymatrixt2.y[:, ti].reshape(
-                    2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]
-                ),
-            )
+            self.FockZ[xi]
+            @ sol_densitymatrixt2.y[:, ti].reshape(
+                2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]
+            ),
         )
 
     def cZZt2d(self, ti, xi, tj, xj, sol_densitymatrix, sol_densitymatrixt2):
         return np.trace(
-            np.dot(
-                self.FockZ[xi],
-                sol_densitymatrixt2.y[:, ti].reshape(
-                    2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]
-                ),
-            )
+            self.FockZ[xi]
+            @ sol_densitymatrixt2.y[:, ti].reshape(
+                2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]
+            ),
         ) - self.cZ(ti, xi, sol_densitymatrix) * self.cZ(tj, xj, sol_densitymatrix)
 
     # entanglement entropy
