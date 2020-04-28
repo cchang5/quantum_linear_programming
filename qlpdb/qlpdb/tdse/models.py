@@ -45,21 +45,6 @@ class Tdse(Base):
         null=False,
         help_text="Ising ground state probability vs. time",
     )
-    entropy_params = JSONField(
-        help_text="Entropy parameters: nA (number of qubits in partition A), indicesA (einsum index notation), reg"
-    )
-    entropy_params_hash = models.TextField(
-        null=False, blank=False, help_text="md5 hash for entropy parameters"
-    )
-    entropy = ArrayField(
-        models.FloatField(null=False),
-        null=False,
-        help_text="von Neumann entropy vs. time",
-    )
-
-    @property
-    def entropy_max(self):
-        return np.max(self.entropy)
 
     class Meta:
         constraints = [
@@ -71,7 +56,6 @@ class Tdse(Base):
                     "offset_hash",
                     "solver_hash",
                     "wave_hash",
-                    "entropy_params_hash",
                 ],
                 name="unique_tdse",
             )

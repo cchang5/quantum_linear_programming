@@ -160,8 +160,6 @@ class TDSE:
         solution,
         time,
         probability,
-        entropy_params,
-        entropy,
         save=False,
     ):
         """
@@ -176,9 +174,6 @@ class TDSE:
         instance: instance of tdse class
         time: solver time step
         probability: prob of Ising ground state
-        nA: number of qubits in partition A
-        indicesA: einsum notation
-        entropy: entropy between partition A and B
         """
         # make tdse inputs
         tdse_params = dict()
@@ -204,11 +199,6 @@ class TDSE:
         tdse_params["wave_hash"] = self.hash_dict(tdse_params["wave"])
         tdse_params["time"] = list(time)
         tdse_params["prob"] = list(probability)
-        tdse_params["entropy_params"] = entropy_params
-        tdse_params["entropy_params_hash"] = self.hash_dict(
-            tdse_params["entropy_params"]
-        )
-        tdse_params["entropy"] = list(entropy)
 
         # select or insert row in graph
         gp = {key: self.graph[key] for key in self.graph if key not in ["total_qubits"]}
@@ -223,23 +213,9 @@ class TDSE:
                 "offset": tdse_params["offset_hash"],
                 "solver": tdse_params["solver_hash"],
                 "wave": tdse_params["wave_hash"],
-                "entropy": tdse_params["entropy_params_hash"],
             }
         )
         save_file(query=tdse, instance=instance, solution = solution, filename=tdsehash, save=save)
-
-        """
-        content = pickle.dumps(instance)
-        fid = ContentFile(content)
-        tdse.instance.save(tdsehash, fid)
-        fid.close()
-        # save pickled solution
-        content = pickle.dumps(solution)
-        fid = ContentFile(content)
-        tdse.solution.save(tdsehash, fid)
-        fid.close()
-        """
-
         return tdse
 
     def _apply_H(self, t, psi: ndarray) -> ndarray:

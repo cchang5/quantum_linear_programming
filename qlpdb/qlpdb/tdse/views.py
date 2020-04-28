@@ -35,7 +35,7 @@ class ComparisonView(TemplateView):
     """
 
     template_name = "plot.html"
-
+    """
     def get_context_data(self, **kwargs):
         """
         """
@@ -69,3 +69,4 @@ class ComparisonView(TemplateView):
         context["graph"] = plot(fig, auto_open=False, output_type="div")
 
         return context
+    """
