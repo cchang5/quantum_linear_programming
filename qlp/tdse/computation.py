@@ -10,7 +10,7 @@ import pickle
 
 from numpy import ndarray
 import numpy as np
-from numpy.linalg import eigh
+from scipy.sparse.linalg import eigsh
 
 from scipy.integrate import solve_ivp
 from scipy.linalg import logm
@@ -25,6 +25,7 @@ from qlpdb.tdse.models import Tdse
 
 from django.core.files.base import ContentFile
 from django.conf import settings
+
 
 def _set_up_pauli():
     """Creates Pauli matrices and identity
@@ -98,6 +99,8 @@ def save_file(query, instance, solution, filename, save=False):
         query.solution = solution_loc
         with open(solution_loc, "wb") as file:
             pickle.dump(solution, file)
+
+
 class TDSE:
     """Time dependent Schrödinger equation solver class
 
@@ -154,13 +157,7 @@ class TDSE:
         return hash
 
     def summary(
-        self,
-        wave_params,
-        instance,
-        solution,
-        time,
-        probability,
-        save=False,
+        self, wave_params, instance, solution, time, probability, save=False,
     ):
         """
         output dictionary used to store tdse run into EspressodB
@@ -215,7 +212,13 @@ class TDSE:
                 "wave": tdse_params["wave_hash"],
             }
         )
-        save_file(query=tdse, instance=instance, solution = solution, filename=tdsehash, save=save)
+        save_file(
+            query=tdse,
+            instance=instance,
+            solution=solution,
+            filename=tdsehash,
+            save=save,
+        )
         return tdse
 
     def _apply_H(self, t, psi: ndarray) -> ndarray:
@@ -236,7 +239,7 @@ class TDSE:
 
         Returns: Ids for gs vectors, all eigenvalues, all eigenvectors
         """
-        eigval, eigv = eigh(H)
+        eigval, eigv = eigsh(H)
         mask = [abs((ei - eigval[0]) / eigval[0]) < degeneracy_tol for ei in eigval]
         gs_idx = np.arange(len(eigval))[mask]
         if debug:
@@ -259,7 +262,9 @@ class TDSE:
             degen_idx: Index for psi1 vectors.
 
         """
-        return sum(np.absolute([psi1[:, idx].conj() @ psi2 for idx in degen_idx]) ** 2)
+        return sum(
+            np.absolute([psi1[:, idx].conj().dot(psi2) for idx in degen_idx]) ** 2
+        )
 
     def init_eigen(self, dtype: str) -> Tuple[ndarray, ndarray]:
         """Computes eigenvalue and vector of initial Hamiltonian either as a pure
@@ -268,12 +273,12 @@ class TDSE:
         """
         if dtype == "true":
             # true ground state
-            eigvalue, eigvector = eigh(
+            eigvalue, eigvector = eigsh(
                 self.annealingH(s=self.offset["normalized_time"][0])
             )
         elif dtype == "transverse":
             # DWave initial wave function
-            eigvalue, eigvector = eigh(
+            eigvalue, eigvector = eigsh(
                 -1
                 * self.ising["energyscale"]
                 * self._constructtransverseH(
@@ -288,7 +293,7 @@ class TDSE:
         """Returns wave function for first eigenstate of Hamiltonian of dtype.
         """
         _, eigvector = self.init_eigen(dtype)
-        return (1.0 + 0.0j) * eigvector[:, 0]
+        return (1.0 + 0.0j) * np.array(eigvector[:, 0]).flatten()
 
     def init_densitymatrix(
         self, temp: float = 13e-3, dtype: str = "transverse", debug: bool = False
@@ -356,24 +361,25 @@ class TDSE:
 
     def _constructIsingH(self, Jij: ndarray, hi: ndarray) -> ndarray:
         """Computes Hamiltonian (``J_ij is i < j``, i.e., upper diagonal"""
-        IsingH = np.zeros(
+        IsingH = sp.csr_matrix(
             (2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"])
         )
         for i in range(self.graph["total_qubits"]):
             IsingH += hi[i] * self.FockZ[i]
             for j in range(i):
                 IsingH += Jij[j, i] * self.FockZZ[i][j]
-        return np.asarray(IsingH)
+        return IsingH
 
     def _constructtransverseH(self, hxi: ndarray) -> ndarray:
         r"""Construct sum of tensor products of ``\sigma^x_i \otimes 1``
         """
-        transverseH = np.zeros(
-            (2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"])
+        transverseH = sp.csr_matrix(
+            (2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"]),
+            dtype=complex,
         )
         for i in range(self.graph["total_qubits"]):
             transverseH += hxi[i] * self.FockX[i]
-        return np.asarray(transverseH)
+        return transverseH
 
     def _Bij(self, B: ndarray) -> ndarray:
         """J_ij coefficients for final Annealing Hamiltonian
@@ -418,7 +424,7 @@ class TDSE:
         sol = PureSolutionInterface(y1)
 
         for jj in range(ngrid - 1):
-            y1 = y1 / (np.sqrt(np.absolute(np.dot(np.conj(y1), y1))))
+            y1 = y1 / (np.sqrt(np.absolute(y1.conj().T @ y1)))
             tempsol = solve_ivp(
                 fun=self._apply_H,
                 t_span=[interval[jj], interval[jj + 1]],
@@ -433,7 +439,7 @@ class TDSE:
         if debug:
             print(
                 "final total prob",
-                (np.absolute(np.dot(np.conj(sol.y[:, -1]), sol.y[:, -1]))) ** 2,
+                (np.absolute(sol.y[:, -1].conj().dot(sol.y[:, -1]))) ** 2,
             )
         return sol
 
@@ -448,7 +454,7 @@ class TDSE:
 
     def _apply_tdse_dense(self, t: float, y: ndarray) -> ndarray:
         """Computes ``-i [H(s), rho(s)]`` for density vector `y`"""
-        f = -1j * self._annealingH_densitymatrix(t) @ y
+        f = -1j * self._annealingH_densitymatrix(t).dot(y)
         return f
 
     def _apply_tdse_dense2(self, t: float, y: ndarray) -> ndarray:
@@ -459,7 +465,7 @@ class TDSE:
         # print(self.Focksize)
         ymat = y.reshape((self.Focksize, self.Focksize))
         H = self.annealingH(t)
-        ymat = -1j * (H @ ymat - ymat @ H)
+        ymat = -1j * (H.dot(ymat) - ymat.dot(H))
         f = ymat.reshape(self.Focksize ** 2)
         return f
 
@@ -550,7 +556,7 @@ class TDSE:
         )
         rhoA = np.einsum(indicesA, tensorrho)
         matrhoA = rhoA.reshape(2 ** nA, 2 ** nA) + reg * np.identity(2 ** nA)
-        s = -np.trace(np.dot(matrhoA, logm(matrhoA) / np.log(2)))
+        s = -np.trace(matrhoA @ logm(matrhoA)) / np.log(2)
         return s
 
     def find_partition(self) -> Tuple[int, str]:
