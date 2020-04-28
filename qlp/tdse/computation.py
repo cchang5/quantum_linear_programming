@@ -18,14 +18,13 @@ from scipy import sparse as sp
 
 from numba import jit
 
-
 from qlp.tdse.schedule import AnnealSchedule
 
 from qlpdb.graph.models import Graph
 from qlpdb.tdse.models import Tdse
 
 from django.core.files.base import ContentFile
-
+from django.conf import settings
 
 def _set_up_pauli():
     """Creates Pauli matrices and identity
@@ -71,7 +70,7 @@ def convert_params(params):
 
 def get_or_create(Model, save=False, **kwargs):
     if save:
-        obj, _ = Model.get_or_create(**kwargs)
+        obj, _ = Model.objects.get_or_create(**kwargs)
     else:
         try:
             obj = Model.objects.get(**kwargs)
@@ -80,6 +79,25 @@ def get_or_create(Model, save=False, **kwargs):
     return obj
 
 
+def save_file(query, instance, solution, filename, save=False):
+    if save:
+        content = pickle.dumps(instance)
+        fid = ContentFile(content)
+        query.instance.save(filename, fid)
+        fid.close()
+        content = pickle.dumps(solution)
+        fid = ContentFile(content)
+        query.solution.save(filename, fid)
+        fid.close()
+    else:
+        instance_loc = f"{settings.MEDIA_ROOT}/temp/{filename}.instance"
+        query.instance = instance_loc
+        with open(instance_loc, "wb") as file:
+            pickle.dump(instance, file)
+        solution_loc = f"{settings.MEDIA_ROOT}/temp/{filename}.solution"
+        query.solution = solution_loc
+        with open(solution_loc, "wb") as file:
+            pickle.dump(solution, file)
 class TDSE:
     """Time dependent Schrödinger equation solver class
 
@@ -197,10 +215,8 @@ class TDSE:
         graph = get_or_create(Model=Graph, save=save, **gp)
         tdse_params["graph"] = graph
         # select or insert row in tdse
-        tdse = get_or_create(Model = Tdse, save = save, **tdse_params)
+        tdse = get_or_create(Model=Tdse, save=save, **tdse_params)
         # save pickled class instance
-        content = pickle.dumps(instance)
-        fid = ContentFile(content)
         tdsehash = self.hash_dict(
             {
                 "ising": tdse_params["ising_hash"],
@@ -210,6 +226,11 @@ class TDSE:
                 "entropy": tdse_params["entropy_params_hash"],
             }
         )
+        save_file(query=tdse, instance=instance, solution = solution, filename=tdsehash, save=save)
+
+        """
+        content = pickle.dumps(instance)
+        fid = ContentFile(content)
         tdse.instance.save(tdsehash, fid)
         fid.close()
         # save pickled solution
@@ -217,6 +238,7 @@ class TDSE:
         fid = ContentFile(content)
         tdse.solution.save(tdsehash, fid)
         fid.close()
+        """
 
         return tdse
 
@@ -656,8 +678,6 @@ def _init_Fock(total_qubits: int) -> Tuple[ndarray, ndarray, ndarray]:
 
     return FockX, FockZ, Fockproj0, Fockproj1
 
-
-_init_Fock(1)
 
 """
 # CODE FOR KL DIVERGENCE

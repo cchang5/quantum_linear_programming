@@ -6,7 +6,6 @@ from django.db import models
 from espressodb.base.models import Base
 from django.contrib.postgres.fields import JSONField
 from django.contrib.postgres.fields import ArrayField
-#from picklefield.fields import PickledObjectField
 
 
 class Tdse(Base):
