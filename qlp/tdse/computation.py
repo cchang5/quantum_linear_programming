@@ -367,7 +367,7 @@ class TDSE:
             IsingH += hi[i] * self.FockZ[i]
             for j in range(i):
                 IsingH += Jij[j, i] * self.FockZZ[i][j]
-        return IsingH
+        return np.asarray(IsingH)
 
     def _constructtransverseH(self, hxi: ndarray) -> ndarray:
         r"""Construct sum of tensor products of ``\sigma^x_i \otimes 1``
@@ -377,7 +377,7 @@ class TDSE:
         )
         for i in range(self.graph["total_qubits"]):
             transverseH += hxi[i] * self.FockX[i]
-        return transverseH
+        return np.asarray(transverseH)
 
     def _Bij(self, B: ndarray) -> ndarray:
         """J_ij coefficients for final Annealing Hamiltonian
