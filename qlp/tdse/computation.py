@@ -10,7 +10,8 @@ import pickle
 
 from numpy import ndarray
 import numpy as np
-from scipy.sparse.linalg import eigsh
+#from scipy.sparse.linalg import eigsh
+from numpy.linalg import eigh
 
 from scipy.integrate import solve_ivp
 from scipy.linalg import logm
@@ -239,7 +240,7 @@ class TDSE:
 
         Returns: Ids for gs vectors, all eigenvalues, all eigenvectors
         """
-        eigval, eigv = eigsh(H)
+        eigval, eigv = eigh(H.toarray())
         mask = [abs((ei - eigval[0]) / eigval[0]) < degeneracy_tol for ei in eigval]
         gs_idx = np.arange(len(eigval))[mask]
         if debug:
@@ -273,18 +274,18 @@ class TDSE:
         """
         if dtype == "true":
             # true ground state
-            eigvalue, eigvector = eigsh(
-                self.annealingH(s=self.offset["normalized_time"][0])
+            eigvalue, eigvector = eigh(
+                (self.annealingH(s=self.offset["normalized_time"][0])).toarray()
             )
         elif dtype == "transverse":
             # DWave initial wave function
-            eigvalue, eigvector = eigsh(
+            eigvalue, eigvector = eigh((
                 -1
                 * self.ising["energyscale"]
                 * self._constructtransverseH(
                     self.AS.A(0) * np.ones(self.graph["total_qubits"])
                 )
-            )
+            ).toarray())
         else:
             raise TypeError("Undefined initial wavefunction.")
         return eigvalue, eigvector
@@ -465,7 +466,7 @@ class TDSE:
         # print(self.Focksize)
         ymat = y.reshape((self.Focksize, self.Focksize))
         H = self.annealingH(t)
-        ymat = -1j * (H.dot(ymat) - ymat.dot(H))
+        ymat = -1j * (H.dot(ymat) - ymat@H)
         f = ymat.reshape(self.Focksize ** 2)
         return f
 
@@ -551,11 +552,27 @@ class TDSE:
            indicesA: einsum string for partial trace
            reg: infinitesimal regularization
         """
+        #print("hello world")
+        #print(self.graph["total_qubits"]) 
+        #print("rho")
+        #print(type(rho))
+        #print(rho.shape)
+        #print('test rho')
+        #testrho=rho.reshape(2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"])
+        #e,v=eigh(testrho)
+        #print(testrho.shape)
+        #print('eig rho',e)
+
         tensorrho = rho.reshape(
             tuple([2 for i in range(2 * self.graph["total_qubits"])])
         )
         rhoA = np.einsum(indicesA, tensorrho)
+        #print("rhoA")
+        #print(type(rhoA))
+        #print(rhoA.shape)
         matrhoA = rhoA.reshape(2 ** nA, 2 ** nA) + reg * np.identity(2 ** nA)
+        #e,v=eigh(matrhoA)
+        #print('eig rhoA',e)
         s = -np.trace(matrhoA @ logm(matrhoA)) / np.log(2)
         return s
 
