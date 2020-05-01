@@ -482,7 +482,10 @@ class TDSE:
         '''
         lindblad=np.zeros(((self.Focksize, self.Focksize)))
         for i in range(self.graph["total_qubits"]):
-            lindblad=lindblad+2.0*(self.Fockplus[i])@(ymat)@(self.Fockminus[i])-(self.Fockproj0[i])@(ymat)-(ymat)@(self.Fockproj0[i])
+                if ((self.ising["hi"])[i] > 0):
+                    lindblad=lindblad+2.0*(self.Fockplus[i])@(ymat)@(self.Fockminus[i])-(self.Fockproj0[i])@(ymat)-(ymat)@(self.Fockproj0[i])
+                else:
+                    lindblad=lindblad+2.0*(self.Fockminus[i])@(ymat)@(self.Fockplus[i])-(self.Fockproj1[i])@(ymat)-(ymat)@(self.Fockproj1[i])
         lindblad=gamma*lindblad
         return lindblad
 
