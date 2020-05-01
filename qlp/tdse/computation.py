@@ -36,16 +36,20 @@ def _set_up_pauli():
     id2 = np.identity(2)
     proj0 = np.zeros((2, 2))
     proj1 = np.zeros((2, 2))
+    sigplus=np.zeros((2, 2))
+    sigminus=np.zeros((2, 2))
     sigx[0, 1] = 1.0
     sigx[1, 0] = 1.0
     sigz[0, 0] = 1.0
     sigz[1, 1] = -1.0
     proj0[0, 0] = 1.0
     proj1[1, 1] = 1.0
-    return id2, sigx, sigz, proj0, proj1
+    sigplus[1,0]=1.0
+    sigminus[0,1]=1.0
+    return id2, sigx, sigz, proj0, proj1, sigplus, sigminus
 
 
-ID2, SIG_X, SIG_Z, PROJ_0, PROJ_1 = _set_up_pauli()
+ID2, SIG_X, SIG_Z, PROJ_0, PROJ_1, SIG_PLUS, SIG_MINUS= _set_up_pauli()
 
 
 class PureSolutionInterface:
@@ -144,6 +148,8 @@ class TDSE:
             self.FockZZ,
             self.Fockproj0,
             self.Fockproj1,
+            self.Fockplus,
+            self.Fockminus
         ) = self._init_Fock()
         self.Focksize = None
         self.AS = AnnealSchedule(**offset_params, graph_params=graph_params)
@@ -338,12 +344,12 @@ class TDSE:
             ``sigma^z_i \otimes 1``,
             ``sigma^z_i \otimes sigma^z_j \otimes 1``
         """
-        FockX, FockZ, FockProj_0, Fockproj1 = (
+        FockX, FockZ, FockProj_0, Fockproj1, Fockplus, Fockminus = (
             [sp.csr_matrix(mmat) for mmat in mat]
             for mat in _init_Fock(self.graph["total_qubits"])
         )
         FockZZ = [[m1 @ m2 for m1 in FockZ] for m2 in FockZ]
-        return FockX, FockZ, FockZZ, FockProj_0, Fockproj1
+        return FockX, FockZ, FockZZ, FockProj_0, Fockproj1, Fockplus, Fockminus
 
     def pushtoFock(self, i: int, local: ndarray) -> ndarray:
         """Tensor product of `local` at particle index i with 1 in fock space
@@ -466,9 +472,19 @@ class TDSE:
         # print(self.Focksize)
         ymat = y.reshape((self.Focksize, self.Focksize))
         H = self.annealingH(t)
-        ymat = -1j * (H.dot(ymat) - ymat@H)
+        lindblad=self.get_lindblad(ymat,gamma=0.1)
+        ymat = -1j * (H.dot(ymat) - ymat@H) + lindblad
         f = ymat.reshape(self.Focksize ** 2)
         return f
+
+    def get_lindblad(self,ymat,gamma):
+        ''' gamma: decoherence rate = 1/(decoherence time), the unit is the same as the Hamiltonian
+        '''
+        lindblad=np.zeros(((self.Focksize, self.Focksize)))
+        for i in range(self.graph["total_qubits"]):
+            lindblad=lindblad+2.0*(self.Fockplus[i])@(ymat)@(self.Fockminus[i])-(self.Fockproj0[i])@(ymat)-(ymat)@(self.Fockproj0[i])
+        lindblad=gamma*lindblad
+        return lindblad
 
     def solve_mixed(self, rho: ndarray) -> ndarray:
         """Solves the TDSE
@@ -639,7 +655,8 @@ _SIG_X = SIG_X.astype(np.int8)
 _SIG_Z = SIG_Z.astype(np.int8)
 _PROJ_0 = PROJ_0.astype(np.int8)
 _PROJ_1 = PROJ_1.astype(np.int8)
-
+_SIG_PLUS = SIG_PLUS.astype(np.int8)
+_SIG_MINUS = SIG_MINUS.astype(np.int8)
 
 @jit(nopython=True)
 def _init_Fock(total_qubits: int) -> Tuple[ndarray, ndarray, ndarray]:
@@ -655,13 +672,16 @@ def _init_Fock(total_qubits: int) -> Tuple[ndarray, ndarray, ndarray]:
     FockZ = np.empty(shape, dtype=np.int8)
     Fockproj0 = np.empty(shape, dtype=np.int8)
     Fockproj1 = np.empty(shape, dtype=np.int8)
+    Fockplus = np.empty(shape, dtype=np.int8)
+    Fockminus = np.empty(shape, dtype=np.int8)
     for i in range(total_qubits):
         FockX[i] = _pushtoFock(i, _SIG_X, total_qubits)
         FockZ[i] = _pushtoFock(i, _SIG_Z, total_qubits)
         Fockproj0[i] = _pushtoFock(i, _PROJ_0, total_qubits)
         Fockproj1[i] = _pushtoFock(i, _PROJ_1, total_qubits)
-
-    return FockX, FockZ, Fockproj0, Fockproj1
+        Fockplus[i] = _pushtoFock(i, _SIG_PLUS, total_qubits)
+        Fockminus[i] = _pushtoFock(i, _SIG_MINUS, total_qubits)
+    return FockX, FockZ, Fockproj0, Fockproj1, Fockplus, Fockminus
 
 
 """
