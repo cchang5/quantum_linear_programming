@@ -10,7 +10,8 @@ import pickle
 
 from numpy import ndarray
 import numpy as np
-from scipy.sparse.linalg import eigsh
+#from scipy.sparse.linalg import eigsh
+from numpy.linalg import eigh
 
 from scipy.integrate import solve_ivp
 from scipy.linalg import logm
@@ -35,16 +36,20 @@ def _set_up_pauli():
     id2 = np.identity(2)
     proj0 = np.zeros((2, 2))
     proj1 = np.zeros((2, 2))
+    sigplus=np.zeros((2, 2))
+    sigminus=np.zeros((2, 2))
     sigx[0, 1] = 1.0
     sigx[1, 0] = 1.0
     sigz[0, 0] = 1.0
     sigz[1, 1] = -1.0
     proj0[0, 0] = 1.0
     proj1[1, 1] = 1.0
-    return id2, sigx, sigz, proj0, proj1
+    sigplus[1,0]=1.0
+    sigminus[0,1]=1.0
+    return id2, sigx, sigz, proj0, proj1, sigplus, sigminus
 
 
-ID2, SIG_X, SIG_Z, PROJ_0, PROJ_1 = _set_up_pauli()
+ID2, SIG_X, SIG_Z, PROJ_0, PROJ_1, SIG_PLUS, SIG_MINUS= _set_up_pauli()
 
 
 class PureSolutionInterface:
@@ -143,6 +148,8 @@ class TDSE:
             self.FockZZ,
             self.Fockproj0,
             self.Fockproj1,
+            self.Fockplus,
+            self.Fockminus
         ) = self._init_Fock()
         self.Focksize = None
         self.AS = AnnealSchedule(**offset_params, graph_params=graph_params)
@@ -239,7 +246,7 @@ class TDSE:
 
         Returns: Ids for gs vectors, all eigenvalues, all eigenvectors
         """
-        eigval, eigv = eigsh(H)
+        eigval, eigv = eigh(H.toarray())
         mask = [abs((ei - eigval[0]) / eigval[0]) < degeneracy_tol for ei in eigval]
         gs_idx = np.arange(len(eigval))[mask]
         if debug:
@@ -273,18 +280,18 @@ class TDSE:
         """
         if dtype == "true":
             # true ground state
-            eigvalue, eigvector = eigsh(
-                self.annealingH(s=self.offset["normalized_time"][0])
+            eigvalue, eigvector = eigh(
+                (self.annealingH(s=self.offset["normalized_time"][0])).toarray()
             )
         elif dtype == "transverse":
             # DWave initial wave function
-            eigvalue, eigvector = eigsh(
+            eigvalue, eigvector = eigh((
                 -1
                 * self.ising["energyscale"]
                 * self._constructtransverseH(
                     self.AS.A(0) * np.ones(self.graph["total_qubits"])
                 )
-            )
+            ).toarray())
         else:
             raise TypeError("Undefined initial wavefunction.")
         return eigvalue, eigvector
@@ -337,12 +344,12 @@ class TDSE:
             ``sigma^z_i \otimes 1``,
             ``sigma^z_i \otimes sigma^z_j \otimes 1``
         """
-        FockX, FockZ, FockProj_0, Fockproj1 = (
+        FockX, FockZ, FockProj_0, Fockproj1, Fockplus, Fockminus = (
             [sp.csr_matrix(mmat) for mmat in mat]
             for mat in _init_Fock(self.graph["total_qubits"])
         )
         FockZZ = [[m1 @ m2 for m1 in FockZ] for m2 in FockZ]
-        return FockX, FockZ, FockZZ, FockProj_0, Fockproj1
+        return FockX, FockZ, FockZZ, FockProj_0, Fockproj1, Fockplus, Fockminus
 
     def pushtoFock(self, i: int, local: ndarray) -> ndarray:
         """Tensor product of `local` at particle index i with 1 in fock space
@@ -465,9 +472,22 @@ class TDSE:
         # print(self.Focksize)
         ymat = y.reshape((self.Focksize, self.Focksize))
         H = self.annealingH(t)
-        ymat = -1j * (H.dot(ymat) - ymat.dot(H))
+        lindblad=self.get_lindblad(ymat,self.gamma)
+        ymat = -1j * (H.dot(ymat) - ymat@H) + lindblad
         f = ymat.reshape(self.Focksize ** 2)
         return f
+
+    def get_lindblad(self,ymat,gamma):
+        ''' gamma: decoherence rate = 1/(decoherence time), the unit is the same as the Hamiltonian
+        '''
+        lindblad=np.zeros(((self.Focksize, self.Focksize)))
+        for i in range(self.graph["total_qubits"]):
+                if ((self.ising["hi"])[i] > 0):
+                    lindblad=lindblad+2.0*(self.Fockplus[i])@(ymat)@(self.Fockminus[i])-(self.Fockproj0[i])@(ymat)-(ymat)@(self.Fockproj0[i])
+                else:
+                    lindblad=lindblad+2.0*(self.Fockminus[i])@(ymat)@(self.Fockplus[i])-(self.Fockproj1[i])@(ymat)-(ymat)@(self.Fockproj1[i])
+        lindblad=gamma*lindblad
+        return lindblad
 
     def solve_mixed(self, rho: ndarray) -> ndarray:
         """Solves the TDSE
@@ -551,11 +571,27 @@ class TDSE:
            indicesA: einsum string for partial trace
            reg: infinitesimal regularization
         """
+        #print("hello world")
+        #print(self.graph["total_qubits"]) 
+        #print("rho")
+        #print(type(rho))
+        #print(rho.shape)
+        #print('test rho')
+        #testrho=rho.reshape(2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"])
+        #e,v=eigh(testrho)
+        #print(testrho.shape)
+        #print('eig rho',e)
+
         tensorrho = rho.reshape(
             tuple([2 for i in range(2 * self.graph["total_qubits"])])
         )
         rhoA = np.einsum(indicesA, tensorrho)
+        #print("rhoA")
+        #print(type(rhoA))
+        #print(rhoA.shape)
         matrhoA = rhoA.reshape(2 ** nA, 2 ** nA) + reg * np.identity(2 ** nA)
+        #e,v=eigh(matrhoA)
+        #print('eig rhoA',e)
         s = -np.trace(matrhoA @ logm(matrhoA)) / np.log(2)
         return s
 
@@ -622,7 +658,8 @@ _SIG_X = SIG_X.astype(np.int8)
 _SIG_Z = SIG_Z.astype(np.int8)
 _PROJ_0 = PROJ_0.astype(np.int8)
 _PROJ_1 = PROJ_1.astype(np.int8)
-
+_SIG_PLUS = SIG_PLUS.astype(np.int8)
+_SIG_MINUS = SIG_MINUS.astype(np.int8)
 
 @jit(nopython=True)
 def _init_Fock(total_qubits: int) -> Tuple[ndarray, ndarray, ndarray]:
@@ -638,13 +675,16 @@ def _init_Fock(total_qubits: int) -> Tuple[ndarray, ndarray, ndarray]:
     FockZ = np.empty(shape, dtype=np.int8)
     Fockproj0 = np.empty(shape, dtype=np.int8)
     Fockproj1 = np.empty(shape, dtype=np.int8)
+    Fockplus = np.empty(shape, dtype=np.int8)
+    Fockminus = np.empty(shape, dtype=np.int8)
     for i in range(total_qubits):
         FockX[i] = _pushtoFock(i, _SIG_X, total_qubits)
         FockZ[i] = _pushtoFock(i, _SIG_Z, total_qubits)
         Fockproj0[i] = _pushtoFock(i, _PROJ_0, total_qubits)
         Fockproj1[i] = _pushtoFock(i, _PROJ_1, total_qubits)
-
-    return FockX, FockZ, Fockproj0, Fockproj1
+        Fockplus[i] = _pushtoFock(i, _SIG_PLUS, total_qubits)
+        Fockminus[i] = _pushtoFock(i, _SIG_MINUS, total_qubits)
+    return FockX, FockZ, Fockproj0, Fockproj1, Fockplus, Fockminus
 
 
 """
