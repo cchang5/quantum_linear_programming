@@ -634,7 +634,18 @@ class TDSE:
                 idx += 1
                 nA += 1
         einidx = einidx1 + einidx2
-        return nA, einidx
+        ridx1 = ''
+        ridx2 = ''
+        for idx, eidx in enumerate(einidx1):
+            if eidx != einidx2[idx]:
+                ridx1 += eidx
+                ridx2 += einidx2[idx]
+            else:
+                pass
+        ridx = ridx1 + ridx2
+        esum = f"{einidx}->{ridx}"
+        print(esum)
+        return nA, esum
 
 
 @jit(nopython=True)

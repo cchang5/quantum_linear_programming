@@ -147,3 +147,5 @@ if __name__ == "__main__":
 
     # single_histogram(nndata)
     plot_prob(nndata, nndata2, nndata3)
+
+
