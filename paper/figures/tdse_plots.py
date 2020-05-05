@@ -99,7 +99,10 @@ def aggregate():
 def aggregate_gamma():
     adata = dict()
     data = Data()
-    for gamma in [0.001, 0.01, 0.015, 0.02, 0.03, 0.035, 0.04, 0.045, 0.05, 0.055, 0.06, 0.065, 0.07, 0.075, 0.1, 1]:
+    data.params["offset"]["offset"] = "binary"
+    data.params["wave"]["temp"] = 15E-3
+    for gamma in [0.001, 0.01, 0.02, 0.035, 0.04, 0.045, 0.05, 0.055, 0.06, 0.065, 0.07, 0.08, 0.09, 0.1]:
+        print(gamma)
         data.params["wave"]["gamma"] = gamma
         adata[gamma] = data.get_data()
         with open(f"{settings.MEDIA_ROOT}/{adata[gamma].solution}", "rb") as file:
@@ -176,9 +179,9 @@ def plot_gamma(gdata):
 
 if __name__ == "__main__":
     # vs offset
-    adata = aggregate()
-    print(list(adata.keys()))
-    plot_aggregate(adata)
+    #adata = aggregate()
+    #print(list(adata.keys()))
+    #plot_aggregate(adata)
 
     # vs gamma
     gdata = aggregate_gamma()
