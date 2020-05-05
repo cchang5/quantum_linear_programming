@@ -22,6 +22,7 @@ class AnnealOffset:
         self.graph_params = graph_params
 
     def fcn(self, h, offset_min, offset_range):
+        h = np.array(h)
         abshrange = max(abs(h)) - min(abs(h))
         fullrange = max(h) - min(h)
 
@@ -54,7 +55,11 @@ class AnnealOffset:
                 if abs(hi) <= hmid:
                     offset_fcn.append(offset_min)
                 else:
-                    offset_fcn.append(offset_min + offset_range)
+                    if offset_min < 0:
+                        offset_fcn.append(offset_min + offset_range)
+                    else:
+                        offset_fcn.append(offset_min - offset_range)
+            print(offset_fcn, offset_tag)
             return offset_fcn, offset_tag
         if self.tag == "negbinary":
             offset_tag = f"FixEmbedding_NegBinary_{offset_min}_{offset_range}_v3_1"
@@ -64,7 +69,11 @@ class AnnealOffset:
                 if abs(hi) >= hmid:
                     offset_fcn.append(offset_min)
                 else:
-                    offset_fcn.append(offset_min + offset_range)
+                    if offset_min < 0:
+                        offset_fcn.append(offset_min + offset_range)
+                    else:
+                        offset_fcn.append(offset_min - offset_range)
+            print(offset_fcn, offset_tag)
             return offset_fcn, offset_tag
         if self.tag == "shiftlinear":
             offset_tag = f"FixEmbedding_ShiftLinear_{offset_min}_{offset_range}"
