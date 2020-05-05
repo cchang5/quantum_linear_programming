@@ -48,7 +48,7 @@ class AnnealOffset:
                 f"FixEmbedding_Constant_{offset_min}_{offset_range}_v3_1",
             )
         if self.tag == "binary":
-            offset_tag = f"FixEmbedding_Binary_{offset_min}_{offset_range}_v4"
+            offset_tag = f"FixEmbedding_Binary_{offset_min}_{offset_range}_v5"
             offset_fcn = []
             hmid = abshrange * 0.5 + min(abs(h))
             for hi in h:
@@ -72,7 +72,6 @@ class AnnealOffset:
                         offset_fcn.append(offset_min + offset_range)
                     else:
                         offset_fcn.append(offset_min - offset_range)
-            print(offset_fcn, offset_tag)
             return offset_fcn, offset_tag
         if self.tag == "shiftlinear":
             offset_tag = f"FixEmbedding_ShiftLinear_{offset_min}_{offset_range}"

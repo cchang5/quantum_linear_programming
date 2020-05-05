@@ -585,7 +585,6 @@ class TDSE:
         tensorrho = rho.reshape(
             tuple([2 for i in range(2 * self.graph["total_qubits"])])
         )
-        print(self.graph["total_qubits"])
         rhoA = np.einsum(indicesA, tensorrho)
         #print("rhoA")
         #print(type(rhoA))
