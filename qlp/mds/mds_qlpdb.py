@@ -59,7 +59,6 @@ class AnnealOffset:
                         offset_fcn.append(offset_min + offset_range)
                     else:
                         offset_fcn.append(offset_min - offset_range)
-            print(offset_fcn, offset_tag)
             return offset_fcn, offset_tag
         if self.tag == "negbinary":
             offset_tag = f"FixEmbedding_NegBinary_{offset_min}_{offset_range}_v3_1"
