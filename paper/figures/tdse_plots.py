@@ -84,7 +84,7 @@ def aggregate():
     #        adata[offset].sol = pickle.load(file)
     #    with open(f"{settings.MEDIA_ROOT}/{adata[offset].instance}", "rb") as file:
     #        adata[offset].tdse = pickle.load(file)
-    for offset in [0.0, -0.01, -0.02, -0.03, -0.04, -0.05]:
+    for offset in [0.05, 0.04, 0.03, 0.02, 0.01, 0.0, -0.0005, -0.001, -0.002,-0.004, -0.005, -0.01, -0.02, -0.03, -0.04, -0.05]:
         data.params["offset"]["offset"] = "binary"
         data.params["offset"]["offset_min"] = offset
         data.params["offset"]["offset_range"] = abs(offset)*2
