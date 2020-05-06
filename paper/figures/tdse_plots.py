@@ -21,7 +21,7 @@ class Data():
         offset_params = dict()
         offset_params["annealing_time"] = 1
         offset_params["normalized_time"] = [0, 1]
-        offset_params["offset"] = "negbinary"
+        offset_params["offset"] = "binary"
         offset_params["offset_min"] = 0
         offset_params["offset_range"] = 0
         offset_params["fill_value"] = "extrapolate"
@@ -30,7 +30,7 @@ class Data():
         # wave params
         wave_params = dict()
         wave_params["type"] = "mixed"
-        wave_params["temp"] = 50E-3
+        wave_params["temp"] = 15E-3
         wave_params["gamma"] = 0.05
         wave_params["initial_wavefunction"] = "transverse"
 
@@ -47,7 +47,6 @@ class Data():
             qubo = get_mds_qubo(
                 graph, directed=directed, penalty=penalty, triangularize=True, dtype="d"
             )
-
         graph_params = graph_summary(tag, graph, qubo)
 
         # solver params
@@ -76,24 +75,25 @@ class Data():
 def aggregate():
     adata = dict()
     data = Data()
-    for offset in [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0]:
-        data.params["offset"]["offset"] = "negbinary"
+    #for offset in [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0]:
+    #    data.params["offset"]["offset"] = "negbinary"
+    #    data.params["offset"]["offset_min"] = offset
+    #    data.params["offset"]["offset_range"] = abs(offset)*2
+    #    adata[offset] = data.get_data()
+    #    with open(f"{settings.MEDIA_ROOT}/{adata[offset].solution}", "rb") as file:
+    #        adata[offset].sol = pickle.load(file)
+    #    with open(f"{settings.MEDIA_ROOT}/{adata[offset].instance}", "rb") as file:
+    #        adata[offset].tdse = pickle.load(file)
+    for offset in [0.05, 0.04, 0.03, 0.02, 0.01, 0.0, -0.01, -0.02, -0.03, -0.04, -0.05]:
+        data.params["offset"]["offset"] = "binary"
         data.params["offset"]["offset_min"] = offset
         data.params["offset"]["offset_range"] = abs(offset)*2
         adata[offset] = data.get_data()
+        print(adata[offset])
         with open(f"{settings.MEDIA_ROOT}/{adata[offset].solution}", "rb") as file:
             adata[offset].sol = pickle.load(file)
         with open(f"{settings.MEDIA_ROOT}/{adata[offset].instance}", "rb") as file:
             adata[offset].tdse = pickle.load(file)
-    for offset in [-0.01, -0.02, -0.03, -0.04, -0.05]:
-        data.params["offset"]["offset"] = "binary"
-        data.params["offset"]["offset_min"] = offset
-        data.params["offset"]["offset_range"] = abs(offset)*2
-        adata[abs(offset)] = data.get_data()
-        with open(f"{settings.MEDIA_ROOT}/{adata[abs(offset)].solution}", "rb") as file:
-            adata[abs(offset)].sol = pickle.load(file)
-        with open(f"{settings.MEDIA_ROOT}/{adata[abs(offset)].instance}", "rb") as file:
-            adata[abs(offset)].tdse = pickle.load(file)
     return adata
 
 def aggregate_gamma():
@@ -179,9 +179,9 @@ def plot_gamma(gdata):
 
 if __name__ == "__main__":
     # vs offset
-    #adata = aggregate()
+    adata = aggregate()
     #print(list(adata.keys()))
-    #plot_aggregate(adata)
+    plot_aggregate(adata)
 
     # vs gamma
     gdata = aggregate_gamma()
