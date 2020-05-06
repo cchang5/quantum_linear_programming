@@ -170,39 +170,26 @@ def getdata_full(min, rangex):
 
 def get_tdse_data():
     if True:
-        y = {'NegBinary': [0.86622, 0.8526, 0.83725, 0.84143, 0.84811, 0.86942],
-             'Binary': [0.9342877282158706, 0.92139, 0.90666, 0.8919, 0.87541, 0.86437]}
+        y = {'Binary': [0.924225, 0.91058, 0.8979, 0.885185, 0.86872, 0.85569, 0.84235, 0.82933, 0.82865, 0.837885, 0.859975]}
     else:
         data = {
             offx: {
-                abs(minx): data_Data.objects.filter(
+                minx: data_Data.objects.filter(
                     experiment__graph__tag=f"NN(2)",
-                    experiment__tag=f"FixEmbedding_{offx}_{minx}_{2*abs(minx)}_v3_1",
+                    experiment__tag=f"FixEmbedding_{offx}_{minx}_{2*abs(minx)}_v5",
                     experiment__settings__annealing_time=1,
                     experiment__settings__num_spin_reversal_transforms=5,
                 ).to_dataframe()
-                for minx in [-0.05, -0.04, -0.03, -0.02, -0.01]
+                for minx in [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
             }
-            for offx in ["NegBinary", "Binary"]
+            for offx in ["Binary"]
         }
-        data["NegBinary"][0.0] = data_Data.objects.filter(
-            experiment__graph__tag=f"NN(2)",
-            experiment__tag=f"FixEmbedding_NegBinary_0.0_-0.0_v3_1",
-            experiment__settings__annealing_time=1,
-            experiment__settings__num_spin_reversal_transforms=5,
-        ).to_dataframe()
-        data["Binary"][0.0] = data_Data.objects.filter(
-            experiment__graph__tag=f"NN(2)",
-            experiment__tag=f"FixEmbedding_Binary_0.0_-0.0_v3_1",
-            experiment__settings__annealing_time=1,
-            experiment__settings__num_spin_reversal_transforms=5,
-        ).to_dataframe()
         y = dict()
         for offset in data.keys():
             X = list(data[offset].keys())
             y[offset] = []
             for key in X:
-                mds = 1
+                mds = 3.25
                 try:
                     energy_count = (
                         data[offset][key].groupby("energy").count()["id"].loc[mds]
@@ -211,6 +198,7 @@ def get_tdse_data():
                     energy_count = 0
                 total_count = data[offset][key].count()["id"]
                 y[offset].append(energy_count / total_count)
+                print(key, total_count)
     print(y)
     return y
 
@@ -340,11 +328,7 @@ def plot_compare_all(data02, data04, data06, data08, data10):
 def plot_tdse(data):
     fig = plt.figure("tdse", figsize=(7,4))
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
-    # negbinary
-    X = [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0]
-    y = data["NegBinary"]
-    ax.errorbar(x=X, y=y, ls="none", marker='o')
-    X = [0.05, 0.04, 0.03, 0.02, 0.01, 0.0]
+    X = [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
     y = data["Binary"]
     ax.errorbar(x=X, y=y, ls="none", marker='^')
     plt.draw()
