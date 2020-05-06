@@ -84,12 +84,11 @@ def aggregate():
     #        adata[offset].sol = pickle.load(file)
     #    with open(f"{settings.MEDIA_ROOT}/{adata[offset].instance}", "rb") as file:
     #        adata[offset].tdse = pickle.load(file)
-    for offset in [0.05, 0.04, 0.03, 0.02, 0.01, 0.0, -0.01, -0.02, -0.03, -0.04, -0.05]:
+    for offset in [0.0, -0.01, -0.02, -0.03, -0.04, -0.05]:
         data.params["offset"]["offset"] = "binary"
         data.params["offset"]["offset_min"] = offset
         data.params["offset"]["offset_range"] = abs(offset)*2
         adata[offset] = data.get_data()
-        print(adata[offset])
         with open(f"{settings.MEDIA_ROOT}/{adata[offset].solution}", "rb") as file:
             adata[offset].sol = pickle.load(file)
         with open(f"{settings.MEDIA_ROOT}/{adata[offset].instance}", "rb") as file:
@@ -101,7 +100,7 @@ def aggregate_gamma():
     data = Data()
     data.params["offset"]["offset"] = "binary"
     data.params["wave"]["temp"] = 15E-3
-    for gamma in [0.001, 0.01, 0.02, 0.035, 0.04, 0.045, 0.05, 0.055, 0.06, 0.065, 0.07, 0.08, 0.09, 0.1]:
+    for gamma in [0.001, 0.01, 0.02, 0.03, 0.035, 0.04, 0.045, 0.05, 0.055, 0.06, 0.065, 0.07, 0.08, 0.09, 0.1]:
         print(gamma)
         data.params["wave"]["gamma"] = gamma
         adata[gamma] = data.get_data()
