@@ -581,10 +581,10 @@ class TDSE:
         #e,v=eigh(testrho)
         #print(testrho.shape)
         #print('eig rho',e)
-
         tensorrho = rho.reshape(
             tuple([2 for i in range(2 * self.graph["total_qubits"])])
         )
+        print(np.shape(tensorrho))
         rhoA = np.einsum(indicesA, tensorrho)
         #print("rhoA")
         #print(type(rhoA))
@@ -592,6 +592,8 @@ class TDSE:
         matrhoA = rhoA.reshape(2 ** nA, 2 ** nA) + reg * np.identity(2 ** nA)
         #e,v=eigh(matrhoA)
         #print('eig rhoA',e)
+        print(np.shape(matrhoA))
+        raise SystemError
         s = -np.trace(matrhoA @ logm(matrhoA)) / np.log(2)
         return s
 
