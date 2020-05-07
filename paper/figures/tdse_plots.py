@@ -127,15 +127,16 @@ def plot_aggregate(adata):
     ax.set_xlabel("offset")
     plt.draw()
 
-    reg = 1e-10
+    reg = 1E-9
     entropy_params = {"nA": 2, "indicesA": "abcdfabceg->dfeg", "reg": reg}
+    #entropy_params = {"nA": 3, "indicesA": "aceghbdfgh->acebdf", "reg": reg}
     plt.figure(f"entropy")
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
     for key in adata:
         sol = adata[key].sol
         tdse = adata[key].tdse
         #nA, indicesA = tdse.find_partition()
-        #reg = 1e-10
+        #reg = 1e-8
         #entropy_params = {"nA": nA, "indicesA": indicesA, "reg": reg}
         #print(entropy_params)
         entropy = np.asarray(
