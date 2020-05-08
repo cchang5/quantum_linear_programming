@@ -260,22 +260,61 @@ We demonstrate the proposed algorithm in order to obtain the MDS on a series of 
 \end{align}
 and gives the probability of randomly guessing the MDS of $G(n)$.
 
-Demonstrate simple dominating set problem.
+\begin{figure}[b]
+	\centering
+	\includegraphics[width=\columnwidth]{./figures/anneal_time_scaling.pdf}
+	\caption{Probability of finding the MDS for $G(6)$ as a function of total annealing time.}
+	\label{fig:at_scale}
+\end{figure}
 
-Study scaling with random graphs (but fixed number of vertices?)
+For the following studies, we perform experiments on the \texttt{DW\_2000Q\_5} solver. The annealing time is optimized to 400$\mu$s after performing a study on the $G(6)$ graph as shown in Fig.~\ref{fig:at_scale}. In Fig.~\ref{fig:baseline}, we show results from the baseline experiment, without modification to the default DWave annealing schedule, and observe improvement over random guessing. However, the experiment results reflect the same degeneracy structure as random guessing, and scale exponentially poorly for larger number of vertices $n$. We explore one avenue towards improving the experiment results by introducing per-qubit annealing offsets into the time evolution.
 
-This probably just involves making the inequality constraint > 1 instead of > 0.
+\begin{figure}
+	\centering
+	\includegraphics[width=\columnwidth]{./figures/scaling_baseline.pdf}
+	\caption{Baseline result of DWave (blue) compared to random guessing (red). The jagged nature of random guessing reflects the degeneracy of the ground state.}
+	\label{fig:baseline}
+\end{figure}
+
+\subsubsection{Modified annealing schedule}
+
+In quantum annealing, the ground state of the problem Hamiltonian is obtained from the evolution of a time-dependent Hamiltonian,
+\begin{equation}
+H(s) = A(s) H^{\textrm{init}} + B(s) H^{\textrm{problem}},
+\end{equation}
+where $H^\textrm{init}=\sum_i\sigma^x_i$ on the DWave, and $H^\textrm{problem}$ is given by Eq.~(\ref{eq:matrix_form}) for the MDS application. The variable $s\in [0, 1]$ is the normalized annealing time and is allowed to vary between 1$\mu s$ to 2$ms$ on the DWave. On DWave solvers, annealing offsets effectively advance or delay the annealing schedule of individual qubits. In Fig.~\ref{fig:anneal_schedule}, the default DWave annealing schedule is shown in addition to the effects of applying positive and negative offsets. Note that due to the way the offsets are implemented on the hardware level, systematic errors are introduced since the initial and final values of $A(s)$ and $B(s)$ will differ for qubits with different offsets. Fig.~\ref{fig:anneal_schedule} shows the maximum offset that we use for the study, which translates to approximately (due to non-linearity) a 5\% advancement (blue) or delay (red) in the schedule.
+
+\begin{figure}[b]
+	\centering
+	\includegraphics[width=\columnwidth]{./figures/anneal_schedule.pdf}
+	\caption{asdf}
+	\label{fig:anneal_schedule}
+\end{figure}
+
+The motivation behind implementing per-qubit level offsets is rooted in the hypothesis that as the problem Hamiltonian is turned on, the system in general will exhibit more disorder. We define disorder by first recasting the QUBO into its Ising form such that the problem Hamiltonian has the form
+\begin{equation}
+H^{\textrm{Ising}} = \sum_{ij} J_{ij} \sigma^z_i \sigma^z_j + \sum_i h_i \sigma^z_i,
+\end{equation}
+and recognize that in the limit where $h_i$ is randomly drawn from a Bernoulli distribution we recover the spin-glass model. The spin-glass model enters its glassy state when $|h_i|$ is large, and as a consequence, the wavefunction experiences many-body localization effects, the many-body analogue of Anderson Localization. 
+
+{\color{red} Should we talk about exponential damping here too? as a competing effect.}
+
+Following this logic, we split the qubits into two groups depending on the value of $h_i$ relative to $(\textrm{max}|\{h\}| - \textrm{min}|\{h\}|) / 2$ given the set of external magnetic fields $\{h\}$ defined by a specific problem. We then symmetrically offset the two groups of qubits over a total range between 0\% and 10\% (-5\% to +5\%). The results of this study is shown in Fig.~\ref{fig:dwave_offset}.
+
+\begin{figure}[b]
+	\centering
+	\includegraphics[width=\columnwidth]{./figures/scaling_comparison_all.pdf}
+	\caption{The legend labels the total range of the symmetric offset employed. A positive range indicates that the group of qubits with small values of $|h_i|$ are advanced (qubits with large values of $|h_i|$ are equivalently delayed), and vice versa for results labeled with a negative range.}
+	\label{fig:dwave_offset}
+\end{figure}
+
+Finally, we note that due to the inherent variance in performance when using different physical qubits, for each graph, we perform the offset study on the same physical qubits.
 
 \subsection{Simulation Results}
 
 \subsection{Decoherence and Many-Body Localization}
 
 \section{METHODS}
-\subsection{Experiment Details}
-\subsubsection{Annealing Time Optimization}
-
-\subsubsection{Spin Reversal Transformation Optimization}
-
 \subsection{Simulation Details}
 \subsubsection{The Lindblad Equation}
 Say what the simulator is solving

@@ -12,6 +12,18 @@ from qlp.tdse import convert_params, embed_qubo_example
 
 from django.conf import settings
 
+label_params = dict()
+label_params["fontsize"] = 7
+tick_params = dict()
+tick_params["labelsize"] = 7
+tick_params["width"] = 0.5
+errorbar_params = dict()
+errorbar_params["mew"] = 0.5
+errorbar_params["markersize"] = 5
+red = '#c82506'
+green = '#70b741'
+blue = '#51a7f9'
+
 class Data():
     def __init__(self):
         self.params = self.parameters()
@@ -76,8 +88,8 @@ def aggregate():
     adata = dict()
     data = Data()
     #for offset in [0.05, 0.04, 0.03, 0.02, 0.01, 0.0, -0.0005, -0.001, -0.002,-0.004, -0.005, -0.01, -0.02, -0.03, -0.04, -0.05]:
-    #for offset in [0.04, -0.04]:
-    for offset in [0.0]:
+    for offset in [-0.05, 0.0]:
+    #for offset in [0.0]:
         data.params["offset"]["offset"] = "binary"
         data.params["offset"]["offset_min"] = offset
         data.params["offset"]["offset_range"] = abs(offset)*2
@@ -205,11 +217,38 @@ def plot_gamma(gdata):
     plt.draw()
     plt.show()
 
+def plot_schedule(adata):
+    X, y1, y2 = adata[-0.05].tdse.AS.plot([0, 1])
+    X, z1, z2 = adata[0.0].tdse.AS.plot([0, 1])
+
+    plt.figure("anneal schedule", figsize=(7, 4))
+    ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+    ax.errorbar(x=X, y=y1[:, 0], ls='-', color=blue, label="Positive offset A(s)")
+    ax.errorbar(x=X, y=z1[:, 0], ls='-', color='k', label="Default A(s)")
+    ax.errorbar(x=X, y=y1[:, -1], ls='-', color=red, label="Negative offset A(s)")
+    ax.errorbar(x=X, y=y2[:, 0], ls='--', color=blue, label="Positive offset B(s)")
+    ax.errorbar(x=X, y=z2[:, 0], ls='--', color='k', label="Default B(s)")
+    ax.errorbar(x=X, y=y2[:, -1], ls='--', color=red, label="Negative offset B(s)")
+    ax.set_xlabel("normalized time") #, **label_params)
+    ax.set_ylabel("GHz") #, **label_params)
+    ax.legend()
+    plt.draw()
+    plt.savefig("./anneal_schedule.pdf")
+    plt.show()
+
+
+
+
+
 if __name__ == "__main__":
     # vs offset
     adata = aggregate()
     #print(list(adata.keys()))
-    plot_aggregate(adata)
+    #plot_aggregate(adata)
+
+    # plot AS
+    print(list(adata.keys()))
+    plot_schedule(adata)
 
     # vs offset no decoherence
     #bdata = aggregate_nodeco()

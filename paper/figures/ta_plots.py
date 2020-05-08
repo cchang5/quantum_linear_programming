@@ -85,7 +85,7 @@ def plotta(data):
     fig = plt.figure("scaling", figsize=(7, 4))
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
     ax.errorbar(x=X, y=y, marker="o", color=red, **errorbar_params)
-    ax.fill_between(x=X, y1=yerr1, y2=yerr2, color=red, alpha=0.5)
+    #ax.fill_between(x=X, y1=yerr1, y2=yerr2, color=red, alpha=0.5)
     ax.set_xscale("log")
     ax.set_ylabel("MDS probability")
     ax.set_xlabel("anneal time (microseconds)")
@@ -313,16 +313,42 @@ def plot_compare_all(data02, data04, data06, data08, data10):
     fig = plt.figure("scaling compare", figsize=(7, 4))
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
     X = np.arange(len(data10["Constant"]))+2
-    ax.errorbar(x=X, y=data10["Binary"], label="Binary 0.10", color=red, **errorbar_params)
-    ax.errorbar(x=X, y=data08["Binary"], label="Binary 0.08", color=green, **errorbar_params)
-    ax.errorbar(x=X, y=data06["Binary"], label="Binary 0.06", color=blue, **errorbar_params)
-    ax.errorbar(x=X, y=data04["Binary"], label="Binary 0.04", color=red, ls='--', **errorbar_params)
-    ax.errorbar(x=X, y=data02["Binary"], label="Binary 0.02", color=green, ls='--', **errorbar_params)
-    ax.errorbar(x=X, y=data10["Constant"], label="Constant", color=blue, ls='--', **errorbar_params)
+    ax.errorbar(x=X, y=data10["Binary"], label="-10%", color=green, ls='-', **errorbar_params)
+    ax.errorbar(x=X, y=data08["Binary"], label="-8%", color=red, ls=':', **errorbar_params)
+    ax.errorbar(x=X, y=data06["Binary"], label="-6%", color=red, ls='-.', **errorbar_params)
+    ax.errorbar(x=X, y=data04["Binary"], label="-4%", color=red, ls='--', **errorbar_params)
+    ax.errorbar(x=X, y=data02["Binary"], label="-2%", color=red, ls='-', **errorbar_params)
+    ax.errorbar(x=X, y=data10["Constant"], label="Constant", color='k', ls='-', **errorbar_params)
+    ax.errorbar(x=X, y=data02["NegBinary"], label="2%", color=blue, ls='-', **errorbar_params)
+    ax.errorbar(x=X, y=data04["NegBinary"], label="4%", color=blue, ls='--', **errorbar_params)
+    ax.errorbar(x=X, y=data06["NegBinary"], label="6%", color=blue, ls='-.', **errorbar_params)
+    ax.errorbar(x=X, y=data08["NegBinary"], label="8%", color=blue, ls=':', **errorbar_params)
+    ax.errorbar(x=X, y=data10["NegBinary"], label="10%", color=green, ls='-', **errorbar_params)
+    degeneracy = np.array([degenfcn(Xi) for Xi in X])
+    rguess = np.array([1 / 2 ** xi for xi in X]) * degeneracy
+    ax.errorbar(x=X, y=rguess, label="Random", ls='-', color='k', alpha=0.3, **errorbar_params)
     ax.legend()
     ax.set_yscale("log")
+    ax.set_xlabel("number of vertices")
+    ax.set_ylabel("MDS probability")
     plt.draw()
     plt.savefig("./scaling_comparison_all.pdf")
+    plt.show()
+
+def plot_baseline(data10):
+    fig = plt.figure("scaling compare", figsize=(7, 4))
+    ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+    X = np.arange(len(data10["Constant"]))+2
+    degeneracy = np.array([degenfcn(Xi) for Xi in X])
+    rguess = np.array([1 / 2 ** xi for xi in X]) * degeneracy
+    ax.errorbar(x=X, y=rguess, label="Random Guess", marker='o', color=red,  **errorbar_params)
+    ax.errorbar(x=X, y=data10["Constant"], label="DWave", marker='o', color=blue, **errorbar_params)
+    ax.legend()
+    ax.set_yscale("log")
+    ax.set_xlabel("number of vertices")
+    ax.set_ylabel("MDS probability")
+    plt.draw()
+    plt.savefig("./scaling_baseline.pdf")
     plt.show()
 
 def plot_tdse(data):
@@ -360,9 +386,12 @@ if __name__ == "__main__":
     data10 = getdata_full(-0.05, 0.1)
     #plot_full(data10, "0p10")
 
+    # baseline
+    #plot_baseline(data10)
+
     # compare offset plot
     plot_compare_all(data02, data04, data06, data08, data10)
 
     # plot tdse comparison plots
-    tdsedata = get_tdse_data()
-    plot_tdse(tdsedata)
+    #tdsedata = get_tdse_data()
+    #plot_tdse(tdsedata)
