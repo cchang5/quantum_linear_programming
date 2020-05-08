@@ -170,7 +170,7 @@ Given a graph $G(E,V)$, defined by the set of $V$ vertices and $E$ edges, and a 
 	\includegraphics[width=0.20\textwidth]{./figures/subaru_mds2.pdf}\\
 	\centering\bf{a} & \centering\bf{b} & \centering\bf{c}
 	\end{tabular}
-	\caption{Example of different dominating sets for the Pleiades constellation $G(V, E)$. Vertices in the dominating set $D$ are highlighted in blue. {\bf{a)}} A dominating set of $G$ with domination number $\overline{\overline{D}} = 5$. {\bf{b)}} A minimal dominating set of $G$ with domination number of $\overline{\overline{D}} = 4$. We note that $D$ is also the maximum independent set of $G$. {\bf{c)}} The minimum dominating set of $G$ with domination number of $\overline{\overline{D}} = 2$.}
+	\caption{Example of different dominating sets for $G(V, E)$. Vertices in the dominating set $D$ are highlighted in blue. {\bf{a)}} A dominating set of $G$ with domination number $\overline{\overline{D}} = 5$. {\bf{b)}} A minimal dominating set of $G$ with domination number of $\overline{\overline{D}} = 4$. We note that $D$ is also the maximum independent set of $G$. {\bf{c)}} The minimum dominating set of $G$ with domination number of $\overline{\overline{D}} = 2$.}
 	\label{fig:dominating_sets}
 \end{figure*}
 
@@ -245,16 +245,20 @@ where $ |M| \equiv \sum_{\nu} M_{\nu \mu}$.
 
 \subsection{Finding the Dominating Set with a Quantum Annealer}
 
-\begin{figure}
+\begin{figure}[b]
 	\centering
 		\includegraphics[width=0.5\columnwidth]{./figures/linear_crop.pdf}
-	\caption{
-The
-	}
+	\caption{Linear graphs $G(n)$ used in this study. Nodes denote vertices of the graphs and lines are undirected edges.}
 	\label{fig:linear}
 \end{figure}
 
-We demonstrate the proposed algorithm in order to obtain the MDS on a series of linear graphs $G(n)$ as shown in Fig.~\ref{fig:linear}.
+We demonstrate the proposed algorithm in order to obtain the MDS on a series of linear graphs $G(n)$ as shown in Fig.~\ref{fig:linear}. This type of graph is chosen because the small number of nearest-neighbor connections is more efficiently embedded into the chimera graph allowing for scaling plots to be generated when using a DWave quantum annealer. Additionally the MDS solution is known analytically, and contains both unique and degenerate solutions. In particular, the domination number for $G(n)$ is $\lceil n/3 \rceil$ while the number of MDS solutions for $n$ vertices is
+\begin{align}
+&1 &&\textrm{if} && n\textrm{ mod }3=0,\nonumber \\
+&2\lfloor n/3 \rfloor + 1 && \textrm{if}&& n\textrm{ mod }3=1,\nonumber \\
+&\lfloor n/3 \rfloor + 2 && \textrm{if} && n \textrm{ mod }3 = 2.
+\end{align}
+
 
 Demonstrate simple dominating set problem.
 

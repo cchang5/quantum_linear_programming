@@ -17,8 +17,8 @@
 \contentsline {subsection}{\numberline {B}Simulation Details}{4}{section*.15}
 \contentsline {subsubsection}{\numberline {1}The Lindblad Equation}{4}{section*.16}
 \contentsline {subsubsection}{\numberline {2}Other Simulation Details}{4}{section*.17}
-\contentsline {subsubsection}{\numberline {3}Decoherence Time}{4}{section*.18}
-\contentsline {section}{\numberline {V}DATA AVAILABILITY}{4}{section*.19}
+\contentsline {subsubsection}{\numberline {3}Decoherence Time}{5}{section*.18}
+\contentsline {section}{\numberline {V}DATA AVAILABILITY}{5}{section*.19}
 \contentsline {section}{\numberline {VI}ACKNOWLEDGEMENTS}{5}{section*.20}
 \contentsline {section}{\numberline {VII}AUTHOR CONTRIBUTIONS}{5}{section*.21}
 \contentsline {section}{\numberline {VIII}ADDITIONAL INFORMATION}{5}{section*.22}
