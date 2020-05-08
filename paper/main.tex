@@ -232,40 +232,39 @@ E = &
 \end{align}
 where $ |M| \equiv \sum_{\nu} M_{\nu \mu}$.
 
-\subsubsection{Total Dominating Set}
-
 \section{DISCUSSION}
 
-\subsection{ILP Examples}
-
-Simple problems and scaling with problem size for single global solution.
-
-- number of constraint equations (slack variables)
-- range of integer values
-- number of variables
-- precision of problem (decimal places needed)
-
-Problems with degenerate minima
-
-- does D-Wave find them with expected distribution for very small systems?
-- at what problem size does this break?
-
-\subsection{Dominating Set}
+\subsection{Finding the Dominating Set with a Quantum Annealer}
 
 Demonstrate simple dominating set problem.
 
 Study scaling with random graphs (but fixed number of vertices?)
 
-\subsection{Total Domination with Quantum Annealing}
-
-Solve the total dominating set problem.
-
 This probably just involves making the inequality constraint > 1 instead of > 0.
 
+\subsection{Simulation Results}
+
+\subsection{Decoherence and Many-Body Localization}
+
 \section{METHODS}
+\subsection{Experiment Details}
+\subsubsection{Annealing Time Optimization}
 
-Might not be necessary to have this section.
+\subsubsection{Spin Reversal Transformation Optimization}
 
+\subsection{Simulation Details}
+\subsubsection{The Lindblad Equation}
+Say what the simulator is solving
+
+With anneal offsets
+
+\subsubsection{Other Simulation Details}
+Temperature
+Initial wave function choices
+RK tolerance
+
+\subsubsection{Decoherence Time}
+Scan over decoherence time
 
 \section{DATA AVAILABILITY}
 	

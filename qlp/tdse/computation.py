@@ -584,7 +584,6 @@ class TDSE:
         tensorrho = rho.reshape(
             tuple([2 for i in range(2 * self.graph["total_qubits"])])
         )
-        print(np.shape(tensorrho))
         rhoA = np.einsum(indicesA, tensorrho)
         #print("rhoA")
         #print(type(rhoA))
@@ -592,9 +591,13 @@ class TDSE:
         matrhoA = rhoA.reshape(2 ** nA, 2 ** nA) + reg * np.identity(2 ** nA)
         #e,v=eigh(matrhoA)
         #print('eig rhoA',e)
-        print(np.shape(matrhoA))
-        raise SystemError
         s = -np.trace(matrhoA @ logm(matrhoA)) / np.log(2)
+        return s
+
+    def vonNeumann_entropy(self, rho, reg):
+        totaln = self.graph["total_qubits"]
+        matrho = rho.reshape(2 ** totaln, 2 ** totaln) + reg * np.identity(2 ** totaln)
+        s = -np.trace(matrho @ logm(matrho)) / np.log(2)
         return s
 
     def find_partition(self) -> Tuple[int, str]:

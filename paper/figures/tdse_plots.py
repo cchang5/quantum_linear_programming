@@ -75,17 +75,26 @@ class Data():
 def aggregate():
     adata = dict()
     data = Data()
-    #for offset in [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0]:
-    #    data.params["offset"]["offset"] = "negbinary"
-    #    data.params["offset"]["offset_min"] = offset
-    #    data.params["offset"]["offset_range"] = abs(offset)*2
-    #    adata[offset] = data.get_data()
-    #    with open(f"{settings.MEDIA_ROOT}/{adata[offset].solution}", "rb") as file:
-    #        adata[offset].sol = pickle.load(file)
-    #    with open(f"{settings.MEDIA_ROOT}/{adata[offset].instance}", "rb") as file:
-    #        adata[offset].tdse = pickle.load(file)
-    for offset in [0.05, 0.04, 0.03, 0.02, 0.01, 0.0, -0.0005, -0.001, -0.002,-0.004, -0.005, -0.01, -0.02, -0.03, -0.04, -0.05]:
+    #for offset in [0.05, 0.04, 0.03, 0.02, 0.01, 0.0, -0.0005, -0.001, -0.002,-0.004, -0.005, -0.01, -0.02, -0.03, -0.04, -0.05]:
+    #for offset in [0.04, -0.04]:
+    for offset in [0.0]:
         data.params["offset"]["offset"] = "binary"
+        data.params["offset"]["offset_min"] = offset
+        data.params["offset"]["offset_range"] = abs(offset)*2
+        adata[offset] = data.get_data()
+        with open(f"{settings.MEDIA_ROOT}/{adata[offset].solution}", "rb") as file:
+            adata[offset].sol = pickle.load(file)
+        with open(f"{settings.MEDIA_ROOT}/{adata[offset].instance}", "rb") as file:
+            adata[offset].tdse = pickle.load(file)
+    return adata
+
+def aggregate_nodeco():
+    adata = dict()
+    data = Data()
+    data.params["wave"]["gamma"] = 0.0
+    data.params["offset"]["offset"] = "binary"
+    #for offset in [0.05, 0.04, 0.03, 0.02, 0.01, 0.0, -0.01, -0.02, -0.03, -0.04, -0.05]:
+    for offset in [0.04, -0.04]:
         data.params["offset"]["offset_min"] = offset
         data.params["offset"]["offset_range"] = abs(offset)*2
         adata[offset] = data.get_data()
@@ -114,6 +123,9 @@ def plot_aggregate(adata):
     plt.figure("full probability")
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
     for key in adata:
+        tdse = adata[key].tdse
+        idx, en, evec = tdse.ground_state_degeneracy(tdse.IsingH, 2e-2, debug=False)
+        print(key, idx)
         ax.errorbar(x=adata[key].time, y=adata[key].prob, label=key)
     ax.set_xlabel("normalized time")
     ax.legend()
@@ -128,29 +140,45 @@ def plot_aggregate(adata):
     plt.draw()
 
     reg = 1E-9
-    entropy_params = {"nA": 2, "indicesA": "abcdfabceg->dfeg", "reg": reg}
-    #entropy_params = {"nA": 3, "indicesA": "aceghbdfgh->acebdf", "reg": reg}
-    plt.figure(f"entropy")
+    plt.figure(f"mutual information")
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+    mi = dict()
     for key in adata:
         sol = adata[key].sol
         tdse = adata[key].tdse
-        #nA, indicesA = tdse.find_partition()
-        #reg = 1e-8
-        #entropy_params = {"nA": nA, "indicesA": indicesA, "reg": reg}
-        #print(entropy_params)
-        entropy = np.asarray(
+        entropy_params = {"nA": 2, "indicesA": "abcdfabceg->dfeg", "reg": reg}
+        entropyA = np.asarray(
             [
                 tdse.ent_entropy(sol.y[:, i], **entropy_params)
                 for i in range(sol.t.size)
             ]
         ).real
-        ax.errorbar(x=adata[key].time, y=entropy, label=key)
+        entropy_params = {"nA": 3, "indicesA": "aceghbdfgh->acebdf", "reg": reg}
+        entropyB = np.asarray(
+            [
+                tdse.ent_entropy(sol.y[:, i], **entropy_params)
+                for i in range(sol.t.size)
+            ]
+        ).real
+        entropyAB = np.asarray(
+            [
+                tdse.vonNeumann_entropy(sol.y[:, i], reg)
+                for i in range(sol.t.size)
+            ]
+        ).real
+        mutual_information = entropyA + entropyB - entropyAB
+        ax.errorbar(x=adata[key].time, y=mutual_information, label=key)
+        mi[key] = mutual_information
     ax.set_xlabel("normalized time")
     ax.legend()
     plt.draw()
 
-
+    plt.figure(f"final mutual information")
+    ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+    x = list(mi.keys())
+    y = [mi[key][-1] for key in x]
+    ax.errorbar(x=x, y=y, ls='None', marker='o')
+    ax.set_xlabel("offset")
     plt.show()
 
 def plot_gamma(gdata):
@@ -183,6 +211,10 @@ if __name__ == "__main__":
     #print(list(adata.keys()))
     plot_aggregate(adata)
 
+    # vs offset no decoherence
+    #bdata = aggregate_nodeco()
+    #plot_aggregate(bdata)
+
     # vs gamma
-    gdata = aggregate_gamma()
-    plot_gamma(gdata)
+    #gdata = aggregate_gamma()
+    #plot_gamma(gdata)
