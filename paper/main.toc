@@ -1,0 +1,25 @@
+\tocdepth@munge 
+\contentsline {section}{\numberline {}Contents}{1}{section*.1}
+\tocdepth@restore 
+\contentsline {section}{\numberline {I}INTRODUCTION}{1}{section*.2}
+\contentsline {section}{\numberline {II}RESULTS}{2}{section*.3}
+\contentsline {subsection}{\numberline {A}Integer Programming Mapping to QUBO}{2}{section*.4}
+\contentsline {subsection}{\numberline {B}Application to the Dominating Set Problem}{2}{section*.5}
+\contentsline {subsubsection}{\numberline {1}Minimum Dominating Set}{3}{section*.6}
+\contentsline {section}{\numberline {III}DISCUSSION}{4}{section*.7}
+\contentsline {subsection}{\numberline {A}Finding the Dominating Set with a Quantum Annealer}{4}{section*.8}
+\contentsline {subsection}{\numberline {B}Simulation Results}{4}{section*.9}
+\contentsline {subsection}{\numberline {C}Decoherence and Many-Body Localization}{4}{section*.10}
+\contentsline {section}{\numberline {IV}METHODS}{4}{section*.11}
+\contentsline {subsection}{\numberline {A}Experiment Details}{4}{section*.12}
+\contentsline {subsubsection}{\numberline {1}Annealing Time Optimization}{4}{section*.13}
+\contentsline {subsubsection}{\numberline {2}Spin Reversal Transformation Optimization}{4}{section*.14}
+\contentsline {subsection}{\numberline {B}Simulation Details}{4}{section*.15}
+\contentsline {subsubsection}{\numberline {1}The Lindblad Equation}{4}{section*.16}
+\contentsline {subsubsection}{\numberline {2}Other Simulation Details}{4}{section*.17}
+\contentsline {subsubsection}{\numberline {3}Decoherence Time}{4}{section*.18}
+\contentsline {section}{\numberline {V}DATA AVAILABILITY}{4}{section*.19}
+\contentsline {section}{\numberline {VI}ACKNOWLEDGEMENTS}{5}{section*.20}
+\contentsline {section}{\numberline {VII}AUTHOR CONTRIBUTIONS}{5}{section*.21}
+\contentsline {section}{\numberline {VIII}ADDITIONAL INFORMATION}{5}{section*.22}
+\contentsline {section}{\numberline {}References}{5}{section*.23}

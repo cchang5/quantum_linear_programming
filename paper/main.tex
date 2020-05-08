@@ -1,4 +1,4 @@
-\documentclass[fleqn,10pt]{wlscirep}
+\documentclass[prd,twocolumn,tightenlines,preprintnumbers,showpacs,superscriptaddress,notitlepage,nofootinbib,eqsecnum,floatfix,longbibliography]{revtex4}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb}
@@ -16,29 +16,34 @@
     urlcolor=blue           % color of external links
 }
 
+\begin{document}
 \title{Solutions to Integer Programming from Quantum Annealing}
 
-\author[1,*]{Christopher K\"orber}
-\author[2]{Chia~Cheng~Chang}
-\author[3]{Chih-Chieh~Chen}
-\author[4]{Travis~Humble}
-\author[5]{Jim~Ostrowski}
-
-
-\affil[1]{Department of Physics, University of California, Berkeley, California 94720, USA}
-\affil[1]{Nuclear Science Division, Lawrence Berkeley National Laboratory, Berkeley, California 94720, USA}
-\affil[2]{RIKEN Interdisciplinary Theoretical and Mathematical Sciences (iTHEMS), Wako, Saitama 351-0198, Japan}
-\affil[2]{Department of Physics, University of California, Berkeley, California 94720, USA}
-\affil[3]{R\&D Group, Grid Inc., Tokyo 107-0061, Japan}
-\affil[4]{Quantum Computing Institute, Oak Ridge National Laboratory, Oak Ridge, Tennessee 37831, USA}
-\affil[4]{University of Tennessee}
-\affil[*]{ckoerber@berkeley.edu}
+\author{Chia~Cheng~Chang}
+\affiliation{RIKEN Interdisciplinary Theoretical and Mathematical Sciences (iTHEMS), Wako, Saitama 351-0198, Japan}
+\affiliation{Department of Physics, University of California, Berkeley, California 94720, USA}
+\affiliation{Nuclear Science Division, Lawrence Berkeley National Laboratory, Berkeley, California 94720, USA}
+\author{Chih-Chieh~Chen}
+\affiliation{R\&D Group, Grid Inc., Tokyo 107-0061, Japan}
+\author{Christopher K\"orber}
+\affiliation{Department of Physics, University of California, Berkeley, California 94720, USA}
+\affiliation{Nuclear Science Division, Lawrence Berkeley National Laboratory, Berkeley, California 94720, USA}
+\author{Travis~Humble}
+\affiliation{Quantum Computing Institute, Oak Ridge National Laboratory, Oak Ridge, Tennessee 37831, USA}
+\author{Jim~Ostrowski}
+\affiliation{University of Tennessee}
 
 \begin{abstract}
-\cite{Chang:2018uxx}
+Abstract here...
 \end{abstract}
 
-\begin{document}
+\preprint{LLNL-JRNL-809712, RIKEN-iTHEMS-Report-20}
+
+\maketitle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\tableofcontents
 
 \flushbottom
 \maketitle
@@ -118,7 +123,8 @@ While the coefficients of the inequality constraints are not required to be inte
 \label{sec:results:ilp}
 The integer quadratic optimization problem can be mapped to a minimization of the quadratic objective function
 \begin{align}
-\chi^2 = & \left[\Psi^x_{\mu} T^x_{\mu i}d_{ij} T^x_{j \nu}\Psi^x_\nu + c_i T^x_{i\mu} \Psi^x_\mu + p (A_{a b} T^x_{b \mu} \Psi^x_{\mu} + T^s_{a \alpha} \Psi^s_\alpha + b_a)^2 \right],\\
+\chi^2 = & \left[\Psi^x_{\mu} T^x_{\mu i}d_{ij} T^x_{j \nu}\Psi^x_\nu + c_i T^x_{i\mu} \Psi^x_\mu \right. \nonumber\\
+&\left.+ p (A_{a b} T^x_{b \mu} \Psi^x_{\mu} + T^s_{a \alpha} \Psi^s_\alpha + b_a)^2 \right],\\
 \Psi = & \begin{pmatrix}
 \Psi^x\\
 \Psi^s
@@ -142,7 +148,8 @@ Q_{sx} & Q_{ss}
 \end{align}
 where
 \begin{align}
-Q_{xx} = & {T^{x}}^T \left[ d + p A^T A + p \mathrm{Diag}_{x} \left(A^T b + b^T A\right) \right] T^x + \mathrm{Diag}_{\psi^x}(c) T^x,\\
+Q_{xx} = & {T^{x}}^T \left[ d + p A^T A + p \mathrm{Diag}_{x} \left(A^T b + b^T A\right) \right] T^x \nonumber \\
+&+ \mathrm{Diag}_{\psi^x}(c) T^x,\\
 Q_{xs} = & Q_{sx}^T = p {T^{x}}^T A^T T^s,\\
 Q_{ss} = & p\left[ {T^{s}}^T T^s + \mathrm{Diag}_{\psi^s}\left( {T^{s}}^T b + b^T T^s\right) \right].
 \end{align}
@@ -216,6 +223,7 @@ where the nearest-neighbor sum is expressed by $J$ (symmetric and zero diagonal)
 The algorithm uses $N_q = \overline{\overline{V}} + \sum_{\nu \in V} \log_2 \mathit(N(\nu))$ qubits---$\overline{\overline{V}}$ qubits to encode the vertices and another $\sum_{\nu \in V} \log_2 \mathit(N(\nu))$ qubits to embed the slack variables. Therefore, the embedding at worse scales with $\overline{\overline{V}} \log_2 |\overline{\overline{V}}|$ qubits for fully connected graphs.
 
 The target Hamiltonian can be written in the matrix form
+\begin{widetext}
 \begin{align}
 E = &
 \begin{pmatrix}
@@ -230,11 +238,23 @@ E = &
 \end{pmatrix} + p \overline{\overline{V}}
 \label{eq:matrix_form}
 \end{align}
+\end{widetext}
 where $ |M| \equiv \sum_{\nu} M_{\nu \mu}$.
 
 \section{DISCUSSION}
 
 \subsection{Finding the Dominating Set with a Quantum Annealer}
+
+\begin{figure}
+	\centering
+		\includegraphics[width=0.5\columnwidth]{./figures/linear_crop.pdf}
+	\caption{
+The
+	}
+	\label{fig:linear}
+\end{figure}
+
+We demonstrate the proposed algorithm in order to obtain the MDS on a series of linear graphs $G(n)$ as shown in Fig.~\ref{fig:linear}.
 
 Demonstrate simple dominating set problem.
 
