@@ -356,8 +356,13 @@ def plot_tdse(data):
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
     X = [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
     y = data["Binary"]
-    ax.errorbar(x=X, y=y, ls="none", marker='^')
+    ax.errorbar(x=X, y=y, ls="none", marker='o', color='k')
+    ax.set_xticks([-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05])
+    ax.set_xticklabels(["-10%", "-8%", "-6%", "-4%", "-2%", "0%", "2%", "4%", "6%", "8%", "10%"])
+    ax.set_xlabel("offset range")
+    ax.set_ylabel("MDS probability")
     plt.draw()
+    plt.savefig("./dwave1us.pdf", transparent=True)
     plt.show()
 
 if __name__ == "__main__":
@@ -390,8 +395,8 @@ if __name__ == "__main__":
     #plot_baseline(data10)
 
     # compare offset plot
-    plot_compare_all(data02, data04, data06, data08, data10)
+    #plot_compare_all(data02, data04, data06, data08, data10)
 
     # plot tdse comparison plots
-    #tdsedata = get_tdse_data()
-    #plot_tdse(tdsedata)
+    tdsedata = get_tdse_data()
+    plot_tdse(tdsedata)

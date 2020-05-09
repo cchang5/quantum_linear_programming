@@ -10,14 +10,14 @@
 \contentsline {subsection}{\numberline {A}Finding the Dominating Set with a Quantum Annealer}{4}{section*.8}
 \contentsline {subsubsection}{\numberline {1}Modified annealing schedule}{5}{section*.9}
 \contentsline {subsection}{\numberline {B}Simulation Results}{6}{section*.10}
-\contentsline {subsection}{\numberline {C}Decoherence and Many-Body Localization}{6}{section*.11}
-\contentsline {section}{\numberline {IV}METHODS}{6}{section*.12}
-\contentsline {subsection}{\numberline {A}Simulation Details}{6}{section*.13}
-\contentsline {subsubsection}{\numberline {1}The Lindblad Equation}{6}{section*.14}
-\contentsline {subsubsection}{\numberline {2}Other Simulation Details}{6}{section*.15}
-\contentsline {subsubsection}{\numberline {3}Decoherence Time}{6}{section*.16}
-\contentsline {section}{\numberline {V}DATA AVAILABILITY}{6}{section*.17}
-\contentsline {section}{\numberline {VI}ACKNOWLEDGEMENTS}{6}{section*.18}
-\contentsline {section}{\numberline {VII}AUTHOR CONTRIBUTIONS}{6}{section*.19}
-\contentsline {section}{\numberline {VIII}ADDITIONAL INFORMATION}{6}{section*.20}
-\contentsline {section}{\numberline {}References}{6}{section*.21}
+\contentsline {subsection}{\numberline {C}Decoherence and Many-Body Localization}{7}{section*.11}
+\contentsline {section}{\numberline {IV}METHODS}{7}{section*.12}
+\contentsline {subsection}{\numberline {A}Simulation Details}{7}{section*.13}
+\contentsline {subsubsection}{\numberline {1}The Lindblad Equation}{7}{section*.14}
+\contentsline {subsubsection}{\numberline {2}Other Simulation Details}{8}{section*.15}
+\contentsline {subsubsection}{\numberline {3}Decoherence Time}{8}{section*.16}
+\contentsline {section}{\numberline {V}DATA AVAILABILITY}{8}{section*.17}
+\contentsline {section}{\numberline {VI}ACKNOWLEDGEMENTS}{8}{section*.18}
+\contentsline {section}{\numberline {VII}AUTHOR CONTRIBUTIONS}{8}{section*.19}
+\contentsline {section}{\numberline {VIII}ADDITIONAL INFORMATION}{8}{section*.20}
+\contentsline {section}{\numberline {}References}{8}{section*.21}
