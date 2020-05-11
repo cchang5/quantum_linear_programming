@@ -34,7 +34,16 @@
 \affiliation{University of Tennessee}
 
 \begin{abstract}
-Abstract here...
+While quantum computing proposes promising solutions to computational problems not accessible with classical approaches, due to current hardware constraints, most quantum algorithms are not yet capable of computing systems of practical relevance, and classical counterparts outperform them.
+To practically benefit from quantum architecture, one has to identify problems and algorithms with favorable scaling and improve on corresponding limitations depending on available hardware.
+For this reason, we developed an algorithm that solves integer linear programming problems (ILP), a classically NP-hard problem, on a quantum annealer (QA) and investigated problem and hardware-specific limitations.
+This work presents the formalism of how to map ILP problems to the annealing architectures. It illustrates the effects of decorrelation and many-body localization, for the minimum dominating set problem, and compares annealing results against numerical simulations of the quantum architecture.
+We find that the QA ILP algorithm outperforms random guessing but is limited to small problems and that annealing schedules can be adjusted to reduce the effects of decorrelation--which is qualitatively confirmed by simulations. 
+%Conclusion: What do these findings mean to us?
+[Rephrase] We need better hardware to challenge heuristic solvers but we identified how to optimize hardware.
+%Perspectives: What should be done next?
+[Rephrase] Better understand correlations and localizations and improve simulation to scale to larger problems.
+
 \end{abstract}
 
 \preprint{LLNL-JRNL-809712, RIKEN-iTHEMS-Report-20}
@@ -51,7 +60,10 @@ Abstract here...
 \section{INTRODUCTION}
 \label{sec:introduction}
 
-Integer linear programming (ILP) is an integer optimization problem subject to inequality constraints and is a commonly tackled problem applicable to situations such as x~\cite{}, y~\cite{}, and z~\cite{}. In general however, ILP is classically NP-complete, and as a result, heuristic methods are employed~\cite{}. The NP-hardness of ILP can be understood by realizing that while the solution to an $n$-dimensional linear problem can be obtained in polynomial time, the optimal integer solution in general must be found in the $2^n$ integer solutions which surround the real number solution. Due to the importance and difficulty, in this work we present a method to obtain the optimal solution to ILP by employing methods of quantum annealing.
+Integer linear programming (ILP) is an integer optimization problem subject to inequality constraints and is a commonly tackled problem applicable to situations such as x~\cite{}, y~\cite{}, and z~\cite{}.
+In general however, ILP is classically NP-complete, and as a result, heuristic methods are employed~\cite{}.
+The NP-hardness of ILP can be understood by realizing that while the solution to an $n$-dimensional linear problem can be obtained in polynomial time, the optimal integer solution in general must be found in the $2^n$ integer solutions which surround the real number solution.
+Due to the importance and difficulty, in this work we present a method to obtain the optimal solution to ILP by employing methods of quantum annealing.
 
 Quantum annealing solves a general quadratic binary optimization problem (QUBO) by slowly varying a time-dependent Hamiltonian~\cite{}. Through the adiabatic theorem of quantum mechanics, the annealer is prepared initially in a trivial ground state while the solution to ILP is encoded in the target Hamiltonian. Due to the explosion in research efforts towards hardware implementations of quantum annealers and future improvements to the annealing schedule~\cite{}, mapping ILP to QUBO provides a path forward towards obtaining optimal solutions to the class of integer optimization problems~\cite{2018Glover}.
 
@@ -198,9 +210,9 @@ We demonstrate an example greedy algorithm in figure Fig.~\ref{fig:mds-greedy}.
 		Example of greedy MDS algorithm:
 		The algorithm iteratively adds vertices to the dominating set (black nodes) such that newly added nodes are maximally unconnected (white nodes).
 		Connected nodes are neighbors of the DS (turquoise) or already in the DS.
-		In (a), one finds three unconnected nodes [(2), (4), (7)] which are adjacent to three unconnected nodes each.
+		In (a), one finds three maximally unconnected nodes [(2), (4), (7)] which are adjacent to three unconnected nodes each.
 		In the first step $a\to b$, randomly the node (4) is picked.
-		In (b), one has two unconnected choices [(1), (2)] with each adjacent to another unconnected node.
+		In (b), one has three unconnected choices [(1), (2)] with each adjacent to another unconnected node and one node [(6)] which is only adjacent to neighbors of the DS.
 		After randomly selecting (2) when going from $b \to c$, only one unconnected node is remaining (6).
 		The found solution is a (minimal) dominating set but not a MDS.
 		To find the MDS using this greedy algorithm, the first node choice must be either (2) or (5).
@@ -211,7 +223,7 @@ We demonstrate an example greedy algorithm in figure Fig.~\ref{fig:mds-greedy}.
 \subsubsection{Minimum Dominating Set}
 The solution to the minimum independent set can be expressed as an integer optimization problem given by,
 \begin{align}
-f(x) = &\min(\sum_{\nu \in V} \psi^x_{\nu}),\\
+f(x) = &\min\left(\sum_{\nu \in V} \psi^x_{\nu}\right),\\
 \textrm{subject to} \quad & \psi^x_{\nu} + \sum_{\mu \in \mathit{N}(\nu)} \psi^x_{\mu} \geq 1,\\
 & \psi^x_{\nu} \in \{0, 1\}
 \end{align}
@@ -287,7 +299,7 @@ In quantum annealing, the ground state of the problem Hamiltonian is obtained fr
 \begin{equation}
 H(s) = A(s) H^{\textrm{init}} + B(s) H^{\textrm{problem}}, \label{eq:tdhamiltonian}
 \end{equation}
-where $H^\textrm{init}=\sum_i\sigma^x_i$ on the DWave, and $H^\textrm{problem}$ is given by Eq.~(\ref{eq:matrix_form}) for the MDS application. The variable $s\in [0, 1]$ is the normalized annealing time and is allowed to vary between 1$\mu s$ to 2$ms$ on the DWave. On DWave solvers, annealing offsets effectively advance or delay the annealing schedule of individual qubits. In Fig.~\ref{fig:anneal_schedule}, the default DWave annealing schedule is shown in addition to the effects of applying positive and negative offsets. Note that due to the way the offsets are implemented on the hardware level, systematic errors are introduced since the initial and final values of $A(s)$ and $B(s)$ will differ for qubits with different offsets. Fig.~\ref{fig:anneal_schedule} shows the maximum offset that we use for the study, which translates to approximately (due to non-linearity) a 5\% advancement (blue) or delay (red) in the schedule.
+where $H^\textrm{init}=\sum_i\sigma^x_i$ on the DWave, and $H^\textrm{problem}$ is given by Eq.~(\ref{eq:matrix_form}) for the MDS application. The variable $s\in [0, 1]$ is the normalized annealing time and is allowed to vary between 1$\mu s$ to 2$ms$ (CK: time unit mapping) on the DWave. On DWave solvers, annealing offsets effectively advance or delay the annealing schedule of individual qubits. In Fig.~\ref{fig:anneal_schedule}, the default DWave annealing schedule is shown in addition to the effects of applying positive and negative offsets. Note that due to the way the offsets are implemented on the hardware level, systematic errors are introduced since the initial and final values of $A(s)$ and $B(s)$ will differ for qubits with different offsets. Fig.~\ref{fig:anneal_schedule} shows the maximum offset that we use for the study, which translates to approximately (due to non-linearity) a 5\% advancement (blue) or delay (red) in the schedule.
 
 \begin{figure}[b]
 	\centering
