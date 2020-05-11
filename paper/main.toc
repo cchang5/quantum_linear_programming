@@ -17,7 +17,7 @@
 \contentsline {subsubsection}{\numberline {2}Other Simulation Details}{8}{section*.15}
 \contentsline {subsubsection}{\numberline {3}Decoherence Time}{8}{section*.16}
 \contentsline {section}{\numberline {V}DATA AVAILABILITY}{8}{section*.17}
-\contentsline {section}{\numberline {VI}ACKNOWLEDGEMENTS}{8}{section*.18}
-\contentsline {section}{\numberline {VII}AUTHOR CONTRIBUTIONS}{8}{section*.19}
-\contentsline {section}{\numberline {VIII}ADDITIONAL INFORMATION}{8}{section*.20}
-\contentsline {section}{\numberline {}References}{8}{section*.21}
+\contentsline {section}{\numberline {VI}ACKNOWLEDGEMENTS}{9}{section*.18}
+\contentsline {section}{\numberline {VII}AUTHOR CONTRIBUTIONS}{9}{section*.19}
+\contentsline {section}{\numberline {VIII}ADDITIONAL INFORMATION}{9}{section*.20}
+\contentsline {section}{\numberline {}References}{9}{section*.21}

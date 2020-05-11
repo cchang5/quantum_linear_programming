@@ -258,17 +258,24 @@ def plot_aggregate(adata, tag):
 
 
 def plot_gamma(gdata):
-    plt.figure("decoherence")
+    plt.figure("decoherence", figsize=(7, 4))
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
     x = list(gdata.keys())
     X = 1 / (np.array(x) * 1e9) * 1e9
     y = [gdata[key].prob[-1] for key in x]
-    ax.errorbar(x=X, y=y, ls="none", marker="o")
-    ax.set_xlabel("T1 (ns)")
+    for idx, xi in enumerate(X):
+        if xi == 20:
+            color = blue
+        else:
+            color = 'k'
+        ax.errorbar(x=xi, y=y[idx], ls="none", color=color, marker="o")
+    ax.set_xlabel("coherence time (ns)")
+    ax.set_ylabel("MDS probability")
     plt.draw()
+    plt.savefig("./coherence.pdf", transparent=True)
     plt.show()
 
-    plt.figure("decoherence full")
+    plt.figure("decoherence full", figsize=(7, 4))
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
     t = list(gdata.keys())
     T1 = 1 / (np.array(t) * 1e9) * 1e9
@@ -416,9 +423,9 @@ def plot_spectrum(adata):
 
 if __name__ == "__main__":
     # vs offset
-    adata = aggregate()
+    #adata = aggregate()
     # print(list(adata.keys()))
-    plot_aggregate(adata, "deco")
+    #plot_aggregate(adata, "deco")
 
     # plot AS
     # print(list(adata.keys()))
@@ -428,9 +435,9 @@ if __name__ == "__main__":
     # plot_spectrum(adata)
 
     # vs offset no decoherence
-    bdata = aggregate_nodeco()
-    plot_aggregate(bdata, "nodeco")
+    #bdata = aggregate_nodeco()
+    #plot_aggregate(bdata, "nodeco")
 
     # vs gamma
-    # gdata = aggregate_gamma()
-    # plot_gamma(gdata)
+    gdata = aggregate_gamma()
+    plot_gamma(gdata)
