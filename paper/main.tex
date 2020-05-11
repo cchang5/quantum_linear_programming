@@ -1,4 +1,5 @@
--\documentclass[prd,twocolumn,tightenlines,preprintnumbers,showpacs,superscriptaddress,notitlepage,nofootinbib,eqsecnum,floatfix,longbibliography]{revtex4}
+\documentclass[prd,twocolumn,tightenlines,preprintnumbers,showpacs,superscriptaddress,notitlepage,nofootinbib,eqsecnum,floatfix,longbibliography]{revtex4}
+
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb}
@@ -15,6 +16,12 @@
     filecolor=blue,      % color of file links
     urlcolor=blue           % color of external links
 }
+
+% disable subsections and subsubsections in the TOC
+\makeatletter
+\def\l@subsubsection#1#2{}
+\makeatother
+
 
 \begin{document}
 \title{Solutions to Integer Programming from Quantum Annealing}
@@ -96,6 +103,12 @@ Include strengths and drawbacks of classical solution.}
 \label{sec:methods:ilp}
 %----------------------------------------------------------------------------------------
 
+%----------------------------------------------------------------------------------------
+\subsubsection{Slack variables}
+\label{sec:methods:slack}
+%----------------------------------------------------------------------------------------
+
+
 The inequality constraints can be rewritten as an equality by introducing slack variables $s$ such that the ILP becomes
 {\color{blue}
 \begin{align}
@@ -116,8 +129,8 @@ Since quantum annealing solves the QUBO problem, we extend the proposed algorith
 without the introduction of auxiliary qubits.
 
 %----------------------------------------------------------------------------------------
-\subsection{QUBO}
-\label{sec:methods:qubo}
+\subsubsection{Bit basis}
+\label{sec:methods:bit-basis}
 %----------------------------------------------------------------------------------------
 
 We map integer variables $z_i$ to qubits under the following transformation~\cite{Chang:2018uoc}
@@ -161,8 +174,8 @@ While the coefficients of the inequality constraints are not required to be inte
 As a result, we can restrict both $x_i$ and $s_i$ to sample over only positive integer values as allowed by Eq.~(\ref{eq:int_to_bin}).
 
 %----------------------------------------------------------------------------------------
-\subsection{Integer Programming Mapping to QUBO}
-\label{sec:methods:ilp}
+\subsubsection{Integer Programming Mapping QUBO}
+\label{sec:methods:ilp-qubo}
 %----------------------------------------------------------------------------------------
 
 The integer quadratic optimization problem can be mapped to a minimization of the quadratic objective function
@@ -203,7 +216,7 @@ The function $\mathrm{Diag}_{z}(v)$ embeds a vector $v$ into a diagonal matrix i
 
 
 %----------------------------------------------------------------------------------------
-\subsection{Application to the Dominating Set Problem}
+\subsubsection{Minimum Dominating Set Problem}
 \label{sec:methods:mds}
 %----------------------------------------------------------------------------------------
 
@@ -268,7 +281,8 @@ We demonstrate an example greedy algorithm in figure Fig.~\ref{fig:mds-greedy}.
 \end{figure*}
 
 %----------------------------------------------------------------------------------------
-\subsubsection{Minimum Dominating Set}
+\subsubsection{Minimum Dominating Set Qubo}
+\label{sec:methods:mds-qubo}
 %----------------------------------------------------------------------------------------
 
 The solution to the minimum independent set can be expressed as an integer optimization problem given by,
@@ -310,9 +324,14 @@ The target Hamiltonian can be written in the matrix form
 \end{widetext}
 where $ |M| \equiv \sum_{\nu} M_{\nu \mu}$.
 
+%----------------------------------------------------------------------------------------
+\subsection{Quantum Annealing}
+\label{methods:annealing}
+%----------------------------------------------------------------------------------------
 
 %----------------------------------------------------------------------------------------
 \subsubsection{Modified annealing schedule}
+\label{methods:annealing-schedule}
 %----------------------------------------------------------------------------------------
 
 In quantum annealing, the ground state of the problem Hamiltonian is obtained from the evolution of a time-dependent Hamiltonian,
@@ -343,51 +362,8 @@ The spin-glass model enters its glassy state when $|h_i|$ is large, and as a con
 
 
 %----------------------------------------------------------------------------------------
-\subsection{Simulation Results}
-%----------------------------------------------------------------------------------------
-
-In order to understand the effects of annealing offsets, we simulate the annealing process on 5 qubits for a $G(2)$ graph embedded in chimera topography.
-In order to shorten the simulation time, we resample the DWave with a total annealing time of 1 $\mu s$.
-The resulting ground state probability as a function of offset measured over 200,000 observations is shown in Fig.~\ref{fig:dwave1us} (Top).
-
-\begin{figure}
-    \centering
-    \includegraphics[width=\columnwidth]{./figures/dwave1us.pdf}
-    \includegraphics[width=\columnwidth]{./figures/sim_deco.pdf}
-    \includegraphics[width=\columnwidth]{./figures/sim_nodeco.pdf}
-    \caption{ (Top) The probability of finding the MDS for $G(2)$ from DWave.
-The machine parameters are identical to Sec.~\ref{sec:discussion:qa} with the exception of shortening the total annealing time to 1 $\mu s$ to accommodate reasonable simulation times.
-(Middle) Result from simulation with decoherence and (Bottom) simulation without decoherence.
-In both simulations, at +10\% offset, the probability of finding the ground state vanishes.
-The red simulation points are not present in the DWave result.}
-    \label{fig:dwave1us}
-\end{figure}
-
-For the simulation, the QUBO is obtained from the output of the DWave such that the same embedding is used.
-The time-dependence is obtained by solving the Lindblad equation subject to the DWave annealing schedule with offsets allowing us to incorporate a decoherence model in our simulation.
-The details of the Lindbladian are given in Sec.~\ref{sec:methods:lindblad}.
-Following Ref.~\cite{}, we fix the temperature of the simulation to 15 milliKelvins to reflect the reported operating temperature of the DWave.
-Due to the small size of the problem, the minimum gap to the second excited state (first non-degenerate state) of the time-dependent Hamiltonian is approximately 2 Kelvins as shown in Fig.~\ref{fig:spectrum}.
-As a result, the DWave operates at effectively zero-temperature for this example problem.
-
-We then set an effective $T_1$ coherence time to 20 $ns$ in order to match the DWave probability of finding the MDS of $G(2)$ at approximately 86\%.
-A detailed study of $T_1$ is given in Sec.~\ref{sec:methods:deco}.
-We emphasize that the effective coherence time is much longer than the single qubit coherence time of 0.5 $ns$ reported by DWave, while still being orders of magnitude shorter than the total anneal time.
-The simulation and the experiment however, both are able to recover the ground state with high probability regardless, and exemplifies the robustness of quantum annealing.
-
-\begin{figure}
-    \centering
-    \includegraphics[width=\columnwidth]{./figures/spectrum.pdf}
-    \includegraphics[width=\columnwidth]{./figures/spectrum_offset.pdf}
-    \caption{The energy spectrum of the first 5 states of the time-dependent Hamiltonian (Top) without annealing offsets and (Bottom) -10\% annealing offset.
-The spectrum in dimensionless units at the end of the anneal is an integer spectrum and correspond to the number of vertices in the dominating set.
-For $G(2)$, the MDS has 1 vertex.
-Annealing offsets lift the ground-state degeneracy.}
-    \label{fig:spectrum}
-\end{figure}
-
-%----------------------------------------------------------------------------------------
-\subsection{Simulation Details}
+\subsection{Simulation of a Quantum Annealer}
+\label{sec:methods:simulation}
 %----------------------------------------------------------------------------------------
 
 %----------------------------------------------------------------------------------------
@@ -639,6 +615,11 @@ Compute dwave mutual information
 Study ground state degeneracy by plotting distribution of states.
 
 %========================================================================================
+\section{CONCLUSION}
+%========================================================================================
+
+
+%========================================================================================
 \section{DATA AVAILABILITY}
 %========================================================================================
 
@@ -654,7 +635,7 @@ We thank x, y, z...
 \section{AUTHOR CONTRIBUTIONS}
 %========================================================================================
 
-...
+C.K. drank a lot of coffee.
 
 %========================================================================================
 \section{ADDITIONAL INFORMATION}
