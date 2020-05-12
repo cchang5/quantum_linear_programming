@@ -168,6 +168,59 @@ def getdata_full(min, rangex):
         print(y)
     return y
 
+def get_spin_config():
+    import pickle
+    vrange = [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
+    offlist = ["Binary"]
+    try:
+        y =dict()
+        for offx in offlist:
+            y[offx] = dict()
+            for v in vrange:
+                with open(f"./temp/{offx}_{v}.pickle", "rb") as file:
+                    y[offx][v] = pickle.load(file)
+    except:
+        data = {
+            offx: {
+                v: data_Data.objects.filter(
+                    experiment__graph__tag=f"NN(2)",
+                    experiment__tag=f"FixEmbedding_{offx}_{v}_{2*abs(v)}_v5",
+                    experiment__settings__annealing_time=1,
+                    experiment__settings__num_spin_reversal_transforms=5,
+                ).to_dataframe()
+                for v in vrange
+            }
+            for offx in offlist
+        }
+        y = dict()
+        for offset in data.keys():
+            y[offset] = dict()
+            X = list(data[offset].keys())
+            for v in X:
+                spin = data[offset][v]["spin_config"]
+                with open(f"./temp/{offset}_{v}.pickle", "wb") as file:
+                    pickle.dump(spin, file)
+                y[offset][v] = spin
+    # remap y
+    remap = [1, 2, 3, 0, 1]
+    for offset in y.keys():
+        X = list(y[offset].keys())
+        for v in X:
+            temp = []
+            for yi in y[offset][v]:
+                temp.append([yi[idx] for idx in remap])
+            y[offset][v] = np.array(temp)
+    basis = [(i, j, k, l, m) for i in [0, 1] for j in [0, 1] for k in [0, 1] for l in [0, 1] for m in [0, 1]]
+    scount = dict()
+    for offset in y.keys():
+        X = list(y[offset].keys())
+        scount[offset] = dict()
+        for v in X:
+            scount[offset][v] = {b: 0 for b in basis}
+            for yi in y[offset][v]:
+                scount[offset][v][tuple(yi)] += 1
+    return scount
+
 def get_tdse_data():
     if True:
         y = {'Binary': [0.924225, 0.91058, 0.8979, 0.885185, 0.86872, 0.85569, 0.84235, 0.82933, 0.82865, 0.837885, 0.859975]}
@@ -376,6 +429,9 @@ def plot_tdse(data):
     plt.savefig("./dwave1us.pdf", transparent=True)
     plt.show()
 
+def plot_dwave_mi(scount):
+    print(scount)
+
 if __name__ == "__main__":
     # plot scaling with anneal_time
     # NN(6) constant offset no spin reversal transformation
@@ -403,7 +459,7 @@ if __name__ == "__main__":
     #plot_full(data10, "0p10")
 
     # baseline
-    plot_baseline(data10)
+    #plot_baseline(data10)
 
     # compare offset plot
     #plot_compare_all(data02, data04, data06, data08, data10)
@@ -411,3 +467,7 @@ if __name__ == "__main__":
     # plot tdse comparison plots
     #tdsedata = get_tdse_data()
     #plot_tdse(tdsedata)
+
+    # dwave MI
+    scount = get_spin_config()
+    plot_dwave_mi(scount)
