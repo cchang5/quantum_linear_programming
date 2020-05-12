@@ -351,6 +351,17 @@ def plot_baseline(data10):
     plt.savefig("./scaling_baseline.pdf")
     plt.show()
 
+    plt.figure("const/rando", figsize=(7, 4))
+    ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+    ax.errorbar(x=X, y=data10["Constant"]/rguess, label="DWave/Random", marker='o', color='k', **errorbar_params)
+    ax.legend()
+    ax.set_yscale("log")
+    ax.set_ylabel("improvement ratio")
+    ax.set_xlabel("number of vertices")
+    plt.draw()
+    plt.savefig("./ratio_baseline.pdf", transparent=True)
+    plt.show()
+
 def plot_tdse(data):
     fig = plt.figure("tdse", figsize=(7,4))
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
@@ -392,11 +403,11 @@ if __name__ == "__main__":
     #plot_full(data10, "0p10")
 
     # baseline
-    #plot_baseline(data10)
+    plot_baseline(data10)
 
     # compare offset plot
     #plot_compare_all(data02, data04, data06, data08, data10)
 
     # plot tdse comparison plots
-    tdsedata = get_tdse_data()
-    plot_tdse(tdsedata)
+    #tdsedata = get_tdse_data()
+    #plot_tdse(tdsedata)
