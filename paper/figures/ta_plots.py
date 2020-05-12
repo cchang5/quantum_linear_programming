@@ -430,7 +430,42 @@ def plot_tdse(data):
     plt.show()
 
 def plot_dwave_mi(scount):
-    print(scount)
+    from scipy.stats import entropy
+    #print(scount)
+
+    n=5
+    nA=3
+    strA='ijklm->ijk'
+    strB='ijklm->lm'
+
+    def calculate_dwave_mi(offset,n,nA,strA,strB):
+        pr=np.zeros(2**n)
+        for I in range(2**n):
+            pr[I]=scount['Binary'][offset][(tuple([int(i) for i in '{0:05b}'.format(I)]))]
+        #print(pr)
+        prtensor=pr.reshape([2 for i in range(n)])
+        prAtensor=np.einsum(strA,prtensor)
+        prBtensor=np.einsum(strB,prtensor)
+        prA=prAtensor.reshape(2**nA)
+        prB=prBtensor.reshape(2**(n-nA))
+        return entropy(prA)+entropy(prB)-entropy(pr)
+
+    #mi=calculate_dwave_mi(offset,n,nA,strA,strB)
+    #print(mi)
+
+    fig = plt.figure("dwave_mi", figsize=(7,4))
+    ax = plt.axes()#([0.15, 0.15, 0.8, 0.8])
+    X = [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
+    y = [calculate_dwave_mi(offset,n,nA,strA,strB) for offset in X]
+    ax.errorbar(x=X, y=y, ls="none", marker='o', color='k')
+    ax.set_xticks([-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05])
+    ax.set_xticklabels(["-10%", "-8%", "-6%", "-4%", "-2%", "0%", "2%", "4%", "6%", "8%", "10%"])
+    ax.set_xlabel("offset range")
+    ax.set_ylabel("dwave mi")
+    plt.draw()
+    plt.savefig("./dwavemi_test.pdf", transparent=True)
+    plt.show()
+
 
 if __name__ == "__main__":
     # plot scaling with anneal_time
