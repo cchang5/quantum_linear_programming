@@ -443,12 +443,14 @@ def plot_dwave_mi(scount):
         for I in range(2**n):
             pr[I]=scount['Binary'][offset][(tuple([int(i) for i in '{0:05b}'.format(I)]))]
         #print(pr)
+        pr=pr/np.sum(pr)
+        print(pr)
         prtensor=pr.reshape([2 for i in range(n)])
         prAtensor=np.einsum(strA,prtensor)
         prBtensor=np.einsum(strB,prtensor)
         prA=prAtensor.reshape(2**nA)
         prB=prBtensor.reshape(2**(n-nA))
-        return entropy(prA)+entropy(prB)-entropy(pr)
+        return entropy(prA,base=2)+entropy(prB,base=2)-entropy(pr,base=2)
 
     #mi=calculate_dwave_mi(offset,n,nA,strA,strB)
     #print(mi)
