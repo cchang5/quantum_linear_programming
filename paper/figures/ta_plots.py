@@ -445,6 +445,8 @@ def plot_dwave_mi(scount):
         #print(pr)
         pr=pr/np.sum(pr)
         print(pr)
+        gnd=np.argmax(pr)
+        print(gnd,pr[gnd])
         prtensor=pr.reshape([2 for i in range(n)])
         prAtensor=np.einsum(strA,prtensor)
         prBtensor=np.einsum(strB,prtensor)
