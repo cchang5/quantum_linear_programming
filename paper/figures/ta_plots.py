@@ -470,6 +470,14 @@ def plot_dwave_mi(scount):
     plt.savefig("./dwavemi_test.pdf", transparent=True)
     plt.show()
 
+def get_tdse_densitymatrix():
+    from tdse_plots import aggregate
+    tdata = aggregate()
+    finalstate = {"Binary": {}}
+    for key in tdata.keys():
+        temp = tdata[key].sol["y"].real
+        finalstate["Binary"][key] = np.diag(temp[:,-1].reshape(32, 32))
+    return finalstate
 
 if __name__ == "__main__":
     # plot scaling with anneal_time
@@ -508,5 +516,11 @@ if __name__ == "__main__":
     #plot_tdse(tdsedata)
 
     # dwave MI
-    scount = get_spin_config()
+    #scount = get_spin_config()
+    #plot_dwave_mi(scount)
+
+    # tdse MI
+    scount = get_tdse_densitymatrix()
+    print(scount)
     plot_dwave_mi(scount)
+
