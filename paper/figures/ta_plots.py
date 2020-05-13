@@ -429,7 +429,7 @@ def plot_tdse(data):
     plt.savefig("./dwave1us.pdf", transparent=True)
     plt.show()
 
-def plot_dwave_mi(scount):
+def plot_dwave_mi(scount,opt):
     from scipy.stats import entropy
     #print(scount)
 
@@ -438,11 +438,13 @@ def plot_dwave_mi(scount):
     strA='ijklm->ijk'
     strB='ijklm->lm'
 
-    def calculate_dwave_mi(offset,n,nA,strA,strB):
+    def calculate_dwave_mi(offset,n,nA,strA,strB,opt):
         pr=np.zeros(2**n)
-        for I in range(2**n):
-            pr[I]=scount['Binary'][offset][(tuple([int(i) for i in '{0:05b}'.format(I)]))]
-        #print(pr)
+        if opt=='dwave':
+            for I in range(2**n):
+                pr[I]=scount['Binary'][offset][(tuple([int(i) for i in '{0:05b}'.format(I)]))]
+        else:
+            pr=scount['Binary'][offset]
         pr=pr/np.sum(pr)
         print(pr)
         gnd=np.argmax(pr)
@@ -457,17 +459,17 @@ def plot_dwave_mi(scount):
     #mi=calculate_dwave_mi(offset,n,nA,strA,strB)
     #print(mi)
 
-    fig = plt.figure("dwave_mi", figsize=(7,4))
+    fig = plt.figure(opt+"_mi", figsize=(7,4))
     ax = plt.axes()#([0.15, 0.15, 0.8, 0.8])
     X = [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
-    y = [calculate_dwave_mi(offset,n,nA,strA,strB) for offset in X]
+    y = [calculate_dwave_mi(offset,n,nA,strA,strB,opt) for offset in X]
     ax.errorbar(x=X, y=y, ls="none", marker='o', color='k')
     ax.set_xticks([-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05])
     ax.set_xticklabels(["-10%", "-8%", "-6%", "-4%", "-2%", "0%", "2%", "4%", "6%", "8%", "10%"])
     ax.set_xlabel("offset range")
-    ax.set_ylabel("dwave mi")
+    ax.set_ylabel("mi")
     plt.draw()
-    plt.savefig("./dwavemi_test.pdf", transparent=True)
+    plt.savefig("./"+opt+"mi_test.pdf", transparent=True)
     plt.show()
 
 def get_tdse_densitymatrix():
@@ -516,11 +518,11 @@ if __name__ == "__main__":
     #plot_tdse(tdsedata)
 
     # dwave MI
-    #scount = get_spin_config()
-    #plot_dwave_mi(scount)
+    scount = get_spin_config()
+    plot_dwave_mi(scount,'dwave')
 
     # tdse MI
     scount = get_tdse_densitymatrix()
     print(scount)
-    plot_dwave_mi(scount)
+    plot_dwave_mi(scount,'simulate')
 
