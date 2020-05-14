@@ -494,7 +494,8 @@ class TDSE:
         '''
         value,vector=np.linalg.eigh(H.toarray())
         gap=value[1]-value[0]
-        p=1.0/(1.0+np.exp(self.beta*gap))
+        e=np.exp(-self.beta*gap)
+        p=e/(1.0+e)
         lower=np.kron(vector[:,0],np.conjugate(vector[:,1]))
         lower=lower.reshape(H.shape)
         raiseop=np.conjugate(np.transpose(lower))
