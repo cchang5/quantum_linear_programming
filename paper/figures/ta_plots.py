@@ -442,11 +442,12 @@ def plot_dwave_mi(scount,opt):
         pr=np.zeros(2**n)
         if opt=='dwave':
             for I in range(2**n):
-                pr[I]=scount['Binary'][offset][(tuple([int(i) for i in '{0:05b}'.format(I)]))]
+                dwstate = np.abs(np.array([int(i) for i in '{0:05b}'.format(I)]) - 1) # map 0 <-> 1
+                pr[I]=scount['Binary'][offset][(tuple(dwstate))]
         else:
             pr=scount['Binary'][offset]
         pr=pr/np.sum(pr)
-        print(pr)
+        #print(pr)
         gnd=np.argmax(pr)
         print(gnd,pr[gnd])
         prtensor=pr.reshape([2 for i in range(n)])
@@ -454,7 +455,7 @@ def plot_dwave_mi(scount,opt):
         prBtensor=np.einsum(strB,prtensor)
         prA=prAtensor.reshape(2**nA)
         prB=prBtensor.reshape(2**(n-nA))
-        return entropy(prA,base=2)+entropy(prB,base=2)-entropy(pr,base=2)
+        return entropy(prA,base=2)+entropy(prB,base=2)-entropy(pr,base=2), pr
 
     #mi=calculate_dwave_mi(offset,n,nA,strA,strB)
     #print(mi)
@@ -462,7 +463,12 @@ def plot_dwave_mi(scount,opt):
     fig = plt.figure(opt+"_mi", figsize=(7,4))
     ax = plt.axes()#([0.15, 0.15, 0.8, 0.8])
     X = [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
-    y = [calculate_dwave_mi(offset,n,nA,strA,strB,opt) for offset in X]
+    y = []
+    pr = dict()
+    for offset in X:
+        ent, prob = calculate_dwave_mi(offset,n,nA,strA,strB,opt)
+        y.append(ent)
+        pr[offset] = prob
     ax.errorbar(x=X, y=y, ls="none", marker='o', color='k')
     ax.set_xticks([-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05])
     ax.set_xticklabels(["-10%", "-8%", "-6%", "-4%", "-2%", "0%", "2%", "4%", "6%", "8%", "10%"])
@@ -471,6 +477,7 @@ def plot_dwave_mi(scount,opt):
     plt.draw()
     plt.savefig("./"+opt+"mi_test.pdf", transparent=True)
     plt.show()
+    return pr
 
 def get_tdse_densitymatrix():
     from tdse_plots import aggregate
@@ -480,6 +487,14 @@ def get_tdse_densitymatrix():
         temp = tdata[key].sol["y"].real
         finalstate["Binary"][key] = np.diag(temp[:,-1].reshape(32, 32))
     return finalstate
+
+def plot_final_state(dwpr, simpr, offset=0.0):
+    fig = plt.figure("final state pr", figsize=(7,4))
+    ax = plt.axes([0.15, 0.15, 0.7, 0.7])
+    ax.errorbar(x=range(len(dwpr[offset])), y = dwpr[offset], color=blue)
+    ax.errorbar(x=range(len(simpr[offset])), y = simpr[offset], color=red)
+    plt.draw()
+    plt.show()
 
 if __name__ == "__main__":
     # plot scaling with anneal_time
@@ -519,10 +534,12 @@ if __name__ == "__main__":
 
     # dwave MI
     scount = get_spin_config()
-    plot_dwave_mi(scount,'dwave')
+    dwpr = plot_dwave_mi(scount,'dwave')
 
     # tdse MI
     scount = get_tdse_densitymatrix()
-    print(scount)
-    plot_dwave_mi(scount,'simulate')
+    simpr = plot_dwave_mi(scount,'simulate')
+
+    # final state distribution
+    plot_final_state(dwpr, simpr)
 
