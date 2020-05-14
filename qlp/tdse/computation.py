@@ -319,7 +319,7 @@ class TDSE:
         h = 4.135667696e-15  # Plank constant [eV s] (no 2 pi)
         one = 1e-9  # GHz s
         beta = 1 / (temp * kb / h * one)  # inverse temperature [h/GHz]
-
+        self.beta=beta
         # construct initial density matrix
         eigvalue, eigvector = self.init_eigen(dtype)
 
@@ -472,12 +472,12 @@ class TDSE:
         # print(self.Focksize)
         ymat = y.reshape((self.Focksize, self.Focksize))
         H = self.annealingH(t)
-        lindblad=self.get_lindblad(ymat,self.gamma)
+        lindblad=self.get_lindblad(ymat,self.gamma,H)
         ymat = -1j * (H.dot(ymat) - ymat@H) + lindblad
         f = ymat.reshape(self.Focksize ** 2)
         return f
 
-    def get_lindblad(self,ymat,gamma):
+    def get_lindblad2(self,ymat,gamma,H):
         ''' gamma: decoherence rate = 1/(decoherence time), the unit is the same as the Hamiltonian
         '''
         lindblad=np.zeros(((self.Focksize, self.Focksize)))
@@ -486,6 +486,18 @@ class TDSE:
                     lindblad=lindblad+2.0*(self.Fockplus[i])@(ymat)@(self.Fockminus[i])-(self.Fockproj0[i])@(ymat)-(ymat)@(self.Fockproj0[i])
                 else:
                     lindblad=lindblad+2.0*(self.Fockminus[i])@(ymat)@(self.Fockplus[i])-(self.Fockproj1[i])@(ymat)-(ymat)@(self.Fockproj1[i])
+        lindblad=gamma*lindblad
+        return lindblad
+
+    def get_lindblad(self,ymat,gamma,H):
+        '''many-body generalized amplitude damping model
+        '''
+        value,vector=np.linalg.eigh(H.toarray())
+        gap=value[1]-value[0]
+        p=1.0/(1.0+np.exp(self.beta*gap))
+        lower=np.kron(vector[:,0],np.conjugate(vector[:,1]))
+        lower=lower.reshape(H.shape)
+        lindblad=(1-p)*lower+p*np.conjugate(np.transpose(lower))
         lindblad=gamma*lindblad
         return lindblad
 
