@@ -497,7 +497,13 @@ class TDSE:
         p=1.0/(1.0+np.exp(self.beta*gap))
         lower=np.kron(vector[:,0],np.conjugate(vector[:,1]))
         lower=lower.reshape(H.shape)
-        lindblad=(1-p)*lower+p*np.conjugate(np.transpose(lower))
+        raiseop=np.conjugate(np.transpose(lower))
+
+        #lindblad=(1-p)*lower+p*np.conjugate(np.transpose(lower))
+
+        lindblad=(1-p)*( 2.0*(lower)@(ymat)@(raiseop)-raiseop@(lower)@(ymat)-(ymat)@(raiseop)@(lower) )
+        lindblad+=p*( 2.0*(raiseop)@(ymat)@(lower)-lower@(raiseop)@(ymat)-(ymat)@(lower)@(raiseop) )
+
         lindblad=gamma*lindblad
         return lindblad
 
