@@ -230,3 +230,4 @@ class AnnealSchedule:
 
         draw()
         show()
+        return X, yA, yB

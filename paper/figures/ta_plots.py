@@ -85,7 +85,7 @@ def plotta(data):
     fig = plt.figure("scaling", figsize=(7, 4))
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
     ax.errorbar(x=X, y=y, marker="o", color=red, **errorbar_params)
-    ax.fill_between(x=X, y1=yerr1, y2=yerr2, color=red, alpha=0.5)
+    #ax.fill_between(x=X, y1=yerr1, y2=yerr2, color=red, alpha=0.5)
     ax.set_xscale("log")
     ax.set_ylabel("MDS probability")
     ax.set_xlabel("anneal time (microseconds)")
@@ -167,6 +167,59 @@ def getdata_full(min, rangex):
                 y[offset].append(energy_count / total_count)
         print(y)
     return y
+
+def get_spin_config():
+    import pickle
+    vrange = [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
+    offlist = ["Binary"]
+    try:
+        y =dict()
+        for offx in offlist:
+            y[offx] = dict()
+            for v in vrange:
+                with open(f"./temp/{offx}_{v}.pickle", "rb") as file:
+                    y[offx][v] = pickle.load(file)
+    except:
+        data = {
+            offx: {
+                v: data_Data.objects.filter(
+                    experiment__graph__tag=f"NN(2)",
+                    experiment__tag=f"FixEmbedding_{offx}_{v}_{2*abs(v)}_v5",
+                    experiment__settings__annealing_time=1,
+                    experiment__settings__num_spin_reversal_transforms=5,
+                ).to_dataframe()
+                for v in vrange
+            }
+            for offx in offlist
+        }
+        y = dict()
+        for offset in data.keys():
+            y[offset] = dict()
+            X = list(data[offset].keys())
+            for v in X:
+                spin = data[offset][v]["spin_config"]
+                with open(f"./temp/{offset}_{v}.pickle", "wb") as file:
+                    pickle.dump(spin, file)
+                y[offset][v] = spin
+    # remap y
+    remap = [1, 2, 3, 0, 1]
+    for offset in y.keys():
+        X = list(y[offset].keys())
+        for v in X:
+            temp = []
+            for yi in y[offset][v]:
+                temp.append([yi[idx] for idx in remap])
+            y[offset][v] = np.array(temp)
+    basis = [(i, j, k, l, m) for i in [0, 1] for j in [0, 1] for k in [0, 1] for l in [0, 1] for m in [0, 1]]
+    scount = dict()
+    for offset in y.keys():
+        X = list(y[offset].keys())
+        scount[offset] = dict()
+        for v in X:
+            scount[offset][v] = {b: 0 for b in basis}
+            for yi in y[offset][v]:
+                scount[offset][v][tuple(yi)] += 1
+    return scount
 
 def get_tdse_data():
     if True:
@@ -313,16 +366,53 @@ def plot_compare_all(data02, data04, data06, data08, data10):
     fig = plt.figure("scaling compare", figsize=(7, 4))
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
     X = np.arange(len(data10["Constant"]))+2
-    ax.errorbar(x=X, y=data10["Binary"], label="Binary 0.10", color=red, **errorbar_params)
-    ax.errorbar(x=X, y=data08["Binary"], label="Binary 0.08", color=green, **errorbar_params)
-    ax.errorbar(x=X, y=data06["Binary"], label="Binary 0.06", color=blue, **errorbar_params)
-    ax.errorbar(x=X, y=data04["Binary"], label="Binary 0.04", color=red, ls='--', **errorbar_params)
-    ax.errorbar(x=X, y=data02["Binary"], label="Binary 0.02", color=green, ls='--', **errorbar_params)
-    ax.errorbar(x=X, y=data10["Constant"], label="Constant", color=blue, ls='--', **errorbar_params)
+    ax.errorbar(x=X, y=data10["Binary"], label="-10%", color=green, ls='-', **errorbar_params)
+    ax.errorbar(x=X, y=data08["Binary"], label="-8%", color=red, ls=':', **errorbar_params)
+    ax.errorbar(x=X, y=data06["Binary"], label="-6%", color=red, ls='-.', **errorbar_params)
+    ax.errorbar(x=X, y=data04["Binary"], label="-4%", color=red, ls='--', **errorbar_params)
+    ax.errorbar(x=X, y=data02["Binary"], label="-2%", color=red, ls='-', **errorbar_params)
+    ax.errorbar(x=X, y=data10["Constant"], label="Constant", color='k', ls='-', **errorbar_params)
+    ax.errorbar(x=X, y=data02["NegBinary"], label="2%", color=blue, ls='-', **errorbar_params)
+    ax.errorbar(x=X, y=data04["NegBinary"], label="4%", color=blue, ls='--', **errorbar_params)
+    ax.errorbar(x=X, y=data06["NegBinary"], label="6%", color=blue, ls='-.', **errorbar_params)
+    ax.errorbar(x=X, y=data08["NegBinary"], label="8%", color=blue, ls=':', **errorbar_params)
+    ax.errorbar(x=X, y=data10["NegBinary"], label="10%", color=green, ls='-', **errorbar_params)
+    degeneracy = np.array([degenfcn(Xi) for Xi in X])
+    rguess = np.array([1 / 2 ** xi for xi in X]) * degeneracy
+    ax.errorbar(x=X, y=rguess, label="Random", ls='-', color='k', alpha=0.3, **errorbar_params)
     ax.legend()
     ax.set_yscale("log")
+    ax.set_xlabel("number of vertices")
+    ax.set_ylabel("MDS probability")
     plt.draw()
     plt.savefig("./scaling_comparison_all.pdf")
+    plt.show()
+
+def plot_baseline(data10):
+    fig = plt.figure("scaling compare", figsize=(7, 4))
+    ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+    X = np.arange(len(data10["Constant"]))+2
+    degeneracy = np.array([degenfcn(Xi) for Xi in X])
+    rguess = np.array([1 / 2 ** xi for xi in X]) * degeneracy
+    ax.errorbar(x=X, y=rguess, label="Random Guess", marker='o', color=red,  **errorbar_params)
+    ax.errorbar(x=X, y=data10["Constant"], label="DWave", marker='o', color=blue, **errorbar_params)
+    ax.legend()
+    ax.set_yscale("log")
+    ax.set_xlabel("number of vertices")
+    ax.set_ylabel("MDS probability")
+    plt.draw()
+    plt.savefig("./scaling_baseline.pdf")
+    plt.show()
+
+    plt.figure("const/rando", figsize=(7, 4))
+    ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+    ax.errorbar(x=X, y=data10["Constant"]/rguess, label="DWave/Random", marker='o', color='k', **errorbar_params)
+    ax.legend()
+    ax.set_yscale("log")
+    ax.set_ylabel("improvement ratio")
+    ax.set_xlabel("number of vertices")
+    plt.draw()
+    plt.savefig("./ratio_baseline.pdf", transparent=True)
     plt.show()
 
 def plot_tdse(data):
@@ -330,7 +420,79 @@ def plot_tdse(data):
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
     X = [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
     y = data["Binary"]
-    ax.errorbar(x=X, y=y, ls="none", marker='^')
+    ax.errorbar(x=X, y=y, ls="none", marker='o', color='k')
+    ax.set_xticks([-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05])
+    ax.set_xticklabels(["-10%", "-8%", "-6%", "-4%", "-2%", "0%", "2%", "4%", "6%", "8%", "10%"])
+    ax.set_xlabel("offset range")
+    ax.set_ylabel("MDS probability")
+    plt.draw()
+    plt.savefig("./dwave1us.pdf", transparent=True)
+    plt.show()
+
+def plot_dwave_mi(scount,opt):
+    from scipy.stats import entropy
+    #print(scount)
+
+    n=5
+    nA=3
+    strA='ijklm->ijk'
+    strB='ijklm->lm'
+
+    def calculate_dwave_mi(offset,n,nA,strA,strB,opt):
+        pr=np.zeros(2**n)
+        if opt=='dwave':
+            for I in range(2**n):
+                dwstate = np.abs(np.array([int(i) for i in '{0:05b}'.format(I)]) - 1) # map 0 <-> 1
+                pr[I]=scount['Binary'][offset][(tuple(dwstate))]
+        else:
+            pr=scount['Binary'][offset]
+        pr=pr/np.sum(pr)
+        #print(pr)
+        gnd=np.argmax(pr)
+        print(gnd,pr[gnd])
+        prtensor=pr.reshape([2 for i in range(n)])
+        prAtensor=np.einsum(strA,prtensor)
+        prBtensor=np.einsum(strB,prtensor)
+        prA=prAtensor.reshape(2**nA)
+        prB=prBtensor.reshape(2**(n-nA))
+        return entropy(prA,base=2)+entropy(prB,base=2)-entropy(pr,base=2), pr
+
+    #mi=calculate_dwave_mi(offset,n,nA,strA,strB)
+    #print(mi)
+
+    fig = plt.figure(opt+"_mi", figsize=(7,4))
+    ax = plt.axes()#([0.15, 0.15, 0.8, 0.8])
+    X = [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
+    y = []
+    pr = dict()
+    for offset in X:
+        ent, prob = calculate_dwave_mi(offset,n,nA,strA,strB,opt)
+        y.append(ent)
+        pr[offset] = prob
+    ax.errorbar(x=X, y=y, ls="none", marker='o', color='k')
+    ax.set_xticks([-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05])
+    ax.set_xticklabels(["-10%", "-8%", "-6%", "-4%", "-2%", "0%", "2%", "4%", "6%", "8%", "10%"])
+    ax.set_xlabel("offset range")
+    ax.set_ylabel("mi")
+    plt.draw()
+    plt.savefig("./"+opt+"mi_test.pdf", transparent=True)
+    plt.show()
+    return pr
+
+def get_tdse_densitymatrix():
+    from tdse_plots import aggregate
+    tdata = aggregate()
+    finalstate = {"Binary": {}}
+    for key in tdata.keys():
+        temp = tdata[key].sol["y"].real
+        finalstate["Binary"][key] = np.diag(temp[:,-1].reshape(32, 32))
+    return finalstate
+
+def plot_final_state(dwpr, simpr, offset=0.0):
+    fig = plt.figure("final state pr", figsize=(7,4))
+    ax = plt.axes([0.15, 0.15, 0.7, 0.7])
+    ax.errorbar(x=range(len(dwpr[offset])), y = dwpr[offset], color=blue)
+    ax.errorbar(x=range(len(simpr[offset])), y = simpr[offset], color=red)
     plt.draw()
     plt.show()
 
@@ -360,9 +522,24 @@ if __name__ == "__main__":
     data10 = getdata_full(-0.05, 0.1)
     #plot_full(data10, "0p10")
 
+    # baseline
+    #plot_baseline(data10)
+
     # compare offset plot
-    plot_compare_all(data02, data04, data06, data08, data10)
+    #plot_compare_all(data02, data04, data06, data08, data10)
 
     # plot tdse comparison plots
-    tdsedata = get_tdse_data()
-    plot_tdse(tdsedata)
+    #tdsedata = get_tdse_data()
+    #plot_tdse(tdsedata)
+
+    # dwave MI
+    scount = get_spin_config()
+    dwpr = plot_dwave_mi(scount,'dwave')
+
+    # tdse MI
+    scount = get_tdse_densitymatrix()
+    simpr = plot_dwave_mi(scount,'simulate')
+
+    # final state distribution
+    plot_final_state(dwpr, simpr)
+

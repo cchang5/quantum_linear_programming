@@ -17,7 +17,7 @@
 \author{C. C. Chang, C. C. Chen, C. K\"orber, T. Humble, J. Ostrowski}
 
 %opening
-%\title{Notes}
+\title{Notes}
 
 \begin{document}
 
@@ -604,9 +604,9 @@ where the projection operator onto the degenerated ground states subspace is $\p
 
 To include the decoherence effects, we solve for master equation in Lindblad form
 \begin{align}
-i \hbar \partial_t \rho (t) = [H(t) , \rho(t)] + \sum_j (2L_j \rho(t) L_j^\dagger - \{ L^\dagger_j L_j, \rho(t) \}) ,
+  \partial_t \rho (t) = - \frac{-i}{\hbar} [H(t) , \rho(t)] + \sum_j (2L_j \rho(t) L_j^\dagger - \{ L^\dagger_j L_j, \rho(t) \}) ,
 \end{align}
-where $L_j$ are the Lindblad operators for decoherence. In this study we only include lowest order approximation, i.e., the amplitude damping for non-interacting qubits. The Lindblad operator is $L_j=\sqrt{\gamma} \sigma^\pm_j $, where $\gamma=1/T_1$ is the decoherence rate for relaxation time $T_1$. For simplicity we assume all qubits having the same relaxation time.
+where $L_j$ are the Lindblad operators for decoherence. In this study we only include lowest order approximation, i.e., the amplitude damping for non-interacting qubits. The Lindblad operator is $L_j=\sqrt{\gamma} \sigma^{+}_j$ for $h_j>0$ and $L_j=\sqrt{\gamma} \sigma^{-}_j$ for $h_j<0$, where $\gamma=1/T_1$ is the decoherence rate for relaxation time $T_1$. For simplicity we assume all qubits having the same relaxation time.
 
 
 
