@@ -490,20 +490,31 @@ class TDSE:
         return lindblad
 
     def get_lindblad(self,ymat,gamma,H):
-        '''many-body generalized amplitude damping model
+        '''full counting statistics
         '''
         value,vector=np.linalg.eigh(H.toarray())
-        gap=value[1]-value[0]
-        e=np.exp(-self.beta*gap)
-        p=e/(1.0+e)
-        lower=np.kron(vector[:,0],np.conjugate(vector[:,1]))
-        lower=lower.reshape(H.shape)
-        raiseop=np.conjugate(np.transpose(lower))
+        lindblad=np.zeros((len(value),len(value)),dtype=complex)
+        for j in range(len(value)):
+            for i in range(j):        
+                gap=value[j]-value[i]
+                e=np.exp(-self.beta*gap)
+                #p=e/(1.0+e)
+                lowering=np.kron(vector[:,i],np.conjugate(vector[:,j]))
+                lowering=lowering.reshape(H.shape)
+                raising=np.conjugate(np.transpose(lowering))
+
+                # store some matrix multiplications to save computation
+                rhoraising=(ymat)@(raising)
+                rholowering=(ymat)@(lowering)
+                raisingrho=(raising)@(ymat)
+                loweringrho=(lowering)@(ymat)
+
+                # re-factored lindblad operator
+                lindblad+=(lowering)@(2.0*rhoraising-e*(raisingrho))+(raising)@(2.0*e*(rholowering)-loweringrho)-(rhoraising)@(lowering)-e*(rholowering)@(raising)
 
         #lindblad=(1-p)*lower+p*np.conjugate(np.transpose(lower))
-
-        lindblad=(1-p)*( 2.0*(lower)@(ymat)@(raiseop)-raiseop@(lower)@(ymat)-(ymat)@(raiseop)@(lower) )
-        lindblad+=p*( 2.0*(raiseop)@(ymat)@(lower)-lower@(raiseop)@(ymat)-(ymat)@(lower)@(raiseop) )
+        #lindblad=(1-p)*( 2.0*(lower)@(ymat)@(raiseop)-raiseop@(lower)@(ymat)-(ymat)@(raiseop)@(lower) )
+        #lindblad+=p*( 2.0*(raiseop)@(ymat)@(lower)-lower@(raiseop)@(ymat)-(ymat)@(lower)@(raiseop) )
 
         lindblad=gamma*lindblad
         return lindblad
