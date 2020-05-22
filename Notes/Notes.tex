@@ -609,6 +609,13 @@ To include the decoherence effects, we solve for master equation in Lindblad for
 where $L_j$ are the Lindblad operators for decoherence. In this study we only include lowest order approximation, i.e., the amplitude damping for non-interacting qubits. The Lindblad operator is $L_j=\sqrt{\gamma} \sigma^{+}_j$ for $h_j>0$ and $L_j=\sqrt{\gamma} \sigma^{-}_j$ for $h_j<0$, where $\gamma=1/T_1$ is the decoherence rate for relaxation time $T_1$. For simplicity we assume all qubits having the same relaxation time.
 
 
+The Lindblad operators from full counting statistics under wide-band limit is given by (arXiv:1312.3476 [quant-ph])
+\begin{align}
+  L_{2j}=(\sqrt{\gamma p_j}) a_j \\
+  L_{2j+1}=(\sqrt{\gamma (1-p_j)} )a_j^\dagger ,
+\end{align}
+, where $j=(\mu,\nu)$ runs through all the level spacing between all the many-body eigen states of the system Hamiltonian for $E_\mu > E_\nu$. $p_j=\frac{1}{1+e^{-\beta (E_\mu-E_\nu)}}$. $a_j=|\nu \rangle \langle \mu |$ is the lowering operator for many-body states in the qubits system.
+
 
 
 \subsection{unit conversion}
