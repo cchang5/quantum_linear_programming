@@ -510,7 +510,7 @@ class TDSE:
                 loweringrho=(lowering)@(ymat)
 
                 # re-factored lindblad operator
-                lindblad+=((lowering)@(2.0*rhoraising-e*(raisingrho))+(raising)@(2.0*e*(rholowering)-loweringrho)-(rhoraising)@(lowering)-e*(rholowering)@(raising))/(1.0+e)
+                lindblad+=((lowering)@(2.0*rhoraising-e*(raisingrho))+(raising)@(2.0*e*(rholowering)-loweringrho)-(rhoraising)@(lowering)-e*(rholowering)@(raising))
 
         #lindblad=(1-p)*lower+p*np.conjugate(np.transpose(lower))
         #lindblad=(1-p)*( 2.0*(lower)@(ymat)@(raiseop)-raiseop@(lower)@(ymat)-(ymat)@(raiseop)@(lower) )
