@@ -281,13 +281,12 @@ class TDSE:
         if dtype == "true":
             # true ground state
             eigvalue, eigvector = eigh(
-                (self.annealingH(s=self.offset["normalized_time"][0])).toarray()
+                ((self.annealingH(s=self.offset["normalized_time"][0])).toarray())/(self.ising["energyscale"])
             )
         elif dtype == "transverse":
             # DWave initial wave function
             eigvalue, eigvector = eigh((
                 -1
-                * self.ising["energyscale"]
                 * self._constructtransverseH(
                     self.AS.A(0) * np.ones(self.graph["total_qubits"])
                 )
