@@ -108,7 +108,7 @@ def aggregate():
         -0.05,
     ]:
         # for offset in [-0.04, 0.04]:
-        #for offset in [-0.04, 0.04]:
+        # for offset in [-0.04, 0.04]:
         data.params["offset"]["offset"] = "binary"
         data.params["offset"]["offset_min"] = offset
         data.params["offset"]["offset_range"] = abs(offset) * 2
@@ -125,7 +125,7 @@ def aggregate_nodeco():
     data = Data()
     data.params["wave"]["gamma"] = 0.0
     data.params["offset"]["offset"] = "binary"
-    #for offset in [
+    # for offset in [
     #    0.05,
     #    0.04,
     #    0.03,
@@ -137,7 +137,7 @@ def aggregate_nodeco():
     #    -0.03,
     #    -0.04,
     #    -0.05,
-    #]:
+    # ]:
     for offset in [0.04, -0.04]:
         data.params["offset"]["offset_min"] = offset
         data.params["offset"]["offset_range"] = abs(offset) * 2
@@ -191,7 +191,12 @@ def plot_aggregate(adata, tag):
             color = blue
         tdse = adata[key].tdse
         idx, en, evec = tdse.ground_state_degeneracy(tdse.IsingH, 2e-2, debug=False)
-        ax.errorbar(x=adata[key].time, y=adata[key].prob, color=color, label=f"{int(key*2*100)}%")
+        ax.errorbar(
+            x=adata[key].time,
+            y=adata[key].prob,
+            color=color,
+            label=f"{int(key*2*100)}%",
+        )
     ax.set_xlabel("normalized time")
     ax.set_ylabel("MDS probability")
     ax.legend()
@@ -240,7 +245,12 @@ def plot_aggregate(adata, tag):
             [tdse.vonNeumann_entropy(sol.y[:, i], reg) for i in range(sol.t.size)]
         ).real
         mutual_information = entropyA + entropyB - entropyAB
-        ax.errorbar(x=adata[key].time, y=mutual_information, color=color, label=f"{int(key*2*100)}%")
+        ax.errorbar(
+            x=adata[key].time,
+            y=mutual_information,
+            color=color,
+            label=f"{int(key*2*100)}%",
+        )
         mi[key] = mutual_information
     ax.set_xlabel("normalized time")
     ax.set_ylabel("mutual information")
@@ -267,7 +277,7 @@ def plot_gamma(gdata):
         if xi == 20:
             color = blue
         else:
-            color = 'k'
+            color = "k"
         ax.errorbar(x=xi, y=y[idx], ls="none", color=color, marker="o")
     ax.set_xlabel("coherence time (ns)")
     ax.set_ylabel("MDS probability")
@@ -293,17 +303,45 @@ def plot_schedule(adata):
     X, y1, y2 = adata[-0.05].tdse.AS.plot([0, 1])
     X, z1, z2 = adata[0.0].tdse.AS.plot([0, 1])
 
-    plt.figure("anneal schedule", figsize=(7, 4))
-    ax = plt.axes([0.15, 0.15, 0.8, 0.8])
-    ax.errorbar(x=X, y=y1[:, 0], ls="-", color=blue, label="Positive offset A(s)")
-    ax.errorbar(x=X, y=z1[:, 0], ls="-", color="k", label="Default A(s)")
-    ax.errorbar(x=X, y=y1[:, -1], ls="-", color=red, label="Negative offset A(s)")
-    ax.errorbar(x=X, y=y2[:, 0], ls="--", color=blue, label="Positive offset B(s)")
-    ax.errorbar(x=X, y=z2[:, 0], ls="--", color="k", label="Default B(s)")
-    ax.errorbar(x=X, y=y2[:, -1], ls="--", color=red, label="Negative offset B(s)")
-    ax.set_xlabel("normalized time")  # , **label_params)
-    ax.set_ylabel("GHz")  # , **label_params)
-    ax.legend()
+    fig, ax = plt.subplots(figsize=(7, 4))
+
+    ax.errorbar(x=X, y=y1[:, 0], ls="-", color=blue)
+    ax.errorbar(x=X, y=z1[:, 0], ls="-", color="k")
+    ax.errorbar(x=X, y=y1[:, -1], ls="-", color=red)
+    ax.errorbar(x=X, y=y2[:, 0], ls="--", color=blue)
+    ax.errorbar(x=X, y=z2[:, 0], ls="--", color="k")
+    ax.errorbar(x=X, y=y2[:, -1], ls="--", color=red)
+
+    l1 = ax.plot(np.nan, np.nan, ls="-", color="black")[0]
+    l2 = ax.plot(np.nan, np.nan, ls="--", color="black")[0]
+
+    none = ax.plot(np.nan, np.nan, marker="None", ls="None")[0]
+
+    b1 = ax.fill_between([np.nan], [np.nan], color=blue)
+    b2 = ax.fill_between([np.nan], [np.nan], color="k")
+    b3 = ax.fill_between([np.nan], [np.nan], color=red)
+
+    ax.legend(
+        [none, l1, l2, none, none, b1, b2, b3],
+        [
+            r"$\it{Amplitude}$",
+            "A(s)",
+            "B(s)",
+            "",
+            r"$\it{Offset}$",
+            "Negative",
+            "Default",
+            "Positive",
+        ],
+        frameon=False,
+        ncol=2,
+    )
+
+    ax.set_xlabel("Normalized anneal time")
+    ax.set_ylabel("Amplitude frequency [GHz]")
+
+    ax.set_ylim(0)
+    ax.set_xlim(0)
     plt.draw()
     plt.savefig("./anneal_schedule.pdf")
     plt.show()
@@ -423,9 +461,9 @@ def plot_spectrum(adata):
 
 if __name__ == "__main__":
     # vs offset
-    #adata = aggregate()
+    # adata = aggregate()
     # print(list(adata.keys()))
-    #plot_aggregate(adata, "deco")
+    # plot_aggregate(adata, "deco")
 
     # plot AS
     # print(list(adata.keys()))
@@ -435,8 +473,8 @@ if __name__ == "__main__":
     # plot_spectrum(adata)
 
     # vs offset no decoherence
-    #bdata = aggregate_nodeco()
-    #plot_aggregate(bdata, "nodeco")
+    # bdata = aggregate_nodeco()
+    # plot_aggregate(bdata, "nodeco")
 
     # vs gamma
     gdata = aggregate_gamma()
