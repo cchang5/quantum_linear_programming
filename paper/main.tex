@@ -257,8 +257,10 @@ Thus, if solvers have finite precision, one must estimate reasonable values for 
 \label{sec:methods:mds}
 %----------------------------------------------------------------------------------------
 
+This sections demonstrates the formalism in case of an example ILP: the Minimum Dominating Set problem.
+
 %----------------------------------------------------------------------------------------
-\subsubsection{Minimum Dominating Set Problem}
+\subsubsection{Definition of the Minimum Dominating Set Problem}
 \label{sec:methods:mds-def}
 %----------------------------------------------------------------------------------------
 
@@ -347,23 +349,14 @@ where the nearest-neighbor sum is expressed by $J$ (symmetric and zero diagonal)
 The algorithm uses $N_q = \overline{\overline{V}} + \sum_{\nu \in V} \log_2 \mathit(N(\nu))$ qubits---$\overline{\overline{V}}$ qubits to encode the vertices and another $\sum_{\nu \in V} \log_2 \mathit(N(\nu))$ qubits to embed the slack variables.
 Therefore, the embedding at worse scales with $\overline{\overline{V}} \log_2 |\overline{\overline{V}}|$ qubits for fully connected graphs.
 
-The target Hamiltonian can be written in the matrix form
-\begin{widetext}
+The target QUBO in the notation of eq.~\eqref{eq:matrix_form} reads
+{\small
 \begin{align}
-    E = &
-    \begin{pmatrix}
-    \Psi^x & \Psi^s
-    \end{pmatrix}
-    \begin{pmatrix}
-    \mathbbm{1} + p\left[J^T J + J^T + J - 2 \mathrm{Diag}_{\psi^x}(|J|) - \mathbbm{1} \right] & - p(\mathbbm{1}+J^T)T^s\\
-    - p{T^s}^T(\mathbbm{1}+J)& p\left[{T^s}^T T^s + 2\mathrm{Diag}_{\psi^s}(|T^s|)\right]
-    \end{pmatrix}
-    \begin{pmatrix}
-    \Psi^x\\ \Psi^s
-    \end{pmatrix} + p \overline{\overline{V}}
-    \label{eq:matrix_form}
-\end{align}
-\end{widetext}
+    Q_{xx} &= \mathbbm{1} + p\left[J^T J + J^T + J - 2 \mathrm{Diag}_{\psi^x}(|J|) - \mathbbm{1} \right] \,,\\
+    Q_{sx} &= - p(\mathbbm{1}+J^T)T^s\,,\\
+    Q_{ss} &= p\left[{T^s}^T T^s + 2\mathrm{Diag}_{\psi^s}(|T^s|)\right]\,,\\
+    C &=  p \overline{\overline{V}}\,,
+\end{align}}
 where $ |M| \equiv \sum_{\nu} M_{\nu \mu}$.
 
 %----------------------------------------------------------------------------------------
@@ -376,18 +369,20 @@ where $ |M| \equiv \sum_{\nu} M_{\nu \mu}$.
 \label{sec:methods:annealing-schedule}
 %----------------------------------------------------------------------------------------
 
-In quantum annealing, the ground state of the problem Hamiltonian is obtained from the evolution of a time-dependent Hamiltonian,
+A quantum annealer evolves the ground state of an initial Hamiltonian into the ground state of the problem Hamiltonian by adiabatically changing the hardware which implements Hamiltonian.
+Thus, the implemented Hamiltonian is explicitly time dependent
 \begin{equation}
     H(s) = A(s) H^{\textrm{init}} + B(s) H^{\textrm{problem}}, \label{eq:tdhamiltonian}
 \end{equation}
-where $H^\textrm{init}=\sum_i\sigma^x_i$ on the DWave, and $H^\textrm{problem}$ is given by Eq.~(\ref{eq:matrix_form}) for the MDS application.
-The variable $s\in [0, 1]$ is the normalized annealing time and is allowed to vary between 1$\mu s$ to 2$ms$ (CK: time unit mapping) on the DWave.
-On DWave solvers, annealing offsets effectively advance or delay the annealing schedule of individual qubits.
+and $H^\textrm{init}=\sum_i\sigma^x_i$ on the DWave, while $H^\textrm{problem}$ is given by Eq.~(\ref{eq:matrix_form}) for the MDS application.
+The variable $s\in [0, 1]$ is the normalized annealing time and, in physical units, is allowed to vary between 1$\mu s$ to 2$ms$ on DWave.
+
+On DWave solvers, annealing offsets effectively advance or delay the annealing schedule of individual qubits ($B(s) \to B_i(s)$).
 In Fig.~\ref{fig:anneal_schedule}, the default DWave annealing schedule is shown in addition to the effects of applying positive and negative offsets.
-Note that due to the way the offsets are implemented on the hardware level, systematic errors are introduced since the initial and final values of $A(s)$ and $B(s)$ will differ for qubits with different offsets.
+Note that due to the way the offsets are implemented on the hardware level, systematic errors are introduced since the initial and final values of $A(s)$ and $B(s)$ will differ for qubits with different offsets ($B_i(s) \neq B_j(s)$).
 Fig.~\ref{fig:anneal_schedule} shows the maximum offset that we use for the study, which translates to approximately (due to non-linearity) a 5\% advancement (blue) or delay (red) in the schedule.
 
-\begin{figure}[b]
+\begin{figure}[htb]
     \centering
     \includegraphics[width=\columnwidth]{./figures/anneal_schedule.pdf}
     \caption{asdf}
@@ -395,11 +390,11 @@ Fig.~\ref{fig:anneal_schedule} shows the maximum offset that we use for the stud
 \end{figure}
 
 The motivation behind implementing per-qubit level offsets is rooted in the hypothesis that as the problem Hamiltonian is turned on, the system in general will exhibit more disorder.
-We define disorder by first recasting the QUBO into its Ising form such that the problem Hamiltonian has the form
+When recasting the QUBO into its Ising form such that the problem Hamiltonian has the form
 \begin{equation}
     H^{\textrm{Ising}} = \sum_{ij} J_{ij} \sigma^z_i \sigma^z_j + \sum_i h_i \sigma^z_i,
 \end{equation}
-and recognize that in the limit where $h_i$ is randomly drawn from a Bernoulli distribution we recover the spin-glass model.
+we recognize that if $h_i$ is randomly drawn from a Bernoulli distribution we recover the spin-glass model.
 The spin-glass model enters its glassy state when $|h_i|$ is large, and as a consequence, the wavefunction experiences many-body localization effects, the many-body analogue of Anderson Localization.
 
 
@@ -412,10 +407,6 @@ The spin-glass model enters its glassy state when $|h_i|$ is large, and as a con
 \subsubsection{The Lindblad Equation}
 \label{sec:methods:lindblad}
 %----------------------------------------------------------------------------------------
-Say what the simulator is solving
-
-{\color{blue}
-
 
 To solve for time evolution dynamics of quantum annealing including thermal and the decoherence effects, we solve for the master equation in Lindblad form
 \begin{align}
@@ -433,28 +424,25 @@ The site dependency takes into account of the annealing offset.
 $[,]$ denotes the Lie bracket.
 $L_j$ are the Lindblad operators for decoherence.
 $\{, \}$ denotes the anti-commutator.
-In this study we only include a minimal model for decoherence, i.e., the amplitude damping for non-interacting qubits.
+In this study, we only include a minimal model for decoherence, i.e., the amplitude damping for non-interacting qubits.
 The Lindblad operator is $L_j=\sqrt{\gamma} \sigma^{+}_j$ for $h_j>0$ and $L_j=\sqrt{\gamma} \sigma^{-}_j$ for $h_j<0$, where $\gamma = 1/T_1$ is the decoherence rate for relaxation time $T_1$.
-For simplicity we assume all qubits having the same relaxation time.
+For simplicity, we assume all qubits have the same relaxation time.
 The initial condition is the Gibbs canonical ensemble
 \begin{equation}
     \rho (0) =  \frac{e^{-\beta H(0)}}{\mbox{Tr}[e^{-\beta H(0)}]} ,
 \end{equation}
 where $\beta$ is the inverse temperature.
-The probability to get the ground state at measurement is
+The probability to obtain the ground state at for a single measurement is
 \begin{align}
-    P =  \mbox{Tr} \{  \rho (t) \pi_{\mbox{gnd}} \}  ,
+    P_{\mbox{gnd}} =  \mbox{Tr} \{  \rho (t) \pi_{\mbox{gnd}} \}  ,
 \end{align}
-where the projection operator onto the degenerated ground states subspace is defined as $\pi_{\mbox{gnd}}=\sum_{i\in G} |\mbox{gnd}_i\rangle \langle \mbox{gnd}_i| $.
+where the projection operator onto the degenerated ground states subspace is defined as
+\begin{equation}
+	\pi_{\mbox{gnd}}=\sum_{i\in G} |\mbox{gnd}_i\rangle \langle \mbox{gnd}_i|
+	\, .
+\end{equation}
 Here $\{ | \mbox{gnd}_i \rangle | i \in G \}$ forms an orthonormal basis for the degenerated ground states subspace, i.e., $\langle \mbox{gnd}_j | \mbox{gnd}_i \rangle = \delta_{ij}$.
 
-
-
-
-
-}
-
-With anneal offsets
 %----------------------------------------------------------------------------------------
 \subsubsection{Other Simulation Details}
 %----------------------------------------------------------------------------------------
