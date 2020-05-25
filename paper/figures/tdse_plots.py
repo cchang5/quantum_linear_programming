@@ -317,6 +317,14 @@ def plot_schedule(adata):
     ax.annotate(s=f"{z2[-1,  0]:1.2f}", xy=(X[-1], z2[-1, 0]), color="k", va="center")
     ax.annotate(s=f"{y2[-1, -1]:1.2f}", xy=(X[-1], y2[-1, -1]), color=red, va="top")
 
+    ax.annotate(
+        s=f"{z2[0, 0]:1.2f}",
+        xy=(X[0], z2[0, 0] + 0.2),
+        color="k",
+        va="bottom",
+        ha="left",
+    )
+
     l1 = ax.plot(np.nan, np.nan, ls="-", color="black")[0]
     l2 = ax.plot(np.nan, np.nan, ls="--", color="black")[0]
 
