@@ -312,6 +312,10 @@ def plot_schedule(adata):
     ax.errorbar(x=X, y=z2[:, 0], ls="--", color="k")
     ax.errorbar(x=X, y=y2[:, -1], ls="--", color=red)
 
+    ax.annotate(s=f"{y2[-1,  0]:1.2f}", xy=(X[-1], y2[-1, 0]), color=blue, va="bottom")
+    ax.annotate(s=f"{z2[-1,  0]:1.2f}", xy=(X[-1], z2[-1, 0]), color="k", va="center")
+    ax.annotate(s=f"{y2[-1, -1]:1.2f}", xy=(X[-1], y2[-1, -1]), color=red, va="top")
+
     l1 = ax.plot(np.nan, np.nan, ls="-", color="black")[0]
     l2 = ax.plot(np.nan, np.nan, ls="--", color="black")[0]
 
