@@ -8,3 +8,4 @@ seaborn
 networkx
 xlrd
 numba
+psycopg2
