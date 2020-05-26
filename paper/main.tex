@@ -207,11 +207,12 @@ If all variables are represented by the same number of qubits--$R_i$ is a consta
 
 The integer quadratic optimization problem can be mapped to a minimization of the quadratic objective function
 \begin{align}
-    \chi^2 = & \left[\Psi^x_{\mu} T^x_{\mu i}d_{ij} T^x_{j \nu}\Psi^x_\nu + c_i T^x_{i\mu} \Psi^x_\mu \right.
+    \chi^2 &= \left[\Psi^x_{\mu} T^x_{\mu i}d_{ij} T^x_{j \nu}\Psi^x_\nu + c_i T^x_{i\mu} \Psi^x_\mu \right.
     \nonumber\\ \label{eq:qubo-min}
-    &\left.+ p (A_{a b} T^x_{b \mu} \Psi^x_{\mu} + T^s_{a \alpha} \Psi^s_\alpha + b_a)^2 \right],\\
-    \vec x_0 =&  T^x \vec \Psi^x_0 \, ,
-    \qquad (\vec \Psi^x_0, \vec \Psi^s_0) = \mathrm{arg}\min\limits_{\vec{\Psi}^x, \vec \Psi^s}(\chi^2) \,, &
+    &\qquad\left.+ p (A_{a b} T^x_{b \mu} \Psi^x_{\mu} + T^s_{a \alpha} \Psi^s_\alpha + b_a)^2 \right],\\
+    \vec x_0 &=  T^x \vec \Psi^x_0 \, ,
+    \\
+    (\vec \Psi^x_0, \vec \Psi^s_0) &= \mathrm{arg}\min\limits_{\vec{\Psi}}(\chi^2) \,, &
 \end{align}
 where $p$ is an external parameter representing the strength of the penalty when violating constraints.
 The objective function can be represented as a QUBO Hamiltonian
@@ -443,12 +444,6 @@ where the projection operator onto the degenerated ground states subspace is def
 \end{equation}
 Here $\{ | \mbox{gnd}_i \rangle | i \in G \}$ forms an orthonormal basis for the degenerated ground states subspace, i.e., $\langle \mbox{gnd}_j | \mbox{gnd}_i \rangle = \delta_{ij}$.
 
-%----------------------------------------------------------------------------------------
-\subsubsection{Other Simulation Details}
-%----------------------------------------------------------------------------------------
-Temperature
-Initial wave function choices
-RK tolerance
 
 %----------------------------------------------------------------------------------------
 \subsubsection{Decoherence Time}
@@ -472,6 +467,52 @@ Consequently, the difference in outcome would trace back to this coherence being
     \caption{asdf}
     \label{fig:prob_mi}
 \end{figure}
+
+
+%----------------------------------------------------------------------------------------
+\subsubsection{Many-Body Localization}
+\label{sec:methods:mbl}
+%----------------------------------------------------------------------------------------
+
+If the annealer does not reach thermal equilibrium, for example, strong external magnetic fields freeze in individual qubits, the final solution of the annealing process might not encode the ground state of the final Hamiltonian.
+It is thus essential to prepare the system such that Many-Body Localizations are absent, and thus one must define a measure for MBL.
+
+We consider the mutual information as a measure for shared information between different partitions (sets of qubits) of the entire system.
+Given two partitions $A$ and $B$, the mutual information is defined as 
+\begin{equation}
+    I(A:B)=S(\rho_A)+S(\rho_B)-S(\rho_{A,B}) \geq 0\,,
+\end{equation}
+which is only zero if partitions $A$ and $B$ do not share information.
+We describe individual density information measures by the von Neumann entropy $S(\rho)=-\mbox{Tr}\rho \log_2 \rho$.
+The density matrix $\rho_{A,B}$ represents the entire system while $\rho_{A}=\mbox{Tr}_{B} (\rho_{A,B})$ is the reduced density matrix for the subsystem A (and equivalent $B$ for exchanged indicies).
+
+We note that this measure depends on the choice of partitions, which is, in principle, arbitrary.
+To define a measure for MBL, the choice for partitions should encode the likelihood of frozen qubits. 
+Thus a natural choice for partitions are regions of different external magnetic fields.
+For this choice, at the beginning of the anneal, the mutual information will be zero as all spins start orthogonal to the external field, and, in the end, the mutual information will be constant once a final solution is obtained.
+Intermediate values for the mutual information encode the communication probability of different spin alignments.
+
+
+%----------------------------------------------------------------------------------------
+\subsubsection{Decoherence and Many-Body Localization}
+\label{sec:methods:decoherence-and-mbl}
+%----------------------------------------------------------------------------------------
+
+Intuitively, to find a final state which globally minimizes the energy, we want the system to explore the entire state space.
+That is, we want the system to have ergodicity in order to avoid Many-Body Localizations.
+Thus the annealing process should be sufficiently slow to not introduce potential barriers which freeze in intermediate spin configurations.
+On the other hand, decoherence in the hardware leads to the loss of quantum information.
+It is, therefore, desirable to minimize the effect of relaxation and shorten the annealing process.
+The interplay between these two competing effects can be observed by looking at the non-monotonous time dependency of the probability for reaching the global ground state.
+
+
+
+%----------------------------------------------------------------------------------------
+\subsubsection{Other Simulation Details}
+%----------------------------------------------------------------------------------------
+Temperature
+Initial wave function choices
+RK tolerance
 
 
 %========================================================================================
@@ -511,7 +552,7 @@ and gives the probability of randomly guessing the MDS of $G(n)$.
 \end{figure}
 
 For the following studies, we perform experiments on the \texttt{DW\_2000Q\_5} solver.
-After performing a study on the $G(6)$wgraph, We selected an annealing time is of 600$\mu$s that optimizes the probability of finding the ground state, as shown in Fig.~\ref{fig:at_scale}.
+After performing a study on the $G(6)$ graph, We selected an annealing time is of 600$\mu$s that optimizes the probability of finding the ground state, as shown in Fig.~\ref{fig:at_scale}.
 In Fig.~\ref{fig:baseline}, we show results from the baseline experiment, without modification to the default DWave annealing schedule, and observe improvement over random guessing.
 However, the experiment results reflect the same degeneracy structure as random guessing and scale exponentially poorly for a larger number of vertices $n$.
 We explore one avenue towards improving the experiment results by introducing per-qubit annealing offsets into the time evolution.
@@ -529,11 +570,11 @@ The jagged nature of random guessing reflects the degeneracy of the ground state
 \subsubsection{Modified annealing schedule}
 %----------------------------------------------------------------------------------------
 
-Following this logic, we split the qubits into two groups depending on the value of $h_i$ relative to $(\textrm{max}|\{h\}| - \textrm{min}|\{h\}|) / 2$ given the set of external magnetic fields $\{h\}$ defined by a specific problem.
+Following this logic, we split the qubits into two groups depending on the value of $h_i$ relative to $(\max(h_i) - \min(h_i)) / 2$ given the set of external magnetic fields $\{h\}$ defined by a specific problem.
 We then symmetrically offset the two groups of qubits over a total range between 0\% and 10\% (-5\% to +5\%).
 The results of this study are shown in Fig.~\ref{fig:dwave_offset}.
 
-\begin{figure}[b]
+\begin{figure}[htb]
     \centering
     \includegraphics[width=\columnwidth]{./figures/scaling_comparison_all.pdf}
     \caption{The legend labels the entire range of the symmetric offset employed.
@@ -593,7 +634,7 @@ Annealing offsets lift the ground-state degeneracy.}
     \label{fig:spectrum}
 \end{figure}
 
-We present the simulated probability of finding the MDS with and without decoherence in Fig.~\ref{fig:dwave_offset} (Middle) and (Bottom).
+We present the simulated probability of finding the MDS with and without decoherence in Fig.~\ref{fig:dwave1us} (Middle) and (Bottom).
 We observe that with decoherence, the simulation captures the rough features of the experiment, including a steady improvement for negative offsets, and similar non-linear behavior at positive offsets.
 Additionally, the range of probabilities in the simulation non-trivially matches the range observed in the experiment.
 In contrast, simulations without decoherence exemplify the opposite behavior concerning offsets, in line with expectations from many-body localization.
@@ -611,16 +652,6 @@ The simulation, however, incorrectly predicts when the decoupling happens.
 %----------------------------------------------------------------------------------------
 
 We provide further evidence of the competing effects between decoherence and many-body localization in this section.
-
-Intuitively, we want the system to explore a more extensive state space to increase the probability for the system to reach the final ground state.
-That is, we want the system to have ergodicity in order to avoid MBL.
-On the other hand, decoherence in the hardware leads to the loss of quantum information.
-It is, therefore, desirable to minimize the effect of relaxation.
-The interplay between these two competing effects can be observed by looking at the time-dependent probability of reaching the final ground state, and the mutual information.
-The mutual information is defined as $I(A:B)=S(\rho_A)+S(\rho_B)-S(\rho_{A,B})$, which quantifies how many bits of quantum information is communicated between partition $A$ and partition $B$ of the total system.
-$S(\rho)=-\mbox{Tr}\rho \log_2 \rho$ is the von Neumann entropy of density matrix $\rho$.
-{\color{blue} $\rho_{A,B}$ is the density matrix for the total system.
-$\rho_{A}=\mbox{Tr}_{B} (\rho_{A,B})$ is the reduced density matrix for the subsystem A.}
 
 \begin{figure*}
     \centering
