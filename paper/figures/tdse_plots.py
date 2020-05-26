@@ -89,26 +89,26 @@ class Data:
 def aggregate():
     adata = dict()
     data = Data()
-    #for offset in [
-    #    0.05,
-    #    0.04,
-    #    0.03,
-    #    0.02,
-    #    0.01,
-    #    0.0,
-    #    -0.0005,
-    #    -0.001,
-    #    -0.002,
-    #    -0.004,
-    #    -0.005,
-    #    -0.01,
-    #    -0.02,
-    #    -0.03,
-    #    -0.04,
-    #    -0.05,
-    #]:
+    for offset in [
+        0.05,
+        0.04,
+        0.03,
+        0.02,
+        0.01,
+        0.0,
+        -0.0005,
+        -0.001,
+        -0.002,
+        -0.004,
+        -0.005,
+        -0.01,
+        -0.02,
+        -0.03,
+        -0.04,
+        -0.05,
+    ]:
         # for offset in [-0.04, 0.04]:
-    for offset in [-0.04, 0.04]:
+        #for offset in [-0.04, 0.04]:
         data.params["offset"]["offset"] = "binary"
         data.params["offset"]["offset_min"] = offset
         data.params["offset"]["offset_range"] = abs(offset) * 2

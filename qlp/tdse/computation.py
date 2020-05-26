@@ -281,13 +281,12 @@ class TDSE:
         if dtype == "true":
             # true ground state
             eigvalue, eigvector = eigh(
-                (self.annealingH(s=self.offset["normalized_time"][0])).toarray()
+                ((self.annealingH(s=self.offset["normalized_time"][0])).toarray())/(self.ising["energyscale"])
             )
         elif dtype == "transverse":
             # DWave initial wave function
             eigvalue, eigvector = eigh((
                 -1
-                * self.ising["energyscale"]
                 * self._constructtransverseH(
                     self.AS.A(0) * np.ones(self.graph["total_qubits"])
                 )
@@ -319,7 +318,7 @@ class TDSE:
         h = 4.135667696e-15  # Plank constant [eV s] (no 2 pi)
         one = 1e-9  # GHz s
         beta = 1 / (temp * kb / h * one)  # inverse temperature [h/GHz]
-
+        self.beta=beta
         # construct initial density matrix
         eigvalue, eigvector = self.init_eigen(dtype)
 
@@ -472,12 +471,12 @@ class TDSE:
         # print(self.Focksize)
         ymat = y.reshape((self.Focksize, self.Focksize))
         H = self.annealingH(t)
-        lindblad=self.get_lindblad(ymat,self.gamma)
+        lindblad=self.get_lindblad(ymat,self.gamma,H)
         ymat = -1j * (H.dot(ymat) - ymat@H) + lindblad
         f = ymat.reshape(self.Focksize ** 2)
         return f
 
-    def get_lindblad(self,ymat,gamma):
+    def get_lindblad2(self,ymat,gamma,H):
         ''' gamma: decoherence rate = 1/(decoherence time), the unit is the same as the Hamiltonian
         '''
         lindblad=np.zeros(((self.Focksize, self.Focksize)))
@@ -486,6 +485,36 @@ class TDSE:
                     lindblad=lindblad+2.0*(self.Fockplus[i])@(ymat)@(self.Fockminus[i])-(self.Fockproj0[i])@(ymat)-(ymat)@(self.Fockproj0[i])
                 else:
                     lindblad=lindblad+2.0*(self.Fockminus[i])@(ymat)@(self.Fockplus[i])-(self.Fockproj1[i])@(ymat)-(ymat)@(self.Fockproj1[i])
+        lindblad=gamma*lindblad
+        return lindblad
+
+    def get_lindblad(self,ymat,gamma,H):
+        '''full counting statistics under wide-band-limit
+        '''
+        value,vector=np.linalg.eigh(H.toarray())
+        lindblad=np.zeros((len(value),len(value)),dtype=complex)
+        for j in range(len(value)):
+            for i in range(j):        
+                gap=value[j]-value[i]
+                e=np.exp(-self.beta*gap)
+                #p=e/(1.0+e)
+                lowering=np.kron(vector[:,i],np.conjugate(vector[:,j]))
+                lowering=lowering.reshape(H.shape)
+                raising=np.conjugate(np.transpose(lowering))
+
+                # store some matrix multiplications to save computation
+                rhoraising=(ymat)@(raising)
+                rholowering=(ymat)@(lowering)
+                raisingrho=(raising)@(ymat)
+                loweringrho=(lowering)@(ymat)
+
+                # re-factored lindblad operator
+                lindblad+=((lowering)@(2.0*rhoraising-e*(raisingrho))+(raising)@(2.0*e*(rholowering)-loweringrho)-(rhoraising)@(lowering)-e*(rholowering)@(raising))
+
+        #lindblad=(1-p)*lower+p*np.conjugate(np.transpose(lower))
+        #lindblad=(1-p)*( 2.0*(lower)@(ymat)@(raiseop)-raiseop@(lower)@(ymat)-(ymat)@(raiseop)@(lower) )
+        #lindblad+=p*( 2.0*(raiseop)@(ymat)@(lower)-lower@(raiseop)@(ymat)-(ymat)@(lower)@(raiseop) )
+
         lindblad=gamma*lindblad
         return lindblad
 
