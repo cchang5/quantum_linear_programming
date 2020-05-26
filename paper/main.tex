@@ -46,7 +46,7 @@
 \begin{abstract}
 While quantum computing proposes promising solutions to computational problems not accessible with classical approaches, due to current hardware constraints, most quantum algorithms are not yet capable of computing systems of practical relevance, and classical counterparts outperform them.
 To practically benefit from quantum architecture, one has to identify problems and algorithms with favorable scaling and improve on corresponding limitations depending on available hardware.
-For this reason, we developed an algorithm that solves integer linear programming problems (ILP), a classically NP-hard problem, on a quantum annealer (QA) and investigated problem and hardware-specific limitations.
+For this reason, we developed an algorithm that solves integer linear programming problems (ILP), a classically NP-hard problem, on a quantum annealer (QA), and investigated problem and hardware-specific limitations.
 This work presents the formalism of how to map ILP problems to the annealing architectures.
 It illustrates the effects of decorrelation and many-body localization, for the minimum dominating set problem, and compares annealing results against numerical simulations of the quantum architecture.
 We find that the QA ILP algorithm outperforms random guessing but is limited to small problems and that annealing schedules can be adjusted to reduce the effects of decorrelation--which is qualitatively confirmed by simulations.
@@ -74,14 +74,14 @@ We find that the QA ILP algorithm outperforms random guessing but is limited to 
 %========================================================================================
 
 Integer linear programming (ILP) is an integer optimization problem subject to inequality constraints and is a commonly tackled problem applicable to situations such as x~\cite{}, y~\cite{}, and the Minimum Dominating Set Problem (MDS)~\cite{}.
-In general however, ILP is classically NP-complete, and as a result, heuristic methods are employed~\cite{}.
-The NP-hardness of ILP can be understood by realizing that while the solution to an $n$-dimensional linear problem can be obtained in polynomial time, the optimal integer solution in general must be found in the $2^n$ integer solutions which surround the real number solution.
+In general, however, ILP is classically NP-complete, and as a result, heuristic methods are employed~\cite{}.
 Standard classical heuristic algorithms employ a greedy scheme which iteratively approximates optimal solutions--starting from a random initial guess, these algorithms apply locally optimal choices at each step.
+The NP-hardness of ILP can be understood by realizing that while the solution to an $n$-dimensional linear problem can be obtained in polynomial time, the optimal integer solution in general must be found in the $2^n$ integer solutions which surround the real number solution.
 While greedy algorithms do not guarantee optimal global solutions, they find approximate solutions in polynomial time, which can be utilized in further computations.
-Due to the importance and difficulty, in this work we present a method to obtain the optimal solution to ILP by employing methods of quantum annealing.
+Due to the importance and difficulty, in this work, we present a method to obtain the optimal solution to ILP by employing methods of quantum annealing.
 
 Quantum annealing solves a general quadratic binary optimization problem (QUBO) by slowly varying a time-dependent Hamiltonian~\cite{}.
-Through the adiabatic theorem of quantum mechanics, the annealer is prepared initially in a trivial ground state while the solution to ILP is encoded in the target Hamiltonian.
+Through the adiabatic theorem of quantum mechanics, the annealer is initially prepared in a trivial ground state while the final Hamiltonian encodes the solution to the ILP.
 Due to the explosion in research efforts towards hardware implementations of quantum annealers and future improvements to the annealing schedule~\cite{}, mapping ILP to QUBO provides a path forward towards obtaining optimal solutions to the class of integer optimization problems~\cite{2018Glover}.
 
 \alert{[Formulate: Decoherence \& Localization]}
@@ -89,9 +89,9 @@ Hardware suffers from...
 For this reason one is not guaranteed to find optimal solutions
 
 \alert{[Formulate: Simulations]}
-To understand findings and limitations, we mimic the hardware 
+To understand findings and limitations, we mimic the hardware
 
-In section \ref{sec:methods} we propose an algorithm that maps ILP problems to QA hardware (\ref{sec:methods:ilp}) and present an example implementation in case of the Minimial Dominating Set problem (\ref{sec:methods:mds}).
+In section \ref{sec:methods} we propose an algorithm that maps ILP problems to QA hardware (\ref{sec:methods:ilp}) and present an example implementation in case of the Minimal Dominating Set problem (\ref{sec:methods:mds}).
 We review the annealing process on the utilized hardware (\ref{sec:methods:annealing}) and describe the computational framework which we used to simulate the annealing process (\ref{sec:methods:simulation}).
 Section \ref{sec:results} summarizes our findings and presents...
 We conclude this report in \ref{sec:conclusion}.
@@ -110,7 +110,7 @@ All algorithms used and data obtained are publicly available (\ref{sec:open-sour
 \label{sec:methods:ilp}
 %----------------------------------------------------------------------------------------
 
-This section presents how a general ILP is mapped to a QUBO.
+This section presents the formalism which maps a general ILP to a QUBO.
 
 %----------------------------------------------------------------------------------------
 \subsubsection{Integer linear programming}
@@ -210,7 +210,7 @@ The integer quadratic optimization problem can be mapped to a minimization of th
     \chi^2 = & \left[\Psi^x_{\mu} T^x_{\mu i}d_{ij} T^x_{j \nu}\Psi^x_\nu + c_i T^x_{i\mu} \Psi^x_\mu \right.
     \nonumber\\ \label{eq:qubo-min}
     &\left.+ p (A_{a b} T^x_{b \mu} \Psi^x_{\mu} + T^s_{a \alpha} \Psi^s_\alpha + b_a)^2 \right],\\
-    \vec x_0 =&  T^x \vec \Psi^x_0 \, , 
+    \vec x_0 =&  T^x \vec \Psi^x_0 \, ,
     \qquad (\vec \Psi^x_0, \vec \Psi^s_0) = \mathrm{arg}\min\limits_{\vec{\Psi}^x, \vec \Psi^s}(\chi^2) \,, &
 \end{align}
 where $p$ is an external parameter representing the strength of the penalty when violating constraints.
@@ -257,7 +257,7 @@ Thus, if solvers have finite precision, one must estimate reasonable values for 
 \label{sec:methods:mds}
 %----------------------------------------------------------------------------------------
 
-This sections demonstrates the formalism in case of an example ILP: the Minimum Dominating Set problem.
+This section demonstrates the formalism in case of an example ILP: the Minimum Dominating Set problem.
 
 %----------------------------------------------------------------------------------------
 \subsubsection{Definition of the Minimum Dominating Set Problem}
@@ -272,7 +272,7 @@ An example is given by Fig.~\ref{fig:dominating_sets}b.
 The domination number of $D$ is given by the cardinality of $|D| \equiv \overline{\overline{D}}$.
 The minimum dominating set (MDS) is defined by $D$ with the smallest domination number.
 Fig.~\ref{fig:dominating_sets}c shows an example of the minimum dominating set of $G(V, E)$ and is different from the minimal dominating set.
-We emphasize that while the maximum independent set is always a minimal dominating set as exemplified by Fig.~\ref{fig:dominating_sets}b, the minimum dominating set in general can have a smaller domination number.
+We emphasize that while the maximum independent set is always a minimal dominating set as exemplified by Fig.~\ref{fig:dominating_sets}b, the minimum dominating set, in general, can have a smaller domination number.
 As a result, the solution to the dominating set problem can not be obtained by solving for the maximum independent set, a problem that is well studied for quantum annealers~\cite{}.
 
 \begin{figure*}
@@ -389,13 +389,13 @@ Fig.~\ref{fig:anneal_schedule} shows the maximum offset that we use for the stud
     \label{fig:anneal_schedule}
 \end{figure}
 
-The motivation behind implementing per-qubit level offsets is rooted in the hypothesis that as the problem Hamiltonian is turned on, the system in general will exhibit more disorder.
+The motivation behind implementing per-qubit level offsets is rooted in the hypothesis that as the problem Hamiltonian is turned on, the system, in general, will exhibit more disorder.
 When recasting the QUBO into its Ising form such that the problem Hamiltonian has the form
 \begin{equation}
     H^{\textrm{Ising}} = \sum_{ij} J_{ij} \sigma^z_i \sigma^z_j + \sum_i h_i \sigma^z_i,
 \end{equation}
-we recognize that if $h_i$ is randomly drawn from a Bernoulli distribution we recover the spin-glass model.
-The spin-glass model enters its glassy state when $|h_i|$ is large, and as a consequence, the wavefunction experiences many-body localization effects, the many-body analogue of Anderson Localization.
+we recognize that if $h_i$ is randomly drawn from a Bernoulli distribution, we recover the spin-glass model.
+The spin-glass model enters its glassy state when $|h_i|$ is large, and as a consequence, the wavefunction experiences many-body localization effects, the many-body analog of Anderson Localization.
 
 
 %----------------------------------------------------------------------------------------
@@ -511,9 +511,9 @@ and gives the probability of randomly guessing the MDS of $G(n)$.
 \end{figure}
 
 For the following studies, we perform experiments on the \texttt{DW\_2000Q\_5} solver.
-The annealing time is optimized to 600$\mu$s after performing a study on the $G(6)$ graph as shown in Fig.~\ref{fig:at_scale}.
+After performing a study on the $G(6)$wgraph, We selected an annealing time is of 600$\mu$s that optimizes the probability of finding the ground state, as shown in Fig.~\ref{fig:at_scale}.
 In Fig.~\ref{fig:baseline}, we show results from the baseline experiment, without modification to the default DWave annealing schedule, and observe improvement over random guessing.
-However, the experiment results reflect the same degeneracy structure as random guessing, and scale exponentially poorly for larger number of vertices $n$.
+However, the experiment results reflect the same degeneracy structure as random guessing and scale exponentially poorly for a larger number of vertices $n$.
 We explore one avenue towards improving the experiment results by introducing per-qubit annealing offsets into the time evolution.
 
 \begin{figure}
@@ -531,30 +531,30 @@ The jagged nature of random guessing reflects the degeneracy of the ground state
 
 Following this logic, we split the qubits into two groups depending on the value of $h_i$ relative to $(\textrm{max}|\{h\}| - \textrm{min}|\{h\}|) / 2$ given the set of external magnetic fields $\{h\}$ defined by a specific problem.
 We then symmetrically offset the two groups of qubits over a total range between 0\% and 10\% (-5\% to +5\%).
-The results of this study is shown in Fig.~\ref{fig:dwave_offset}.
+The results of this study are shown in Fig.~\ref{fig:dwave_offset}.
 
 \begin{figure}[b]
     \centering
     \includegraphics[width=\columnwidth]{./figures/scaling_comparison_all.pdf}
-    \caption{The legend labels the total range of the symmetric offset employed.
+    \caption{The legend labels the entire range of the symmetric offset employed.
 A positive range indicates that the group of qubits with small values of $|h_i|$ are advanced (qubits with large values of $|h_i|$ are equivalently delayed), and vice versa for results labeled with a negative range.}
     \label{fig:dwave_offset}
 \end{figure}
 
-Finally, we note that due to the inherent variance in performance when using different physical qubits, for each graph, we perform the offset study on the same physical qubits.
+Finally, we note that due to the inherent variance in performance when using different physical qubits, we perform the offset study on the same physical qubits for each graph.
 Additionally, the largest offset ranges sampled are at the limits of the hardware capabilities of the DWave annealer.
 
 We observe from Fig.~\ref{fig:dwave_offset} that advancing qubits subject to \textit{larger} final external magnetic fields yields approximately an order of magnitude improvement over the baseline results at the largest offset range.
-In contrast advancing qubits with weaker magnetic fields consistently hurts the performance of the annealer.
+In contrast, advancing qubits with weaker magnetic fields consistently hurts the performance of the annealer.
 This result is surprising in light of the expectation from many-body localization.
-We provide an explanation of this surprising result by simulating the annealing process of the annealer which are discussed in the following sections.
+We explain this surprising result by simulating the annealing process of the annealer, which we discuss in the following sections.
 
 %----------------------------------------------------------------------------------------
 \subsection{Simulation Results}
 %----------------------------------------------------------------------------------------
 
-In order to understand the effects of annealing offsets, we simulate the annealing process on 5 qubits for a $G(2)$ graph embedded in chimera topography.
-In order to shorten the simulation time, we resample the DWave with a total annealing time of 1 $\mu s$.
+In order to understand the effects of annealing offsets, we simulate the annealing process on five qubits for a $G(2)$ graph embedded in chimera topography.
+To shorten the simulation time, we resample the DWave with a total annealing time of 1 $\mu s$.
 The resulting ground state probability as a function of offset measured over 200,000 observations is shown in Fig.~\ref{fig:dwave1us} (Top).
 
 \begin{figure}
@@ -570,17 +570,17 @@ The red simulation points are not present in the DWave result.}
     \label{fig:dwave1us}
 \end{figure}
 
-For the simulation, the QUBO is obtained from the output of the DWave such that the same embedding is used.
-The time-dependence is obtained by solving the Lindblad equation subject to the DWave annealing schedule with offsets allowing us to incorporate a decoherence model in our simulation.
+The simulation utilizes the same Hamiltonian as DWave, which corresponds to the embedded original MDS QUBO.
+The time-dependent solution is obtained by solving the Lindblad equation subject to the DWave annealing schedule with offsets allowing us to incorporate a decoherence model in our simulation.
 The details of the Lindbladian are given in Sec.~\ref{sec:methods:lindblad}.
 Following Ref.~\cite{}, we fix the temperature of the simulation to 15 milliKelvins to reflect the reported operating temperature of the DWave.
-Due to the small size of the problem, the minimum gap to the second excited state (first non-degenerate state) of the time-dependent Hamiltonian is approximately 2 Kelvins as shown in Fig.~\ref{fig:spectrum}.
+Due to the small size of the problem, the minimum gap to the second excited state (first non-degenerate state) of the time-dependent Hamiltonian is approximately 2 Kelvins, as shown in Fig.~\ref{fig:spectrum}.
 As a result, the DWave operates at effectively zero-temperature for this example problem.
 
-We then set an effective $T_1$ coherence time to 20 $ns$ in order to match the DWave probability of finding the MDS of $G(2)$ at approximately 86\%.
+We then set an effective $T_1$ coherence time to 20 $ns$ to match the DWave probability of finding the MDS of $G(2)$ at approximately 86\%.
 A detailed study of $T_1$ is given in Sec.~\ref{sec:methods:deco}.
 We emphasize that the effective coherence time is much longer than the single qubit coherence time of 0.5 $ns$ reported by DWave, while still being orders of magnitude shorter than the total anneal time.
-The simulation and the experiment however, both are able to recover the ground state with high probability regardless, and exemplifies the robustness of quantum annealing.
+The simulation and the experiment, however, both can recover the ground state with high probability regardless and exemplify quantum annealing's robustness.
 
 \begin{figure}
     \centering
@@ -593,18 +593,18 @@ Annealing offsets lift the ground-state degeneracy.}
     \label{fig:spectrum}
 \end{figure}
 
-The probability of finding the MDS from the simulation with and without decoherence are given in Fig.~\ref{fig:dwave_offset} (Middle) and (Bottom).
+We present the simulated probability of finding the MDS with and without decoherence in Fig.~\ref{fig:dwave_offset} (Middle) and (Bottom).
 We observe that with decoherence, the simulation captures the rough features of the experiment, including a steady improvement for negative offsets, and similar non-linear behavior at positive offsets.
-Additionally, the range of probabilities in the simulation non-trivially match the range observed in experiment.
-In contrast, simulations without decoherence exemplify the opposite behavior with respect to offsets, in line with expectation from many-body localization.
-Therefore, the simulation provides evidence in relating the improvement seen on the DWave to the effects of decoherence rather than many-body localization, while for idealized annealing, the effects of many-body localization become important.
+Additionally, the range of probabilities in the simulation non-trivially matches the range observed in the experiment.
+In contrast, simulations without decoherence exemplify the opposite behavior concerning offsets, in line with expectations from many-body localization.
+Therefore, the simulation provides evidence in relating the improvement seen on the DWave to the effects of decoherence rather than many-body localization, while for idealized annealing, the effects of many-body localization become essential.
 
-In both simulations, the system experience a relatively large jump in probability, at -10\% and +30\% respectively.
+In both simulations, the system experience a relatively big jump in probability, at -10\% and +30\%, respectively.
 For the simulation with decoherence, this behavior is inconsistent with experiment.
 {\color{red} eh..
-guess a reason?} Additionally, both simulations experience vanishing probability at +10\% offset.
-This behavior is expected to happen eventually in experiment as well when the two sets of qubits become too aggressively staggered and effectively decouple.
-The simulation however, incorrectly predicts when the decoupling happens.
+guess a reason?} Additionally, both simulations experience vanishing probability at a +10\% offset.
+This behavior is expected to happen eventually in the experiment as well when the two sets of qubits become too aggressively staggered and effectively decouple.
+The simulation, however, incorrectly predicts when the decoupling happens.
 
 %----------------------------------------------------------------------------------------
 \subsection{Decoherence and Many-Body Localization}
@@ -612,10 +612,10 @@ The simulation however, incorrectly predicts when the decoupling happens.
 
 We provide further evidence of the competing effects between decoherence and many-body localization in this section.
 
-Intuitively, we want the system to explore a larger state space to increase the probability for the system to reach the final ground state.
+Intuitively, we want the system to explore a more extensive state space to increase the probability for the system to reach the final ground state.
 That is, we want the system to have ergodicity in order to avoid MBL.
 On the other hand, decoherence in the hardware leads to the loss of quantum information.
-It is therefore desirable to minimize the effect of relaxation.
+It is, therefore, desirable to minimize the effect of relaxation.
 The interplay between these two competing effects can be observed by looking at the time-dependent probability of reaching the final ground state, and the mutual information.
 The mutual information is defined as $I(A:B)=S(\rho_A)+S(\rho_B)-S(\rho_{A,B})$, which quantifies how many bits of quantum information is communicated between partition $A$ and partition $B$ of the total system.
 $S(\rho)=-\mbox{Tr}\rho \log_2 \rho$ is the von Neumann entropy of density matrix $\rho$.
@@ -633,10 +633,10 @@ $\rho_{A}=\mbox{Tr}_{B} (\rho_{A,B})$ is the reduced density matrix for the subs
     \label{fig:prob_mi}
 \end{figure*}
 
-From Fig.~\ref{fig:prob_mi} we observe that when the anneal schedule is modified to delay stronger external magnetic fields, the phase transition is delayed, yielding larger mutual information, and in turn probes a larger state space.
+From Fig.~\ref{fig:prob_mi}, we observe that when the annealing schedule is modified to delay stronger external magnetic fields, the phase transition is delayed, yielding larger mutual information, and in turn probes a larger state space.
 This observation is independent of the effects of decoherence, and only relies on delaying the phase transition later in the annealing process.
-It then follows that the effects of decoherence is in competition with delocalization because the system is required to exhibit its quantum mechanical nature for longer.
-In contrast, if the phase transition is advanced, effects of decoherence are more suppressed since the system freezes to its classical solution earlier in the annealing process and {\color{blue}become unaffected by dephasing.} This phenomena is demonstrated by the left panels in Fig.~\ref{fig:prob_mi} where in the case of decoherence, the schedule which delays the phase transition consistently underperforms the (bahhh help me word this.
+It then follows that the effects of decoherence competes with delocalization because the system is required to exhibit its quantum mechanical nature for longer.
+In contrast, if the phase transition is advanced, effects of decoherence are more suppressed since the system freezes to its classical solution earlier in the annealing process and become unaffected by dephasing. The left panels in Fig.~\ref{fig:prob_mi} demonstrate this phenomenon wherein the case of decoherence, the schedule which delays the phase transition consistently underperforms the (bahhh help me word this.
 top one the red is always below blue, the bottom one, the red crosses the blue after the phase transition).
 
 Things to do:
