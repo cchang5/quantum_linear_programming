@@ -20,6 +20,6 @@ jobs:
               uses: rtCamp/action-slack-notify@v2.0.2
               env:
                 SLACK_WEBHOOK: https://hooks.slack.com/services/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
-                SLACK_USERNAME: Compile bot
-                SLACK_TITLE: PDF compiled!
-                SLACK_MESSAGE: I was able to compile the most recent pdf. You can check it out here: https://github.com/cchang5/quantum_linear_programming/actions
+                SLACK_USERNAME: "CompileBot"
+                SLACK_TITLE: "PDF compiled!"
+                SLACK_MESSAGE: "I was able to compile the most recent pdf. You can check it out here: https://github.com/cchang5/quantum_linear_programming/actions."
