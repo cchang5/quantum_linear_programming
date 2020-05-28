@@ -12,6 +12,8 @@ paper/main.out
 paper/main.pdf
 paper/main.toc
 paper/main.synctex.gz
+paper/main.fdb_latexmk
+paper/main.fls
 *.synctex.gz
 __pycache__/
 qlpdb/media/
