@@ -504,8 +504,12 @@ class TDSE:
 
                 # store some matrix multiplications to save computation
                 rhoraising=(ymat)@(raising)
-                rholowering=(ymat)@(lowering)
-                raisingrho=(raising)@(ymat)
+                if (e>1.e-10):
+                    rholowering=(ymat)@(lowering)
+                    raisingrho=(raising)@(ymat)
+                else:
+                    rholowering=np.zeros((len(value),len(value)),dtype=complex)
+                    raisingrho=np.zeros((len(value),len(value)),dtype=complex)
                 loweringrho=(lowering)@(ymat)
 
                 # re-factored lindblad operator
