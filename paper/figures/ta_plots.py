@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import seaborn as sns
 from qlpdb.data.models import Data as data_Data
 import numpy as np
 import math
@@ -12,6 +13,9 @@ tick_params["width"] = 0.5
 errorbar_params = dict()
 errorbar_params["mew"] = 0.5
 errorbar_params["markersize"] = 5
+errorbar_params["elinewidth"] = 2
+errorbar_params["capthick"] = 4
+errorbar_params["capsize"] = 4
 red = '#c82506'
 green = '#70b741'
 blue = '#51a7f9'
@@ -77,18 +81,22 @@ def getsrtdata():
 
 def plotta(data):
     X = list(data.keys())
-    y = [data[key] for key in X]
+    y = np.array([data[key] for key in X])
     nobs = 50000
-    yerr = [proportion_confint(yi*nobs, nobs, alpha=0.05, method='normal') for yi in y]
+    yerr = np.array([proportion_confint(yi*nobs, nobs, alpha=0.05, method='normal') for yi in y])
     yerr1 = [yi[0] for yi in yerr]
     yerr2 = [yi[1] for yi in yerr]
     fig = plt.figure("scaling", figsize=(7, 4))
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
-    ax.errorbar(x=X, y=y, marker="o", color=red, **errorbar_params)
-    #ax.fill_between(x=X, y1=yerr1, y2=yerr2, color=red, alpha=0.5)
+    ax.errorbar(x=X, y=y*100, yerr=(yerr.T[0] - y)*100, marker="o", ls=":", color=red, **errorbar_params)
+    #ax.axhline(y[23]*100, color="black", ls="--", lw=1)
+    ax.axvline(X[23], color="black", ls="--", lw=1)
+    ax.plot(X[23], y[23]*100, marker="o", ls=":", color="black", zorder=10, mew=0.5)
     ax.set_xscale("log")
-    ax.set_ylabel("MDS probability")
-    ax.set_xlabel("anneal time (microseconds)")
+    ax.set_ylabel("Prob. of finding MDS ground state [%]")
+    ax.set_xlabel("Anneal time [$\mu s$]")
+
+    sns.despine()
     plt.draw()
     plt.savefig("./anneal_time_scaling.pdf", transparent=True)
     plt.show()
@@ -627,5 +635,3 @@ if __name__ == "__main__":
     # DWave full spin config
     prdict = getallspinconfig()
     plot_final_state_vs_at(prdict, offset=-0.05)
-
-
