@@ -480,7 +480,9 @@ def plot_dwave_mi(scount,opt):
     return pr
 
 def get_tdse_densitymatrix():
-    from tdse_plots import aggregate
+    #from tdse_plots import aggregate
+    from tdse_plots import aggregate_nodeco as aggregate
+
     tdata = aggregate()
     finalstate = {"Binary": {}}
     for key in tdata.keys():
@@ -488,13 +490,89 @@ def get_tdse_densitymatrix():
         finalstate["Binary"][key] = np.diag(temp[:,-1].reshape(32, 32))
     return finalstate
 
-def plot_final_state(dwpr, simpr, offset=0.0):
+def plot_final_state(dwpr=None, simpr=None, offset=0.0):
     fig = plt.figure("final state pr", figsize=(7,4))
     ax = plt.axes([0.15, 0.15, 0.7, 0.7])
-    ax.errorbar(x=range(len(dwpr[offset])), y = dwpr[offset], color=blue)
-    ax.errorbar(x=range(len(simpr[offset])), y = simpr[offset], color=red)
+    if dwpr:
+        ax.errorbar(x=range(len(dwpr[offset])), y = dwpr[offset], color=blue)
+    if simpr:
+        ax.errorbar(x=range(len(simpr[offset])), y = simpr[offset], color=red)
     plt.draw()
     plt.show()
+
+def plot_final_state_vs_at(prdict, offset=0.0):
+    fig = plt.figure("final state pr", figsize=(7,4))
+    ax = plt.axes([0.15, 0.15, 0.7, 0.7])
+    anneal_time =  [1, 10, 100, 1000] #[1,2,3,4,5,6,7,8,9,10,20,30,40,50,60,70,80,90,100,200,300,400,500,600,700,800,900,1000]
+    for at in anneal_time:
+        ax.errorbar(x=range(len(prdict[at][offset])), y = prdict[at][offset])
+    plt.draw()
+    plt.show()
+
+def getallspinconfig():
+    import pickle
+    vrange = [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
+    anneal_time = [1,2,3,4,5,6,7,8,9,10,20,30,40,50,60,70,80,90,100,200,300,400,500,600,700,800,900,1000]
+    try:
+        y =dict()
+        for at in anneal_time:
+            y[at] = dict()
+            for v in vrange:
+                with open(f"./temp/Binary_{v}_{at}.pickle", "rb") as file:
+                    y[at][v] = pickle.load(file)
+    except:
+        data = {
+            at: {
+                v: data_Data.objects.filter(
+                    experiment__graph__tag=f"NN(2)",
+                    experiment__tag=f"FixEmbedding_Binary_{v}_{2*abs(v)}_v5",
+                    experiment__settings__annealing_time=at,
+                    experiment__settings__num_spin_reversal_transforms=5,
+                ).to_dataframe()
+                for v in vrange
+            }
+            for at in anneal_time
+        }
+        y = dict()
+        for at in data.keys():
+            y[at] = dict()
+            X = list(data[at].keys())
+            for v in X:
+                spin = data[at][v]["spin_config"]
+                with open(f"./temp/Binary_{v}_{at}.pickle", "wb") as file:
+                    pickle.dump(spin, file)
+                y[at][v] = spin
+    # remap y
+    remap = [1, 2, 3, 0, 1]
+    for at in y.keys():
+        X = list(y[at].keys())
+        for v in X:
+            temp = []
+            for yi in y[at][v]:
+                temp.append([yi[idx] for idx in remap])
+            y[at][v] = np.array(temp)
+    basis = [(i, j, k, l, m) for i in [0, 1] for j in [0, 1] for k in [0, 1] for l in [0, 1] for m in [0, 1]]
+    scount = dict()
+    for at in y.keys():
+        X = list(y[at].keys())
+        scount[at] = dict()
+        for v in X:
+            scount[at][v] = {b: 0 for b in basis}
+            for yi in y[at][v]:
+                scount[at][v][tuple(yi)] += 1
+    # get prob vs computational basis
+    n=5
+    pr = np.zeros(2 ** n)
+    prdict = dict()
+    for at in anneal_time:
+        prdict[at] = dict()
+        for v in vrange:
+            for I in range(2 ** n):
+                dwstate = np.abs(np.array([int(i) for i in '{0:05b}'.format(I)]) - 1)  # map 0 <-> 1
+                pr[I] = scount[at][v][(tuple(dwstate))]
+            pr = pr / np.sum(pr)
+            prdict[at][v] = pr
+    return prdict
 
 if __name__ == "__main__":
     # plot scaling with anneal_time
@@ -532,14 +610,22 @@ if __name__ == "__main__":
     #tdsedata = get_tdse_data()
     #plot_tdse(tdsedata)
 
-    # dwave MI
-    scount = get_spin_config()
-    dwpr = plot_dwave_mi(scount,'dwave')
+    ## dwave MI
+    #scount = get_spin_config()
+    #dwpr = plot_dwave_mi(scount,'dwave')
 
-    # tdse MI
-    scount = get_tdse_densitymatrix()
-    simpr = plot_dwave_mi(scount,'simulate')
+    ## tdse MI
+    #scount = get_tdse_densitymatrix()
+    #simpr = plot_dwave_mi(scount,'simulate')
 
-    # final state distribution
-    plot_final_state(dwpr, simpr)
+    ## final state distribution
+    #plot_final_state(dwpr, simpr, offset=-0.01)
+    #plot_final_state(dwpr, simpr, offset=0.02)
+    #plot_final_state(dwpr, simpr, offset=0.03)
+    #plot_final_state(dwpr, simpr, offset=0.04)
+
+    # DWave full spin config
+    prdict = getallspinconfig()
+    plot_final_state_vs_at(prdict, offset=-0.05)
+
 

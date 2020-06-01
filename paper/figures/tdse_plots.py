@@ -124,21 +124,22 @@ def aggregate_nodeco():
     adata = dict()
     data = Data()
     data.params["wave"]["gamma"] = 0.0
+    data.params["offset"]["annealing_time"] = 0.001
     data.params["offset"]["offset"] = "binary"
-    #for offset in [
-    #    0.05,
-    #    0.04,
-    #    0.03,
-    #    0.02,
-    #    0.01,
-    #    0.0,
-    #    -0.01,
-    #    -0.02,
-    #    -0.03,
-    #    -0.04,
-    #    -0.05,
-    #]:
-    for offset in [0.04, -0.04]:
+    for offset in [
+        0.05,
+        0.04,
+        0.03,
+        0.02,
+        0.01,
+        0.0,
+        -0.01,
+        -0.02,
+        -0.03,
+        -0.04,
+        -0.05,
+    ]:
+        #for offset in [0.04, -0.04]:
         data.params["offset"]["offset_min"] = offset
         data.params["offset"]["offset_range"] = abs(offset) * 2
         adata[offset] = data.get_data()
@@ -197,7 +198,7 @@ def plot_aggregate(adata, tag):
     ax.legend()
     plt.draw()
     plt.savefig(f"full_prob_{tag}.pdf", transparent=True)
-    """
+
     plt.figure("prob", figsize=(7, 4))
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
     x = list(adata.keys())
@@ -215,8 +216,8 @@ def plot_aggregate(adata, tag):
     else:
         ax.set_ylim([0.9938, 0.99485])
     plt.draw()
-    plt.savefig(f"./sim_{tag}.pdf", transparent=True)
-    """
+    #plt.savefig(f"./sim_{tag}.pdf", transparent=True)
+
     reg = 1e-9
     plt.figure(f"mutual information", figsize=(7, 4))
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
@@ -435,9 +436,9 @@ if __name__ == "__main__":
     # plot_spectrum(adata)
 
     # vs offset no decoherence
-    #bdata = aggregate_nodeco()
-    #plot_aggregate(bdata, "nodeco")
+    bdata = aggregate_nodeco()
+    plot_aggregate(bdata, "nodeco")
 
     # vs gamma
-    gdata = aggregate_gamma()
-    plot_gamma(gdata)
+    #gdata = aggregate_gamma()
+    #plot_gamma(gdata)
