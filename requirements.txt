@@ -9,3 +9,4 @@ networkx
 xlrd
 numba
 psycopg2
+statsmodels
