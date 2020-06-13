@@ -488,7 +488,7 @@ class TDSE:
         lindblad=gamma*lindblad
         return lindblad
 
-    def get_lindblad(self,ymat,gamma,H):
+    def get_lindblad3(self,ymat,gamma,H):
         '''full counting statistics under wide-band-limit
         '''
         value,vector=np.linalg.eigh(H.toarray())
@@ -518,6 +518,36 @@ class TDSE:
         #lindblad=(1-p)*lower+p*np.conjugate(np.transpose(lower))
         #lindblad=(1-p)*( 2.0*(lower)@(ymat)@(raiseop)-raiseop@(lower)@(ymat)-(ymat)@(raiseop)@(lower) )
         #lindblad+=p*( 2.0*(raiseop)@(ymat)@(lower)-lower@(raiseop)@(ymat)-(ymat)@(lower)@(raiseop) )
+
+        lindblad=gamma*lindblad
+        return lindblad
+
+
+    def get_lindblad(self,ymat,gamma,H):
+        '''full counting statistics under wide-band-limit
+        '''
+        value,vector=np.linalg.eigh(H.toarray())
+        lindblad=np.zeros((len(value),len(value)),dtype=complex)
+        conjvector=np.conjugate(vector)
+
+        #pre-compute
+        rhoii=np.zeros(len(value),dtype=complex)
+        proj=np.zeros((len(value),len(value),len(value)),dtype=complex)
+        projrho=np.zeros((len(value),len(value),len(value)),dtype=complex)
+        rhoproj=np.zeros((len(value),len(value),len(value)),dtype=complex)
+
+        for i in range(len(value)):
+            rhoii[i]=np.dot(conjvector[:,i],np.dot(ymat,vector[:,i]))    
+            proj[i,:,:]=np.kron(vector[:,i][None].T,conjvector[:,i])
+            projrho[i,:,:]=np.kron(vector[:,i][None].T,np.dot(conjvector[:,i],ymat))
+            rhoproj[i,:,:]=np.kron(np.dot(ymat,vector[:,i])[None].T,conjvector[:,i])
+
+        for j in range(len(value)):
+            for i in range(j):        
+                gap=value[j]-value[i]
+                e=np.exp(-self.beta*gap)
+
+                lindblad+=2.0*(rhoii[j]*proj[i,:,:]+e*rhoii[i]*proj[j,:,:])-(projrho[j,:,:]+rhoproj[j,:,:])-e*(projrho[i,:,:]+rhoproj[i,:,:])
 
         lindblad=gamma*lindblad
         return lindblad
