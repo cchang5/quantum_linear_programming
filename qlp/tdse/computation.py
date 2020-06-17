@@ -476,7 +476,7 @@ class TDSE:
         f = ymat.reshape(self.Focksize ** 2)
         return f
 
-    def get_lindblad2(self,ymat,gamma,H):
+    def get_lindblad(self,ymat,gamma,H):
         ''' gamma: decoherence rate = 1/(decoherence time), the unit is the same as the Hamiltonian
         '''
         lindblad=np.zeros(((self.Focksize, self.Focksize)))
@@ -523,7 +523,7 @@ class TDSE:
         return lindblad
 
 
-    def get_lindblad(self,ymat,gamma,H):
+    def get_lindblad2(self,ymat,gamma,H):
         '''full counting statistics under wide-band-limit
         '''
         value,vector=np.linalg.eigh(H.toarray())
