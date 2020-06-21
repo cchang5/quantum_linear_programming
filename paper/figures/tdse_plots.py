@@ -60,13 +60,14 @@ class Data:
             qubo = get_mds_qubo(
                 graph, directed=directed, penalty=penalty, triangularize=True, dtype="d"
             )
+            qubo = qubo/4
         graph_params = graph_summary(tag, graph, qubo)
 
         # solver params
         solver_params = dict()
         solver_params["method"] = "RK45"
-        solver_params["rtol"] = 1e-6
-        solver_params["atol"] = 1e-7
+        solver_params["rtol"] = 1e-5
+        solver_params["atol"] = 1e-6
 
         params = {
             "offset": offset_params,
@@ -77,6 +78,9 @@ class Data:
         return params
 
     def get_data(self):
+        print(convert_params(self.params["offset"]))
+        print(self.params["solver"])
+        print(self.params["wave"])
         query = Tdse.objects.filter(
             graph__tag=self.params["graph"]["tag"],
             offset__contains=convert_params(self.params["offset"]),
@@ -154,19 +158,15 @@ def aggregate_gamma():
     adata = dict()
     data = Data()
     data.params["offset"]["offset"] = "binary"
-    data.params["wave"]["temp"] = 15e-3
+    data.params["wave"]["temp"] = 50e-3
     for gamma in [
         0.001,
         0.01,
         0.02,
         0.03,
-        0.035,
         0.04,
-        0.045,
         0.05,
-        0.055,
         0.06,
-        0.065,
         0.07,
         0.08,
         0.09,
@@ -436,9 +436,9 @@ if __name__ == "__main__":
     # plot_spectrum(adata)
 
     # vs offset no decoherence
-    bdata = aggregate_nodeco()
-    plot_aggregate(bdata, "nodeco")
+    #bdata = aggregate_nodeco()
+    #plot_aggregate(bdata, "nodeco")
 
     # vs gamma
-    #gdata = aggregate_gamma()
-    #plot_gamma(gdata)
+    gdata = aggregate_gamma()
+    plot_gamma(gdata)
