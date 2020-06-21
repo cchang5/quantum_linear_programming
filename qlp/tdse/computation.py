@@ -17,6 +17,8 @@ from scipy.integrate import solve_ivp
 from scipy.linalg import logm
 from scipy import sparse as sp
 
+from random import normalvariate as rnormal
+
 from numba import jit
 
 from qlp.tdse.schedule import AnnealSchedule
@@ -105,6 +107,22 @@ def save_file(query, instance, solution, filename, save=False):
         with open(solution_loc, "wb") as file:
             pickle.dump(solution, file)
 
+def add_jchaos(Jij_exact, hi_exact, jchaos):
+    Jij = np.array(Jij_exact)
+    hi = np.array(hi_exact)
+    for i, Ji in enumerate(Jij):
+        for j, J in enumerate(Ji):
+            if Jij[i,j] == 0:
+                pass
+            else:
+                Jij[i,j] += rnormal(0, jchaos*Jij[i,j])
+
+    for i, h in enumerate(hi):
+        if hi[j] == 0:
+            pass
+        else:
+            hi[i] += rnormal(0, jchaos)
+    return Jij, hi
 
 class TDSE:
     """Time dependent Schrödinger equation solver class
@@ -156,6 +174,9 @@ class TDSE:
         self.IsingH = self._constructIsingH(
             self._Bij(self.AS.B(1)) * self.ising["Jij"], self.AS.B(1) * self.ising["hi"]
         )
+        self.IsingH_exact = self._constructIsingH(
+            self._Bij(self.AS.B(1)) * self.ising["Jij_exact"], self.AS.B(1) * self.ising["hi_exact"]
+        )
 
     def hash_dict(self, d):
         hash = hashlib.md5(
@@ -190,6 +211,8 @@ class TDSE:
         ising = dict(self.ising)
         ising["Jij"] = [list(row) for row in ising["Jij"]]
         ising["hi"] = list(ising["hi"])
+        ising["Jij_exact"] = [list(row) for row in ising["Jij_exact"]]
+        ising["hi_exact"] = list(ising["hi_exact"])
         tdse_params["ising"] = ising
         tdse_params["ising_hash"] = self.hash_dict(tdse_params["ising"])
         offset = dict(self.offset)
