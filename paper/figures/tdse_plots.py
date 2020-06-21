@@ -66,8 +66,8 @@ class Data:
         # solver params
         solver_params = dict()
         solver_params["method"] = "RK45"
-        solver_params["rtol"] = 1e-5
-        solver_params["atol"] = 1e-6
+        solver_params["rtol"] = 5e-5
+        solver_params["atol"] = 5e-6
 
         params = {
             "offset": offset_params,
@@ -265,7 +265,7 @@ def plot_gamma(gdata):
     X = 1 / (np.array(x) * 1e9) * 1e9
     y = [gdata[key].prob[-1] for key in x]
     for idx, xi in enumerate(X):
-        if xi == 20:
+        if idx == 7:
             color = blue
         else:
             color = 'k'
