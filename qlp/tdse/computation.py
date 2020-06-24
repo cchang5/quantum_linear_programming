@@ -505,6 +505,24 @@ class TDSE:
     def get_lindblad(self,ymat,gamma,H):
         ''' gamma: decoherence rate = 1/(decoherence time), the unit is the same as the Hamiltonian
         '''
+        lindblad=np.zeros(((self.Focksize, self.Focksize)),dtype=complex)
+        for i in range(self.graph["total_qubits"]):
+                gap=2.0*abs((self.ising["hi"])[i])
+                e=np.exp(-self.beta*gap)
+                if ((self.ising["hi"])[i] > 0):
+                    lindblad=lindblad+2.0*(self.Fockplus[i])@(ymat)@(self.Fockminus[i])-(self.Fockproj0[i])@(ymat)-(ymat)@(self.Fockproj0[i])
+                    lindblad=lindblad+e*(2.0*(self.Fockminus[i])@(ymat)@(self.Fockplus[i])-(self.Fockproj1[i])@(ymat)-(ymat)@(self.Fockproj1[i]))
+                else:
+                    lindblad=lindblad+2.0*(self.Fockminus[i])@(ymat)@(self.Fockplus[i])-(self.Fockproj1[i])@(ymat)-(ymat)@(self.Fockproj1[i])
+                    lindblad=lindblad+e*(2.0*(self.Fockplus[i])@(ymat)@(self.Fockminus[i])-(self.Fockproj0[i])@(ymat)-(ymat)@(self.Fockproj0[i]))
+        lindblad=gamma*lindblad
+        return lindblad
+
+
+
+    def get_lindblad1(self,ymat,gamma,H):
+        ''' gamma: decoherence rate = 1/(decoherence time), the unit is the same as the Hamiltonian
+        '''
         lindblad=np.zeros(((self.Focksize, self.Focksize)))
         for i in range(self.graph["total_qubits"]):
                 if ((self.ising["hi"])[i] > 0):
