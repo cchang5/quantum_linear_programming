@@ -48,7 +48,7 @@ class AnnealOffset:
                 f"FixEmbedding_Constant_{offset_min}_{offset_range}_v3_1",
             )
         if self.tag == "binary":
-            offset_tag = f"FixEmbedding_Binary_{offset_min}_{offset_range}_6.20"
+            offset_tag = f"FixEmbedding_Binary_{offset_min}_{offset_range}_v6.0_80"
             offset_fcn = []
             hmid = abshrange * 0.5 + min(abs(h))
             for hi in h:
@@ -151,7 +151,7 @@ def retry_embedding(
 
     try:
         with open(
-            f"../qlp/mds/embeddings/{graph_tag}_{target_min}_{target_range}.yaml", "r"
+            f"../qlp/mds/embeddings/{graph_tag}_{target_min}_{target_range}_v6.yaml", "r"
         ) as file:
             embedding = yaml.safe_load(file)
         embed, min_offset, max_offset = get_embed_min_max_offset(sampler, embedding)
@@ -172,7 +172,7 @@ def retry_embedding(
                 )
             else:
                 with open(
-                    f"../qlp/mds/embeddings/{graph_tag}_{target_min}_{target_range}.yaml",
+                    f"../qlp/mds/embeddings/{graph_tag}_{target_min}_{target_range}_v6.yaml",
                     "w",
                 ) as file:
                     safe_embed = {int(k): list(embedding[k]) for k in embedding}
