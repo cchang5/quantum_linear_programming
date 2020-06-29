@@ -339,8 +339,8 @@ class TDSE:
             debug: More output messages
         """
         kb = 8.617333262145e-5  # Boltzmann constant [eV / K]
-        #h = 4.135667696e-15  # Plank constant [eV s] (no 2 pi)
-        h = 6.582119569e-16
+        h = 4.135667696e-15  # Plank constant [eV s] (no 2 pi)
+        #h = 6.582119569e-16
         one = 1e-9  # GHz s
         beta = 1 / (temp * kb / h * one)  # inverse temperature [h/GHz]
         self.beta=beta
