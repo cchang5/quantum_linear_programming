@@ -339,8 +339,8 @@ class TDSE:
             debug: More output messages
         """
         kb = 8.617333262145e-5  # Boltzmann constant [eV / K]
-        h = 4.135667696e-15  # Plank constant [eV s] (no 2 pi)
-        #h = 6.582119569e-16
+        #h = 4.135667696e-15  # Plank constant [eV s] (no 2 pi)
+        h = 6.582119569e-16
         one = 1e-9  # GHz s
         beta = 1 / (temp * kb / h * one)  # inverse temperature [h/GHz]
         self.beta=beta
@@ -496,25 +496,25 @@ class TDSE:
         # print(self.Focksize)
         ymat = y.reshape((self.Focksize, self.Focksize))
         H = self.annealingH(t)
-        lindblad=self.get_lindblad(ymat,self.gamma,H)
+        lindblad=self.get_lindblad(ymat,self.gamma,H,t)
         ymat = -1j * (H.dot(ymat) - ymat@H)
         ymat += lindblad
         f = ymat.reshape(self.Focksize ** 2)
         return f
 
-    def get_lindblad(self,ymat,gamma,H):
+    def get_lindblad(self,ymat,gamma,H, t):
         ''' gamma: decoherence rate = 1/(decoherence time), the unit is the same as the Hamiltonian
         '''
         lindblad=np.zeros(((self.Focksize, self.Focksize)),dtype=complex)
         for i in range(self.graph["total_qubits"]):
                 gap=2.0*abs((self.ising["hi"])[i])
-                e=np.exp(-self.beta*gap)
+                e=np.exp(-self.beta*self.AS.B(t)*gap)
                 if ((self.ising["hi"])[i] > 0):
                     lindblad=lindblad+2.0*(self.Fockplus[i])@(ymat)@(self.Fockminus[i])-(self.Fockproj0[i])@(ymat)-(ymat)@(self.Fockproj0[i])
-                    lindblad=lindblad+e*(2.0*(self.Fockminus[i])@(ymat)@(self.Fockplus[i])-(self.Fockproj1[i])@(ymat)-(ymat)@(self.Fockproj1[i]))
+                    lindblad=lindblad+e[i]*(2.0*(self.Fockminus[i])@(ymat)@(self.Fockplus[i])-(self.Fockproj1[i])@(ymat)-(ymat)@(self.Fockproj1[i]))
                 else:
                     lindblad=lindblad+2.0*(self.Fockminus[i])@(ymat)@(self.Fockplus[i])-(self.Fockproj1[i])@(ymat)-(ymat)@(self.Fockproj1[i])
-                    lindblad=lindblad+e*(2.0*(self.Fockplus[i])@(ymat)@(self.Fockminus[i])-(self.Fockproj0[i])@(ymat)-(ymat)@(self.Fockproj0[i]))
+                    lindblad=lindblad+e[i]*(2.0*(self.Fockplus[i])@(ymat)@(self.Fockminus[i])-(self.Fockproj0[i])@(ymat)-(ymat)@(self.Fockproj0[i]))
         lindblad=gamma*lindblad
         return lindblad
 
