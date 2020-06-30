@@ -532,7 +532,7 @@ class TDSE:
         lindblad=gamma*lindblad
         return lindblad
 
-    def get_lindblad3(self,ymat,gamma,H):
+    def get_lindblad3(self,ymat,gamma,H,t):
         '''full counting statistics under wide-band-limit
         '''
         value,vector=np.linalg.eigh(H.toarray())
@@ -540,7 +540,7 @@ class TDSE:
         for j in range(len(value)):
             for i in range(j):        
                 gap=value[j]-value[i]
-                e=np.exp(-self.beta*gap)
+                e=np.exp(-self.beta*gap/self.ising["energyscale"])
                 #p=e/(1.0+e)
                 lowering=np.kron(vector[:,i],np.conjugate(vector[:,j]))
                 lowering=lowering.reshape(H.shape)
