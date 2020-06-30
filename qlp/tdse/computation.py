@@ -434,7 +434,7 @@ class TDSE:
         """Computes ``H(s) = A(s) H_init + B(s) H_final`` in units of "energyscale"
         """
         AxtransverseH = self._constructtransverseH(
-            self.AS.A(s) * np.ones(self.graph["total_qubits"])
+            (self.AS.A(s) + self.offset["Aoffset"]) * np.ones(self.graph["total_qubits"])
         )
         BxIsingH = self._constructIsingH(
             self._Bij(self.AS.B(s)) * self.ising["Jij"], self.AS.B(s) * self.ising["hi"]

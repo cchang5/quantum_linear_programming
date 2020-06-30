@@ -43,8 +43,8 @@ class Data:
         # wave params
         wave_params = dict()
         wave_params["type"] = "mixed"
-        wave_params["temp"] = 15e-3
-        wave_params["gamma"] = 0.05
+        wave_params["temp"] = 0.05
+        wave_params["gamma"] = 1 / 300
         wave_params["initial_wavefunction"] = "transverse"
 
         # graph params
@@ -60,14 +60,14 @@ class Data:
             qubo = get_mds_qubo(
                 graph, directed=directed, penalty=penalty, triangularize=True, dtype="d"
             )
-            qubo = qubo/4
+            qubo = qubo / 4
         graph_params = graph_summary(tag, graph, qubo)
 
         # solver params
         solver_params = dict()
         solver_params["method"] = "RK45"
-        solver_params["rtol"] = 5e-5
-        solver_params["atol"] = 5e-6
+        solver_params["rtol"] = 1.1e-8
+        solver_params["atol"] = 1.1e-9
 
         params = {
             "offset": offset_params,
@@ -100,11 +100,6 @@ def aggregate():
         0.02,
         0.01,
         0.0,
-        -0.0005,
-        -0.001,
-        -0.002,
-        -0.004,
-        -0.005,
         -0.01,
         -0.02,
         -0.03,
@@ -112,7 +107,7 @@ def aggregate():
         -0.05,
     ]:
         # for offset in [-0.04, 0.04]:
-        #for offset in [-0.04, 0.04]:
+        # for offset in [-0.04, 0.04]:
         data.params["offset"]["offset"] = "binary"
         data.params["offset"]["offset_min"] = offset
         data.params["offset"]["offset_range"] = abs(offset) * 2
@@ -143,7 +138,7 @@ def aggregate_nodeco():
         -0.04,
         -0.05,
     ]:
-        #for offset in [0.04, -0.04]:
+        # for offset in [0.04, -0.04]:
         data.params["offset"]["offset_min"] = offset
         data.params["offset"]["offset_range"] = abs(offset) * 2
         adata[offset] = data.get_data()
@@ -158,19 +153,18 @@ def aggregate_gamma():
     adata = dict()
     data = Data()
     data.params["offset"]["offset"] = "binary"
-    data.params["wave"]["temp"] = 50e-3
+    data.params["wave"]["temp"] = 0.05
     for gamma in [
-        0.001,
-        0.01,
-        0.02,
-        0.03,
-        0.04,
-        0.05,
-        0.06,
-        0.07,
-        0.08,
-        0.09,
-        0.1,
+        1 / 10,
+        # 1/20,
+        1 / 30,
+        1 / 40,
+        1 / 50,
+        1 / 60,
+        1 / 70,
+        1 / 80,
+        1 / 90,
+        1 / 100,
     ]:
         print(gamma)
         data.params["wave"]["gamma"] = gamma
@@ -182,6 +176,62 @@ def aggregate_gamma():
     return adata
 
 
+def plot_mbl(adata):
+    ngrid = 10
+    timegrid = np.linspace(0, 1, ngrid)
+    offdiag = np.zeros(ngrid)
+    plt.figure("many body hybridization", figsize=(7, 4))
+    ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+    for offset in adata:
+        for i in range(ngrid):
+            H = adata[offset].tdse.annealingH(timegrid[i]).todense()
+            offdiag[i] = np.linalg.norm(H - np.diag(np.diag(H)))
+        ax.errorbar(x=timegrid, y=offdiag, marker="None", ls="-", label=offset)
+    ax.legend()
+    plt.title(
+        "many body hybridazation (Frobenius norm of off diagonal matrix elements) "
+    )
+    plt.draw()
+    plt.show()
+
+
+def plot_centropy(adata):
+    import scipy.stats as stats
+
+    plt.figure("centropy", figsize=(7, 4))
+    ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+    for offset in adata:
+        centropy = np.asarray(
+            [
+                stats.entropy(
+                    abs(np.diag(adata[offset].sol.y[:, i].reshape(32, 32))), base=2
+                )
+                for i in range(adata[offset].sol.t.size)
+            ]
+        ).real
+        timegrid = np.linspace(0, 1, adata[offset].sol.t.size)
+        ax.errorbar(x=timegrid, y=centropy, marker="None", ls="-", label=offset)
+    ax.legend()
+    plt.title("classical entropy")
+    plt.draw()
+    plt.show()
+
+
+def plot_distribution(adata):
+    plt.figure("distribution", figsize=(7, 4))
+    ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+    rhodim = 2 ** 5
+    for offset in adata:
+        ax.errorbar(
+            x=np.linspace(0, rhodim - 1, rhodim),
+            y=np.diagonal(adata[offset].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+            label=offset,
+        )
+    ax.legend()
+    plt.title("distribution")
+    plt.draw()
+    plt.show()
+
 def plot_aggregate(adata, tag):
     plt.figure("full probability", figsize=(7, 4))
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
@@ -192,7 +242,12 @@ def plot_aggregate(adata, tag):
             color = blue
         tdse = adata[key].tdse
         idx, en, evec = tdse.ground_state_degeneracy(tdse.IsingH, 2e-2, debug=False)
-        ax.errorbar(x=adata[key].time, y=adata[key].prob, color=color, label=f"{int(key*2*100)}%")
+        ax.errorbar(
+            x=adata[key].time,
+            y=adata[key].prob,
+            color=color,
+            label=f"{int(key*2*100)}%",
+        )
     ax.set_xlabel("normalized time")
     ax.set_ylabel("MDS probability")
     ax.legend()
@@ -208,7 +263,7 @@ def plot_aggregate(adata, tag):
             color = red
         else:
             color = blue
-        ax.errorbar(x=2*xi, y=y[idx], ls="none", marker="o", color=color)
+        ax.errorbar(x=2 * xi, y=y[idx], ls="none", marker="o", color=color)
     ax.set_xlabel("offset range (%)")
     ax.set_ylabel("MDS probability")
     if tag == "deco":
@@ -216,7 +271,7 @@ def plot_aggregate(adata, tag):
     else:
         ax.set_ylim([0.9938, 0.99485])
     plt.draw()
-    #plt.savefig(f"./sim_{tag}.pdf", transparent=True)
+    # plt.savefig(f"./sim_{tag}.pdf", transparent=True)
 
     reg = 1e-9
     plt.figure(f"mutual information", figsize=(7, 4))
@@ -241,7 +296,12 @@ def plot_aggregate(adata, tag):
             [tdse.vonNeumann_entropy(sol.y[:, i], reg) for i in range(sol.t.size)]
         ).real
         mutual_information = entropyA + entropyB - entropyAB
-        ax.errorbar(x=adata[key].time, y=mutual_information, color=color, label=f"{int(key*2*100)}%")
+        ax.errorbar(
+            x=adata[key].time,
+            y=mutual_information,
+            color=color,
+            label=f"{int(key*2*100)}%",
+        )
         mi[key] = mutual_information
     ax.set_xlabel("normalized time")
     ax.set_ylabel("mutual information")
@@ -268,7 +328,7 @@ def plot_gamma(gdata):
         if idx == 7:
             color = blue
         else:
-            color = 'k'
+            color = "k"
         ax.errorbar(x=xi, y=y[idx], ls="none", color=color, marker="o")
     ax.set_xlabel("coherence time (ns)")
     ax.set_ylabel("MDS probability")
@@ -424,9 +484,12 @@ def plot_spectrum(adata):
 
 if __name__ == "__main__":
     # vs offset
-    #adata = aggregate()
+    adata = aggregate()
     # print(list(adata.keys()))
-    #plot_aggregate(adata, "deco")
+    # plot_aggregate(adata, "deco")
+    plot_mbl(adata)
+    plot_centropy(adata)
+    plot_distribution(adata)
 
     # plot AS
     # print(list(adata.keys()))
@@ -436,9 +499,9 @@ if __name__ == "__main__":
     # plot_spectrum(adata)
 
     # vs offset no decoherence
-    #bdata = aggregate_nodeco()
-    #plot_aggregate(bdata, "nodeco")
+    # bdata = aggregate_nodeco()
+    # plot_aggregate(bdata, "nodeco")
 
     # vs gamma
-    gdata = aggregate_gamma()
-    plot_gamma(gdata)
+    # gdata = aggregate_gamma()
+    # plot_gamma(gdata)
