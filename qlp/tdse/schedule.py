@@ -64,6 +64,22 @@ class s_to_offset:
                 "A(s) (GHz)": self.maxB / (1.0 + exp(10.0 * (s - 0.5))),
                 "B(s) (GHz)": self.maxB / (1.0 + exp(-10.0 * (s - 0.5))),
             }
+        elif anneal_curve == "constantA":
+            # DWave approx 10 GHz
+            self.anneal_schedule = {
+                "s": [0, 1],
+                "C (normalized)": [0, 1],
+                "A(s) (GHz)": [self.maxB, self.maxB],
+                "B(s) (GHz)": [0, 0],
+            }
+        elif anneal_curve == "constantB":
+            # DWave approx 10 GHz
+            self.anneal_schedule = {
+                "s": [0, 1],
+                "C (normalized)": [0, 1],
+                "A(s) (GHz)": [0, 0],
+                "B(s) (GHz)": [self.maxB, self.maxB],
+            }
         elif anneal_curve == "dwave":
             anneal_schedule = read_excel(
                 io="./09-1212A-B_DW_2000Q_5_anneal_schedule.xlsx", sheet_name=1
