@@ -71,9 +71,9 @@ class s_to_offset:
             self.anneal_schedule = {
                 key: anneal_schedule[key].values for key in anneal_schedule.columns
             }
-            for key in self.anneal_schedule:
-                if key in ["A(s) (GHz)", "B(s) (GHz)"]:
-                    self.anneal_schedule[key] = [round(i, 3) for i in self.anneal_schedule[key]]
+            #for key in self.anneal_schedule:
+            #    if key in ["A(s) (GHz)", "B(s) (GHz)"]:
+            #        self.anneal_schedule[key] = [round(i, 3) for i in self.anneal_schedule[key]]
         else:
             raise KeyError(f"Anneal curve {anneal_curve} not reckognized")
 
