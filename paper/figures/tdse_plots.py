@@ -43,8 +43,8 @@ class Data:
         # wave params
         wave_params = dict()
         wave_params["type"] = "mixed"
-        wave_params["temp"] = 0.05
-        wave_params["gamma"] = 1 / 300
+        wave_params["temp"] = 0.04
+        wave_params["gamma"] = 1 / 60
         wave_params["initial_wavefunction"] = "transverse"
 
         # graph params
@@ -66,8 +66,8 @@ class Data:
         # solver params
         solver_params = dict()
         solver_params["method"] = "RK45"
-        solver_params["rtol"] = 1.1e-8
-        solver_params["atol"] = 1.1e-9
+        solver_params["rtol"] = 1e-7
+        solver_params["atol"] = 1e-8
 
         params = {
             "offset": offset_params,
@@ -153,10 +153,10 @@ def aggregate_gamma():
     adata = dict()
     data = Data()
     data.params["offset"]["offset"] = "binary"
-    data.params["wave"]["temp"] = 0.05
+    data.params["wave"]["temp"] = 0.04
     for gamma in [
         1 / 10,
-        # 1/20,
+        1 / 20,
         1 / 30,
         1 / 40,
         1 / 50,
@@ -189,10 +189,10 @@ def plot_mbl(adata):
         ax.errorbar(x=timegrid, y=offdiag, marker="None", ls="-", label=offset)
     ax.legend()
     plt.title(
-        "many body hybridazation (Frobenius norm of off diagonal matrix elements) "
+        "many body hybridization (Frobenius norm of off diagonal matrix elements) "
     )
     plt.draw()
-    plt.show()
+    plt.savefig("./hybridization.pdf", transparent=True)
 
 
 def plot_centropy(adata):
@@ -218,19 +218,144 @@ def plot_centropy(adata):
 
 
 def plot_distribution(adata):
-    plt.figure("distribution", figsize=(7, 4))
-    ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+    plt.figure("distribution", figsize=(7, 11))
     rhodim = 2 ** 5
-    for offset in adata:
-        ax.errorbar(
-            x=np.linspace(0, rhodim - 1, rhodim),
-            y=np.diagonal(adata[offset].sol.y[:, -1].reshape((rhodim, rhodim))).real,
-            label=offset,
-        )
-    ax.legend()
-    plt.title("distribution")
+    height = 0.08
+    top = 0.95
+    ax0 = plt.axes([0.15, top - height, 0.8, height])
+    ax0.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[-0.05].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+    )
+    ax0.get_xaxis().set_ticks([])
+    ax0.set_ylim([0, 1.1])
+    ax0.text(
+        top-0.03, top-0.13, "-10% offset", horizontalalignment="right", transform=ax0.transAxes
+    )
+
+    ax1 = plt.axes([0.15, top - height * 2, 0.8, height])
+    ax1.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[-0.04].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+    )
+    ax1.set_ylim([0, 1.1])
+    ax1.text(
+        top-0.03, top-0.13, "-8% offset", horizontalalignment="right", transform=ax1.transAxes
+    )
+    ax1.get_xaxis().set_ticks([])
+
+    ax2 = plt.axes([0.15, top - height * 3, 0.8, height])
+    ax2.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[-0.03].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+    )
+    ax2.set_ylim([0, 1.1])
+    ax2.text(
+        top-0.03, top-0.13, "-6% offset", horizontalalignment="right", transform=ax2.transAxes
+    )
+    ax2.get_xaxis().set_ticks([])
+
+    ax3 = plt.axes([0.15, top - height * 4, 0.8, height])
+    ax3.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[-0.02].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+    )
+    ax3.set_ylim([0, 1.1])
+    ax3.text(
+        top-0.03, top-0.13, "-4% offset", horizontalalignment="right", transform=ax3.transAxes
+    )
+    ax3.get_xaxis().set_ticks([])
+
+    ax4 = plt.axes([0.15, top - height * 5, 0.8, height])
+    ax4.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[-0.01].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+    )
+    ax4.set_ylim([0, 1.1])
+    ax4.text(
+        top-0.03, top-0.13, "-2% offset", horizontalalignment="right", transform=ax4.transAxes
+    )
+    ax4.get_xaxis().set_ticks([])
+
+    ax5 = plt.axes([0.15, top - height * 6, 0.8, height])
+    ax5.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[0.0].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+    )
+    ax5.set_ylim([0, 1.1])
+    ax5.text(
+        top-0.03, top-0.13, "0% offset", horizontalalignment="right", transform=ax5.transAxes
+    )
+    ax5.get_xaxis().set_ticks([])
+
+    ax6 = plt.axes([0.15, top - height * 7, 0.8, height])
+    ax6.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[0.01].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+    )
+    ax6.set_ylim([0, 1.1])
+    ax6.text(
+        top-0.03, top-0.13, "2% offset", horizontalalignment="right", transform=ax6.transAxes
+    )
+    ax6.get_xaxis().set_ticks([])
+
+    ax7 = plt.axes([0.15, top - height * 8, 0.8, height])
+    ax7.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[0.02].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+    )
+    ax7.set_ylim([0, 1.1])
+    ax7.text(
+        top-0.03, top-0.13, "4% offset", horizontalalignment="right", transform=ax7.transAxes
+    )
+    ax7.get_xaxis().set_ticks([])
+
+    ax8 = plt.axes([0.15, top - height * 9, 0.8, height])
+    ax8.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[0.03].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+    )
+    ax8.set_ylim([0, 1.1])
+    ax8.text(
+        top-0.03, top-0.13, "6% offset", horizontalalignment="right", transform=ax8.transAxes
+    )
+    ax8.get_xaxis().set_ticks([])
+
+    ax9 = plt.axes([0.15, top - height * 10, 0.8, height])
+    ax9.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[0.04].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+    )
+    ax9.set_ylim([0, 1.1])
+    ax9.text(
+        top-0.03, top-0.13, "8% offset", horizontalalignment="right", transform=ax9.transAxes
+    )
+    ax9.get_xaxis().set_ticks([])
+
+    ax10 = plt.axes([0.15, top - height * 11, 0.8, height])
+    ax10.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[0.05].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+    )
+    ax10.set_ylim([0, 1.1])
+    ax10.text(
+        top-0.03, top-0.13, "10% offset", horizontalalignment="right", transform=ax10.transAxes
+    )
+
     plt.draw()
-    plt.show()
+    plt.savefig("./final_state_distribution.pdf", transparent=True)
+
 
 def plot_aggregate(adata, tag):
     plt.figure("full probability", figsize=(7, 4))
@@ -262,16 +387,16 @@ def plot_aggregate(adata, tag):
         if float(xi) < 0 and float(xi) > -0.01:
             color = red
         else:
-            color = blue
+            color = "k"
         ax.errorbar(x=2 * xi, y=y[idx], ls="none", marker="o", color=color)
     ax.set_xlabel("offset range (%)")
     ax.set_ylabel("MDS probability")
     if tag == "deco":
-        ax.set_ylim([0.85, 0.92])
+        ax.set_ylim([0.83, 0.88])
     else:
         ax.set_ylim([0.9938, 0.99485])
     plt.draw()
-    # plt.savefig(f"./sim_{tag}.pdf", transparent=True)
+    plt.savefig(f"./sim_{tag}.pdf", transparent=True)
 
     reg = 1e-9
     plt.figure(f"mutual information", figsize=(7, 4))
@@ -325,7 +450,7 @@ def plot_gamma(gdata):
     X = 1 / (np.array(x) * 1e9) * 1e9
     y = [gdata[key].prob[-1] for key in x]
     for idx, xi in enumerate(X):
-        if idx == 7:
+        if idx == 5:
             color = blue
         else:
             color = "k"
@@ -487,8 +612,8 @@ if __name__ == "__main__":
     adata = aggregate()
     # print(list(adata.keys()))
     # plot_aggregate(adata, "deco")
-    plot_mbl(adata)
-    plot_centropy(adata)
+    # plot_mbl(adata)
+    # plot_centropy(adata)
     plot_distribution(adata)
 
     # plot AS
