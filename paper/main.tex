@@ -323,14 +323,13 @@ In order to understand the effects of annealing offsets, we simulate the anneali
 	\centering
 	\includegraphics[width=\columnwidth]{./figures/dwave1us.pdf}
 	\includegraphics[width=\columnwidth]{./figures/sim_deco.pdf}
-	\includegraphics[width=\columnwidth]{./figures/sim_nodeco.pdf}
 	\caption{ (Top) The probability of finding the MDS for $G(2)$ from DWave. The machine parameters are identical to Sec.~\ref{sec:discussion:qa} with the exception of shortening the total annealing time to 1 $\mu s$ to accommodate reasonable simulation times. (Middle) Result from simulation with decoherence and (Bottom) simulation without decoherence. In both simulations, at +10\% offset, the probability of finding the ground state vanishes. The red simulation points are not present in the DWave result.}
 	\label{fig:dwave1us}
 \end{figure}
 
-For the simulation, the QUBO is obtained from the output of the DWave such that the same embedding is used. The time-dependence is obtained by solving the Lindblad equation subject to the DWave annealing schedule with offsets allowing us to incorporate a decoherence model in our simulation. The details of the Lindbladian are given in Sec.~\ref{sec:methods:lindblad}. Following Ref.~\cite{}, we fix the temperature of the simulation to 15 milliKelvins to reflect the reported operating temperature of the DWave. Due to the small size of the problem, the minimum gap to the second excited state (first non-degenerate state) of the time-dependent Hamiltonian is approximately 2 Kelvins as shown in Fig.~\ref{fig:spectrum}. As a result, the DWave operates at effectively zero-temperature for this example problem.
+For the simulation, the QUBO is obtained from the output of the DWave such that the same embedding is used. The time-dependence is obtained by solving the Lindblad equation subject to the DWave annealing schedule with offsets allowing us to incorporate a decoherence model in our simulation. The details of the Lindbladian are given in Sec.~\ref{sec:methods:lindblad}. Following Ref.~\cite{}, we fix the temperature of the simulation to 40 milliKelvins to reflect approximately the reported operating temperature of the DWave. Due to the small size of the problem, the minimum gap to the second excited state (first non-degenerate state) of the time-dependent Hamiltonian ranges from 13 mK to 90 mK depending on the offset as shown in Fig.~\ref{fig:spectrum}. We account for the thermal effects through full-counting statistics~\ref{}. {\color{red}some more words about this?}
 
-We then set an effective $T_1$ coherence time to 20 $ns$ in order to match the DWave probability of finding the MDS of $G(2)$ at approximately 86\%. A detailed study of $T_1$ is given in Sec.~\ref{sec:methods:deco}. We emphasize that the effective coherence time is much longer than the single qubit coherence time of 0.5 $ns$ reported by DWave, while still being orders of magnitude shorter than the total anneal time. The simulation and the experiment however, both are able to recover the ground state with high probability regardless, and exemplifies the robustness of quantum annealing.
+We then set an effective $T_1$ coherence time to 60 $ns$ in order to match the DWave probability of finding the MDS of $G(2)$ at approximately 85\%. A detailed study of $T_1$ is given in Sec.~\ref{sec:methods:deco}. We emphasize that the effective coherence time is much longer than the single qubit coherence time of 0.5 $ns$ reported by DWave, while still being orders of magnitude shorter than the total anneal time. The simulation and the experiment however, both are able to recover the ground state with high probability regardless, and exemplifies the robustness of quantum annealing.
 
 \begin{figure}
 	\centering
@@ -340,11 +339,9 @@ We then set an effective $T_1$ coherence time to 20 $ns$ in order to match the D
 	\label{fig:spectrum}
 \end{figure}
 
-The probability of finding the MDS from the simulation with and without decoherence are given in Fig.~\ref{fig:dwave_offset} (Middle) and (Bottom). We observe that with decoherence, the simulation captures the rough features of the experiment, including a steady improvement for negative offsets, and similar non-linear behavior at positive offsets. Additionally, the range of probabilities in the simulation non-trivially match the range observed in experiment. In contrast, simulations without decoherence exemplify the opposite behavior with respect to offsets, in line with expectation from many-body localization. Therefore, the simulation provides evidence in relating the improvement seen on the DWave to the effects of decoherence rather than many-body localization, while for idealized annealing, the effects of many-body localization become important.
+The probability of finding the MDS from simulation is given in Fig.~\ref{fig:dwave_offset} (Bottom). We observe that the simulation captures the rough features of the experiment, including a steady improvement for negative offsets. Additionally, the range of probabilities in the simulation non-trivially match the range observed in experiment suggesting that the temperature and coherence time parameters are consistent with experiment.
 
-In both simulations, the system experience a relatively large jump in probability, at -10\% and +30\% respectively. For the simulation with decoherence, this behavior is inconsistent with experiment.  {\color{red} eh.. guess a reason?} Additionally, both simulations experience vanishing probability at +10\% offset. This behavior is expected to happen eventually in experiment as well when the two sets of qubits become too aggressively staggered and effectively decouple. The simulation however, incorrectly predicts when the decoupling happens.
-
-\subsection{Decoherence and Many-Body Localization}
+\subsection{Many-Body Localization}
 
 We provide further evidence of the competing effects between decoherence and many-body localization in this section.
 
@@ -353,12 +350,17 @@ Intuitively, we want the system to explore a larger state space to increase the 
 \begin{figure*}
 	\centering
 	\includegraphics[width=\columnwidth]{./figures/full_prob_deco.pdf}
-	\includegraphics[width=\columnwidth]{./figures/mutual_info_deco.pdf}
-	\includegraphics[width=\columnwidth]{./figures/full_prob_nodeco.pdf}
-	\includegraphics[width=\columnwidth]{./figures/mutual_info_nodeco.pdf}
+	\includegraphics[width=\columnwidth]{./figures/hybridization.pdf}
 	\caption{(Left) The time-dependent probability of resolving the ground state and (Right) the corresponding mutual information. (Top) Simulation with decoherence included and (Bottom) without decoherence.}
 	\label{fig:prob_mi}
 \end{figure*}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\columnwidth]{./figures/final_state_distribution.pdf}
+	\caption{caption}
+	\label{fig:final_state_distribution}
+\end{figure}
 
 From Fig.~\ref{fig:prob_mi} we observe that when the anneal schedule is modified to delay stronger external magnetic fields, the phase transition is delayed, yielding larger mutual information, and in turn probes a larger state space. This observation is independent of the effects of decoherence, and only relies on delaying the phase transition later in the annealing process. It then follows that the effects of decoherence is in competition with delocalization because the system is required to exhibit its quantum mechanical nature for longer. In contrast, if the phase transition is advanced, effects of decoherence are more suppressed since the system freezes to its classical solution earlier in the annealing process and {\color{blue}become unaffected by dephasing.} This phenomena is demonstrated by the left panels in Fig.~\ref{fig:prob_mi} where in the case of decoherence, the schedule which delays the phase transition consistently underperforms the (bahhh help me word this. top one the red is always below blue, the bottom one, the red crosses the blue after the phase transition).
 
