@@ -11,6 +11,8 @@ from qlp.mds.qubo import get_mds_qubo
 from qlp.tdse import convert_params, embed_qubo_example
 
 from django.conf import settings
+from ta_plots import get_tdse_data, plot_tdse
+
 
 label_params = dict()
 label_params["fontsize"] = 7
@@ -358,27 +360,29 @@ def plot_distribution(adata):
 
 
 def plot_aggregate(adata, tag):
-    plt.figure("full probability", figsize=(7, 4))
-    ax = plt.axes([0.15, 0.15, 0.8, 0.8])
-    for idx, key in enumerate(adata):
-        if key > 0:
-            color = red
-        else:
-            color = blue
-        tdse = adata[key].tdse
-        idx, en, evec = tdse.ground_state_degeneracy(tdse.IsingH, 2e-2, debug=False)
-        ax.errorbar(
-            x=adata[key].time,
-            y=adata[key].prob,
-            color=color,
-            label=f"{int(key*2*100)}%",
-        )
-    ax.set_xlabel("normalized time")
-    ax.set_ylabel("MDS probability")
-    ax.legend()
-    plt.draw()
-    plt.savefig(f"full_prob_{tag}.pdf", transparent=True)
+    if False:
+        plt.figure("full probability", figsize=(7, 4))
+        ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+        for idx, key in enumerate(adata):
+            if key > 0:
+                color = red
+            else:
+                color = blue
+            tdse = adata[key].tdse
+            idx, en, evec = tdse.ground_state_degeneracy(tdse.IsingH, 2e-2, debug=False)
+            ax.errorbar(
+                x=adata[key].time,
+                y=adata[key].prob,
+                color=color,
+                label=f"{int(key*2*100)}%",
+            )
+        ax.set_xlabel("normalized time")
+        ax.set_ylabel("MDS probability")
+        ax.legend()
+        plt.draw()
+        plt.savefig(f"full_prob_{tag}.pdf", transparent=True)
 
+    dwave_data = get_tdse_data()
     plt.figure("prob", figsize=(7, 4))
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
     x = list(adata.keys())
@@ -389,58 +393,62 @@ def plot_aggregate(adata, tag):
         else:
             color = "k"
         ax.errorbar(x=2 * xi, y=y[idx], ls="none", marker="o", color=color)
+    X = 2*np.array([-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05])
+    y = dwave_data["Binary"]
+    ax.errorbar(x=X, y=y, ls="none", marker='o', color=red, label="D-Wave")
     ax.set_xlabel("offset range (%)")
     ax.set_ylabel("MDS probability")
     if tag == "deco":
-        ax.set_ylim([0.83, 0.88])
+        ax.set_ylim([0.8, 0.93])
     else:
         ax.set_ylim([0.9938, 0.99485])
     plt.draw()
     plt.savefig(f"./sim_{tag}.pdf", transparent=True)
 
-    reg = 1e-9
-    plt.figure(f"mutual information", figsize=(7, 4))
-    ax = plt.axes([0.15, 0.15, 0.8, 0.8])
-    mi = dict()
-    for idx, key in enumerate(adata):
-        if key > 0:
-            color = red
-        else:
-            color = blue
-        sol = adata[key].sol
-        tdse = adata[key].tdse
-        entropy_params = {"nA": 2, "indicesA": "abcdfabceg->dfeg", "reg": reg}
-        entropyA = np.asarray(
-            [tdse.ent_entropy(sol.y[:, i], **entropy_params) for i in range(sol.t.size)]
-        ).real
-        entropy_params = {"nA": 3, "indicesA": "aceghbdfgh->acebdf", "reg": reg}
-        entropyB = np.asarray(
-            [tdse.ent_entropy(sol.y[:, i], **entropy_params) for i in range(sol.t.size)]
-        ).real
-        entropyAB = np.asarray(
-            [tdse.vonNeumann_entropy(sol.y[:, i], reg) for i in range(sol.t.size)]
-        ).real
-        mutual_information = entropyA + entropyB - entropyAB
-        ax.errorbar(
-            x=adata[key].time,
-            y=mutual_information,
-            color=color,
-            label=f"{int(key*2*100)}%",
-        )
-        mi[key] = mutual_information
-    ax.set_xlabel("normalized time")
-    ax.set_ylabel("mutual information")
-    ax.legend()
-    plt.draw()
-    plt.savefig(f"mutual_info_{tag}.pdf", transparent=True)
+    if False:
+        reg = 1e-9
+        plt.figure(f"mutual information", figsize=(7, 4))
+        ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+        mi = dict()
+        for idx, key in enumerate(adata):
+            if key > 0:
+                color = red
+            else:
+                color = blue
+            sol = adata[key].sol
+            tdse = adata[key].tdse
+            entropy_params = {"nA": 2, "indicesA": "abcdfabceg->dfeg", "reg": reg}
+            entropyA = np.asarray(
+                [tdse.ent_entropy(sol.y[:, i], **entropy_params) for i in range(sol.t.size)]
+            ).real
+            entropy_params = {"nA": 3, "indicesA": "aceghbdfgh->acebdf", "reg": reg}
+            entropyB = np.asarray(
+                [tdse.ent_entropy(sol.y[:, i], **entropy_params) for i in range(sol.t.size)]
+            ).real
+            entropyAB = np.asarray(
+                [tdse.vonNeumann_entropy(sol.y[:, i], reg) for i in range(sol.t.size)]
+            ).real
+            mutual_information = entropyA + entropyB - entropyAB
+            ax.errorbar(
+                x=adata[key].time,
+                y=mutual_information,
+                color=color,
+                label=f"{int(key*2*100)}%",
+            )
+            mi[key] = mutual_information
+        ax.set_xlabel("normalized time")
+        ax.set_ylabel("mutual information")
+        ax.legend()
+        plt.draw()
+        plt.savefig(f"mutual_info_{tag}.pdf", transparent=True)
 
-    plt.figure(f"final mutual information", figsize=(7, 4))
-    ax = plt.axes([0.15, 0.15, 0.8, 0.8])
-    x = list(mi.keys())
-    y = [mi[key][-1] for key in x]
-    ax.errorbar(x=x, y=y, ls="None", marker="o")
-    ax.set_xlabel("offset")
-    plt.show()
+        plt.figure(f"final mutual information", figsize=(7, 4))
+        ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+        x = list(mi.keys())
+        y = [mi[key][-1] for key in x]
+        ax.errorbar(x=x, y=y, ls="None", marker="o")
+        ax.set_xlabel("offset")
+        plt.show()
 
 
 def plot_gamma(gdata):
@@ -611,10 +619,10 @@ if __name__ == "__main__":
     # vs offset
     adata = aggregate()
     # print(list(adata.keys()))
-    # plot_aggregate(adata, "deco")
+    plot_aggregate(adata, "deco")
     # plot_mbl(adata)
     # plot_centropy(adata)
-    plot_distribution(adata)
+    #plot_distribution(adata)
 
     # plot AS
     # print(list(adata.keys()))

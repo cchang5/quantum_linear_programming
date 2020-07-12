@@ -321,9 +321,9 @@ In order to understand the effects of annealing offsets, we simulate the anneali
 
 \begin{figure}
 	\centering
-	\includegraphics[width=\columnwidth]{./figures/dwave1us.pdf}
+	%\includegraphics[width=\columnwidth]{./figures/dwave1us.pdf}
 	\includegraphics[width=\columnwidth]{./figures/sim_deco.pdf}
-	\caption{ (Top) The probability of finding the MDS for $G(2)$ from DWave. The machine parameters are identical to Sec.~\ref{sec:discussion:qa} with the exception of shortening the total annealing time to 1 $\mu s$ to accommodate reasonable simulation times. (Middle) Result from simulation with decoherence and (Bottom) simulation without decoherence. In both simulations, at +10\% offset, the probability of finding the ground state vanishes. The red simulation points are not present in the DWave result.}
+	\caption{ {\color{red} New figure, Dwave on top of simulation (black).} The probability of finding the MDS for $G(2)$ from DWave. The machine parameters are identical to Sec.~\ref{sec:discussion:qa} with the exception of shortening the total annealing time to 1 $\mu s$ to accommodate reasonable simulation times. (Middle) Result from simulation with decoherence and (Bottom) simulation without decoherence. In both simulations, at +10\% offset, the probability of finding the ground state vanishes. The red simulation points are not present in the DWave result.}
 	\label{fig:dwave1us}
 \end{figure}
 
@@ -335,16 +335,19 @@ We then set an effective $T_1$ coherence time to 60 $ns$ in order to match the D
 	\centering
 	\includegraphics[width=\columnwidth]{./figures/spectrum.pdf}
 	\includegraphics[width=\columnwidth]{./figures/spectrum_offset.pdf}
-	\caption{The energy spectrum of the first 5 states of the time-dependent Hamiltonian (Top) without annealing offsets and (Bottom) -10\% annealing offset. The spectrum in dimensionless units at the end of the anneal is an integer spectrum and correspond to the number of vertices in the dominating set. For $G(2)$, the MDS has 1 vertex. Annealing offsets lift the ground-state degeneracy.}
+	\caption{{\color{red} Maybe combine these 2 plots to 1 as well? same color for same offset.} The energy spectrum of the first 5 states of the time-dependent Hamiltonian (Top) without annealing offsets and (Bottom) -10\% annealing offset. The spectrum in dimensionless units at the end of the anneal is an integer spectrum and correspond to the number of vertices in the dominating set. For $G(2)$, the MDS has 1 vertex. Annealing offsets lift the ground-state degeneracy.}
 	\label{fig:spectrum}
 \end{figure}
 
 The probability of finding the MDS from simulation is given in Fig.~\ref{fig:dwave_offset} (Bottom). We observe that the simulation captures the rough features of the experiment, including a steady improvement for negative offsets. Additionally, the range of probabilities in the simulation non-trivially match the range observed in experiment suggesting that the temperature and coherence time parameters are consistent with experiment.
 
+{\color{red} Talk about final state distribution here. Reference figure, make figure prettier, add DWave final state distribution to figure.}
+
 \subsection{Many-Body Localization}
 
-We provide further evidence of the competing effects between decoherence and many-body localization in this section.
+We provide further evidence that suggests the advancement of strong external fields leads to a delay in the phase transition, and increase in many-body localization, and results in a higher probability to recover the true ground state in this section.
 
+{\color{red} The following paragraphs are not relevant now. Need new story.}
 Intuitively, we want the system to explore a larger state space to increase the probability for the system to reach the final ground state. That is, we want the system to have ergodicity in order to avoid MBL. On the other hand, decoherence in the hardware leads to the loss of quantum information. It is therefore desirable to minimize the effect of relaxation. The interplay between these two competing effects can be observed by looking at the time-dependent probability of reaching the final ground state, and the mutual information. The mutual information is defined as $I(A:B)=S(\rho_A)+S(\rho_B)-S(\rho_{A,B})$, which quantifies how many bits of quantum information is communicated between partition $A$ and partition $B$ of the total system. $S(\rho)=-\mbox{Tr}\rho \log_2 \rho$ is the von Neumann entropy of density matrix $\rho$. {\color{blue} $\rho_{A,B}$ is the density matrix for the total system. $\rho_{A}=\mbox{Tr}_{B} (\rho_{A,B})$ is the reduced density matrix for the subsystem A.}
 
 \begin{figure*}
@@ -358,7 +361,7 @@ Intuitively, we want the system to explore a larger state space to increase the 
 \begin{figure}
 	\centering
 	\includegraphics[width=\columnwidth]{./figures/final_state_distribution.pdf}
-	\caption{caption}
+	\caption{{\color{red}I need to add dwave final state distribution here too.}}
 	\label{fig:final_state_distribution}
 \end{figure}
 
@@ -375,7 +378,7 @@ Study ground state degeneracy by plotting distribution of states.
 \subsubsection{The Lindblad Equation}
 \label{sec:methods:lindblad}
 Say what the simulator is solving
-
+{\color{red} Need to change to talk about full counting statistics.}
 {\color{blue}
 
 
