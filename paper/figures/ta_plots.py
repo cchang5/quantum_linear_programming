@@ -562,11 +562,11 @@ def getallspinconfig():
                 scount[at][v][tuple(yi)] += 1
     # get prob vs computational basis
     n=5
-    pr = np.zeros(2 ** n)
     prdict = dict()
     for at in anneal_time:
         prdict[at] = dict()
         for v in vrange:
+            pr = np.zeros(2 ** n)
             for I in range(2 ** n):
                 dwstate = np.abs(np.array([int(i) for i in '{0:05b}'.format(I)]) - 1)  # map 0 <-> 1
                 pr[I] = scount[at][v][(tuple(dwstate))]

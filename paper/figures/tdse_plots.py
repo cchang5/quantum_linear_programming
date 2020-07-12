@@ -11,7 +11,7 @@ from qlp.mds.qubo import get_mds_qubo
 from qlp.tdse import convert_params, embed_qubo_example
 
 from django.conf import settings
-from ta_plots import get_tdse_data, plot_tdse
+from ta_plots import get_tdse_data, plot_tdse, getallspinconfig
 
 
 label_params = dict()
@@ -220,15 +220,19 @@ def plot_centropy(adata):
 
 
 def plot_distribution(adata):
+    prdict = getallspinconfig()
+
     plt.figure("distribution", figsize=(7, 11))
     rhodim = 2 ** 5
-    height = 0.08
-    top = 0.95
+    height = 0.085
+    top = 0.98
     ax0 = plt.axes([0.15, top - height, 0.8, height])
     ax0.bar(
         x=np.linspace(0, rhodim - 1, rhodim),
         height=np.diagonal(adata[-0.05].sol.y[:, -1].reshape((rhodim, rhodim))).real,
         width=1,
+        color=red,
+        label="simulation"
     )
     ax0.get_xaxis().set_ticks([])
     ax0.set_ylim([0, 1.1])
@@ -241,6 +245,8 @@ def plot_distribution(adata):
         x=np.linspace(0, rhodim - 1, rhodim),
         height=np.diagonal(adata[-0.04].sol.y[:, -1].reshape((rhodim, rhodim))).real,
         width=1,
+        color=red
+
     )
     ax1.set_ylim([0, 1.1])
     ax1.text(
@@ -253,6 +259,7 @@ def plot_distribution(adata):
         x=np.linspace(0, rhodim - 1, rhodim),
         height=np.diagonal(adata[-0.03].sol.y[:, -1].reshape((rhodim, rhodim))).real,
         width=1,
+        color=red
     )
     ax2.set_ylim([0, 1.1])
     ax2.text(
@@ -265,6 +272,7 @@ def plot_distribution(adata):
         x=np.linspace(0, rhodim - 1, rhodim),
         height=np.diagonal(adata[-0.02].sol.y[:, -1].reshape((rhodim, rhodim))).real,
         width=1,
+        color=red
     )
     ax3.set_ylim([0, 1.1])
     ax3.text(
@@ -277,6 +285,7 @@ def plot_distribution(adata):
         x=np.linspace(0, rhodim - 1, rhodim),
         height=np.diagonal(adata[-0.01].sol.y[:, -1].reshape((rhodim, rhodim))).real,
         width=1,
+        color=red
     )
     ax4.set_ylim([0, 1.1])
     ax4.text(
@@ -289,6 +298,7 @@ def plot_distribution(adata):
         x=np.linspace(0, rhodim - 1, rhodim),
         height=np.diagonal(adata[0.0].sol.y[:, -1].reshape((rhodim, rhodim))).real,
         width=1,
+        color=red
     )
     ax5.set_ylim([0, 1.1])
     ax5.text(
@@ -301,6 +311,7 @@ def plot_distribution(adata):
         x=np.linspace(0, rhodim - 1, rhodim),
         height=np.diagonal(adata[0.01].sol.y[:, -1].reshape((rhodim, rhodim))).real,
         width=1,
+        color=red
     )
     ax6.set_ylim([0, 1.1])
     ax6.text(
@@ -313,6 +324,7 @@ def plot_distribution(adata):
         x=np.linspace(0, rhodim - 1, rhodim),
         height=np.diagonal(adata[0.02].sol.y[:, -1].reshape((rhodim, rhodim))).real,
         width=1,
+        color=red
     )
     ax7.set_ylim([0, 1.1])
     ax7.text(
@@ -325,6 +337,7 @@ def plot_distribution(adata):
         x=np.linspace(0, rhodim - 1, rhodim),
         height=np.diagonal(adata[0.03].sol.y[:, -1].reshape((rhodim, rhodim))).real,
         width=1,
+        color=red
     )
     ax8.set_ylim([0, 1.1])
     ax8.text(
@@ -337,6 +350,7 @@ def plot_distribution(adata):
         x=np.linspace(0, rhodim - 1, rhodim),
         height=np.diagonal(adata[0.04].sol.y[:, -1].reshape((rhodim, rhodim))).real,
         width=1,
+        color=red
     )
     ax9.set_ylim([0, 1.1])
     ax9.text(
@@ -349,12 +363,27 @@ def plot_distribution(adata):
         x=np.linspace(0, rhodim - 1, rhodim),
         height=np.diagonal(adata[0.05].sol.y[:, -1].reshape((rhodim, rhodim))).real,
         width=1,
+        color=red
     )
     ax10.set_ylim([0, 1.1])
     ax10.text(
         top-0.03, top-0.13, "10% offset", horizontalalignment="right", transform=ax10.transAxes
     )
 
+    ax0.bar(x=range(len(prdict[1][-0.05])), height=prdict[1][-0.05], width=1, alpha=0.5, color=blue, label="D-Wave")
+    ax1.bar(x=range(len(prdict[1][-0.04])), height=prdict[1][-0.04], width=1, alpha=0.5, color=blue)
+    ax2.bar(x=range(len(prdict[1][-0.03])), height=prdict[1][-0.03], width=1, alpha=0.5, color=blue,)
+    ax3.bar(x=range(len(prdict[1][-0.02])), height=prdict[1][-0.02], width=1, alpha=0.5, color=blue,)
+    ax4.bar(x=range(len(prdict[1][-0.01])), height=prdict[1][-0.01], width=1, alpha=0.5, color=blue,)
+    ax5.bar(x=range(len(prdict[1][0.0])), height=prdict[1][0.0], width=1, alpha=0.5, color=blue,)
+    ax6.bar(x=range(len(prdict[1][0.01])), height=prdict[1][0.01], width=1, alpha=0.5, color=blue,)
+    ax7.bar(x=range(len(prdict[1][0.02])), height=prdict[1][0.02], width=1, alpha=0.5, color=blue,)
+    ax8.bar(x=range(len(prdict[1][0.03])), height=prdict[1][0.03], width=1, alpha=0.5, color=blue,)
+    ax9.bar(x=range(len(prdict[1][0.04])), height=prdict[1][0.04], width=1, alpha=0.5, color=blue,)
+    ax10.bar(x=range(len(prdict[1][0.05])), height=prdict[1][0.05], width=1, alpha=0.5, color=blue,)
+    ax0.legend(loc=2)
+    ax5.set_ylabel("probability")
+    ax10.set_xlabel("eigenstates (00000 to 11111)")
     plt.draw()
     plt.savefig("./final_state_distribution.pdf", transparent=True)
 
@@ -619,10 +648,10 @@ if __name__ == "__main__":
     # vs offset
     adata = aggregate()
     # print(list(adata.keys()))
-    plot_aggregate(adata, "deco")
+    #plot_aggregate(adata, "deco")
     # plot_mbl(adata)
     # plot_centropy(adata)
-    #plot_distribution(adata)
+    plot_distribution(adata)
 
     # plot AS
     # print(list(adata.keys()))
