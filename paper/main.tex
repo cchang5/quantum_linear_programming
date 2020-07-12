@@ -379,12 +379,12 @@ Study ground state degeneracy by plotting distribution of states.
 \label{sec:methods:lindblad}
 Say what the simulator is solving
 {\color{red} Need to change to talk about full counting statistics.}
-{\color{blue}
+{\color{red}
 
 
 To solve for time evolution dynamics of quantum annealing including thermal and the decoherence effects, we solve for the master equation in Lindblad form
 \begin{align}
-\partial_t \rho (t) =  \frac{-i}{\hbar} [H(t) , \rho(t)] + \sum_j (2L_j \rho(t) L_j^\dagger - \{ L^\dagger_j L_j, \rho(t) \}) ,
+\partial_t \rho (t) =  \frac{-i}{\hbar} [H(t) , \rho(t)] + \mathcal{L}[\rho (t)] ,
 \end{align}
 where $\rho (t)$ is the density matrix at time $t$. $H(t)$ is the time-dependent Hamiltonian 
 \begin{align}
@@ -392,7 +392,23 @@ where $\rho (t)$ is the density matrix at time $t$. $H(t)$ is the time-dependent
  H_{anneal}(t)&  =  - \sum_i  A_i(t)\sigma^x_i & \notag \\ 
  +&  \sum_{i>j} \sqrt{B_{i}(t)B_{j}(t)} J_{ij} \sigma^z_i \sigma^z_j +\sum_i B_{i}(t) h_i \sigma^z_i  ,&
 \end{align}
-where $A_i(t)$ and $B_{i}(t)$ are site-dependent annealing schedule functions. The site dependency takes into account of the annealing offset. $[,]$ denotes the Lie bracket. $L_j$ are the Lindblad operators for decoherence. $\{, \}$ denotes the anti-commutator. In this study we only include a minimal model for decoherence, i.e., the amplitude damping for non-interacting qubits. The Lindblad operator is $L_j=\sqrt{\gamma} \sigma^{+}_j$ for $h_j>0$ and $L_j=\sqrt{\gamma} \sigma^{-}_j$ for $h_j<0$, where $\gamma = 1/T_1$ is the decoherence rate for relaxation time $T_1$. For simplicity we assume all qubits having the same relaxation time. The initial condition is the Gibbs canonical ensemble
+where $A_i(t)$ and $B_{i}(t)$ are site-dependent annealing schedule functions. The site dependency takes into account of the annealing offset. $[,]$ denotes the Lie bracket and $\mathcal{L}$ is the Lindblad operator.
+
+For full counting statistics the Lindblad operator is 
+\begin{align}
+\mathcal{L}[\rho (t)] &=& \Gamma \sum_j   (2 S_j \rho(t) S_j^\dagger - \{ S^\dagger_j S_j, \rho(t) \}) \\
+&& + e^{-\beta \Delta E_j} (2 S_j^\dagger \rho(t) S_j - \{ S_j S^\dagger_j, \rho(t) \} )
+\end{align}
+where $j$ index the inter-level spacing for energy difference $\Delta E_j$, $\{, \}$ denotes the anti-commutator, $\Gamma = 1/T_c$ is the decoherence rate for coherence time $T_c$.
+
+
+%In this study we only include a minimal model for decoherence, i.e., the amplitude damping for non-interacting qubits. The Lindblad operator is $L_j=\sqrt{\gamma} \sigma^{+}_j$ for $h_j>0$ and $L_j=\sqrt{\gamma} \sigma^{-}_j$ for $h_j<0$, where  
+
+
+}
+ 
+ {\color{blue}
+The initial condition is the Gibbs canonical ensemble
 \begin{equation}
 \rho (0) =  \frac{e^{-\beta H(0)}}{\mbox{Tr}[e^{-\beta H(0)}]} ,
 \end{equation}
@@ -411,10 +427,29 @@ where the projection operator onto the degenerated ground states subspace is def
 
 With anneal offsets
 
+
+
+
+
+
 \subsubsection{Other Simulation Details}
 Temperature
 Initial wave function choices
 RK tolerance
+
+{\color{red}
+	
+To check the correctness of simulator and unit conversion, we tested a simple annealing schedule for pure transverse field, i.e. $A(s)=A(0)$ and $B(s)=0$. The initial state is pure zero state $\rho=|00...0\rangle \langle 00...0|$. In this case the analytical solution can be obtained for the wave function oscillation. The time-dependent probability is $P_{0}=\cos^{2n}(s)=\cos^{2n}(t/T)$ where $n$ is the number of qubits and $T$ is the annealing time. For annealing time $T=1/A(0)$, we expect to see perfect one-period oscillation. The energy spectrum for this system can be analytically obtained, so we also checked the Boltzmann distribution in the initial density matrix construction.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\columnwidth]{./figures/check.png}
+	\caption{check}
+	\label{fig:check}
+\end{figure}
+
+
+}
 
 \subsubsection{Decoherence Time}
 \label{sec:methods:deco}
