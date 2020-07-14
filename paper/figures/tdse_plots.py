@@ -68,8 +68,8 @@ class Data:
         # solver params
         solver_params = dict()
         solver_params["method"] = "RK45"
-        solver_params["rtol"] = 1e-7
-        solver_params["atol"] = 1e-8
+        solver_params["rtol"] = 1.2e-7
+        solver_params["atol"] = 1.2e-8
 
         params = {
             "offset": offset_params,
@@ -487,7 +487,7 @@ def plot_gamma(gdata):
     X = 1 / (np.array(x) * 1e9) * 1e9
     y = [gdata[key].prob[-1] for key in x]
     for idx, xi in enumerate(X):
-        if idx == 5:
+        if idx == 7:
             color = blue
         else:
             color = "k"
@@ -646,12 +646,12 @@ def plot_spectrum(adata):
 
 if __name__ == "__main__":
     # vs offset
-    adata = aggregate()
+    #adata = aggregate()
     # print(list(adata.keys()))
     #plot_aggregate(adata, "deco")
     # plot_mbl(adata)
     # plot_centropy(adata)
-    plot_distribution(adata)
+    #plot_distribution(adata)
 
     # plot AS
     # print(list(adata.keys()))
@@ -665,5 +665,5 @@ if __name__ == "__main__":
     # plot_aggregate(bdata, "nodeco")
 
     # vs gamma
-    # gdata = aggregate_gamma()
-    # plot_gamma(gdata)
+    gdata = aggregate_gamma()
+    plot_gamma(gdata)
