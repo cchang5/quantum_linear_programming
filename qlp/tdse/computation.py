@@ -498,7 +498,7 @@ class TDSE:
         # print(self.Focksize)
         ymat = y.reshape((self.Focksize, self.Focksize))
         H = self.annealingH(t)
-        lindblad = self.get_lindblad2(ymat, self.gamma, H, t)
+        lindblad = self.get_lindblad(ymat, self.gamma, H, t)
         ymat = -1j * (H.dot(ymat) - ymat @ H)
         ymat += lindblad
         f = ymat.reshape(self.Focksize ** 2)
