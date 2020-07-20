@@ -498,8 +498,14 @@ class TDSE:
         # print(self.Focksize)
         ymat = y.reshape((self.Focksize, self.Focksize))
         H = self.annealingH(t)
-        lindblad = self.get_lindblad(ymat, self.gamma, H, t)
-        lindblad_local = self.get_lindblad2(ymat, self.gamma_local, H, t)
+        if self.gamma == 0:
+            lindblad = 0
+        else:
+            lindblad = self.get_lindblad(ymat, self.gamma, H, t) # full counting
+        if self.gamma_local == 0:
+            lindblad_local = 0
+        else:
+            lindblad_local = self.get_lindblad2(ymat, self.gamma_local, H, t) # local decoherence
         ymat = -1j * (H.dot(ymat) - ymat @ H)
         ymat += lindblad
         ymat += lindblad_local

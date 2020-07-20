@@ -1,0 +1,19 @@
+\BOOKMARK [1][-]{section*.1}{INTRODUCTION}{}% 1
+\BOOKMARK [1][-]{section*.2}{RESULTS}{}% 2
+\BOOKMARK [2][-]{section*.3}{Integer Programming Mapping to QUBO}{section*.2}% 3
+\BOOKMARK [2][-]{section*.4}{Application to the Dominating Set Problem}{section*.2}% 4
+\BOOKMARK [3][-]{section*.5}{Minimum Dominating Set}{section*.4}% 5
+\BOOKMARK [1][-]{section*.6}{DISCUSSION}{}% 6
+\BOOKMARK [2][-]{section*.7}{Finding the Dominating Set with a Quantum Annealer}{section*.6}% 7
+\BOOKMARK [3][-]{section*.8}{Modified annealing schedule}{section*.7}% 8
+\BOOKMARK [2][-]{section*.9}{Simulation Results}{section*.6}% 9
+\BOOKMARK [2][-]{section*.10}{Many-Body Localization}{section*.6}% 10
+\BOOKMARK [1][-]{section*.11}{METHODS}{}% 11
+\BOOKMARK [2][-]{section*.12}{Simulation Details}{section*.11}% 12
+\BOOKMARK [3][-]{section*.13}{The Lindblad Equation}{section*.12}% 13
+\BOOKMARK [3][-]{section*.14}{Other Simulation Details}{section*.12}% 14
+\BOOKMARK [3][-]{section*.15}{Decoherence Time}{section*.12}% 15
+\BOOKMARK [1][-]{section*.16}{DATA AVAILABILITY}{}% 16
+\BOOKMARK [1][-]{section*.17}{ACKNOWLEDGEMENTS}{}% 17
+\BOOKMARK [1][-]{section*.18}{AUTHOR CONTRIBUTIONS}{}% 18
+\BOOKMARK [1][-]{section*.19}{ADDITIONAL INFORMATION}{}% 19
