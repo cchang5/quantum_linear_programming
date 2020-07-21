@@ -179,6 +179,7 @@ class TDSE:
         self.IsingH_exact = self._constructIsingH(
             self._Bij(self.AS.B(1)) * self.ising["Jij_exact"], self.AS.B(1) * self.ising["hi_exact"]
         )
+        self.gammadict = {"g": [], "glocal": [], "s": []}
 
     def hash_dict(self, d):
         hash = hashlib.md5(
@@ -501,11 +502,16 @@ class TDSE:
         if self.gamma == 0:
             lindblad = 0
         else:
-            lindblad = self.get_lindblad(ymat, self.gamma, H, t) # full counting
+            gamma_t = np.mean(self.gamma*self.AS.B(t)/self.AS.B(1))
+            lindblad = self.get_lindblad(ymat, gamma_t, H, t) # full counting
         if self.gamma_local == 0:
             lindblad_local = 0
         else:
-            lindblad_local = self.get_lindblad2(ymat, self.gamma_local, H, t) # local decoherence
+            glocal_t = np.mean(self.gamma_local*self.AS.A(t)/self.AS.A(0))
+            lindblad_local = self.get_lindblad2(ymat, glocal_t, H, t) # local decoherence
+        self.gammadict["s"].append(t)
+        self.gammadict["g"].append(gamma_t)
+        self.gammadict["glocal"].append(glocal_t)
         ymat = -1j * (H.dot(ymat) - ymat @ H)
         ymat += lindblad
         ymat += lindblad_local
