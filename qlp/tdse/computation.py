@@ -329,7 +329,7 @@ class TDSE:
         return (1.0 + 0.0j) * np.array(eigvector[:, 0]).flatten()
 
     def init_densitymatrix(
-            self, temp: float = 13e-3, dtype: str = "transverse", debug: bool = False
+            self, temp: float = 13e-3, temp_local: float = 13e-3, dtype: str = "transverse", debug: bool = False
     ) -> ndarray:
         """Returns density matrix for s=0
 
@@ -347,6 +347,8 @@ class TDSE:
         one = 1e-9  # GHz s
         beta = 1 / (temp * kb / h * one)  # inverse temperature [h/GHz]
         self.beta = beta
+        beta_local = 1 / (temp_local * kb / h * one)
+        self.beta_local = beta_local
         # construct initial density matrix
         eigvalue, eigvector = self.init_eigen(dtype)
 
@@ -502,16 +504,19 @@ class TDSE:
         if self.gamma == 0:
             lindblad = 0
         else:
-            gamma_t = np.mean(self.gamma*self.AS.B(t)/self.AS.B(1))
+            #gamma_t = np.mean(self.gamma*(self.AS.B(t)/self.AS.B(1)))
+            gamma_t = self.gamma*np.exp(-((t-1)/0.05)**2)
+            #gamma_t = self.gamma
             lindblad = self.get_lindblad(ymat, gamma_t, H, t) # full counting
         if self.gamma_local == 0:
             lindblad_local = 0
         else:
-            glocal_t = np.mean(self.gamma_local*self.AS.A(t)/self.AS.A(0))
+            #glocal_t = np.mean(self.gamma_local*self.AS.A(t)/self.AS.A(0))
+            glocal_t = self.gamma_local
             lindblad_local = self.get_lindblad2(ymat, glocal_t, H, t) # local decoherence
-        self.gammadict["s"].append(t)
-        self.gammadict["g"].append(gamma_t)
-        self.gammadict["glocal"].append(glocal_t)
+        #self.gammadict["s"].append(t)
+        #self.gammadict["g"].append(gamma_t)
+        #self.gammadict["glocal"].append(glocal_t)
         ymat = -1j * (H.dot(ymat) - ymat @ H)
         ymat += lindblad
         ymat += lindblad_local
@@ -524,7 +529,7 @@ class TDSE:
         lindblad = np.zeros(((self.Focksize, self.Focksize)), dtype=complex)
         for i in range(self.graph["total_qubits"]):
             gap = 2.0 * abs((self.ising["hi"])[i])
-            e = np.exp(-self.beta * self.AS.B(t) * gap)
+            e = np.exp(-self.beta_local * self.AS.B(t) * gap)
             if ((self.ising["hi"])[i] > 0):
                 lindblad = lindblad + 2.0 * (self.Fockplus[i]) @ (ymat) @ (self.Fockminus[i]) - (self.Fockproj0[i]) @ (
                     ymat) - (ymat) @ (self.Fockproj0[i])
