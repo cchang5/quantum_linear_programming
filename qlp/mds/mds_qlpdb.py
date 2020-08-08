@@ -60,6 +60,10 @@ class AnnealOffset:
                     else:
                         offset_fcn.append(offset_min - offset_range)
             return offset_fcn, offset_tag
+        if self.tag == "test":
+            offset_tag = "test"
+            offset_fcn = [offset_min, 0]
+            return offset_fcn, offset_tag
         if self.tag == "negbinary":
             offset_tag = f"FixEmbedding_NegBinary_{offset_min}_{offset_range}_v3_1"
             offset_fcn = []
@@ -127,13 +131,13 @@ class AnnealOffset:
 
 
 def retry_embedding(
-    sampler,
-    qubo_dict,
-    qpu_graph,
-    graph_tag,
-    target_min=-0.1,
-    target_range=0.12,
-    n_tries=100,
+        sampler,
+        qubo_dict,
+        qpu_graph,
+        graph_tag,
+        target_min=-0.1,
+        target_range=0.12,
+        n_tries=100,
 ):
     def get_embed_min_max_offset(sampler, embedding):
         embed = FixedEmbeddingComposite(sampler, embedding)
@@ -151,7 +155,7 @@ def retry_embedding(
 
     try:
         with open(
-            f"../qlp/mds/embeddings/{graph_tag}_{target_min}_{target_range}_v6.yaml", "r"
+                f"../qlp/mds/embeddings/{graph_tag}_{target_min}_{target_range}_v6.yaml", "r"
         ) as file:
             embedding = yaml.safe_load(file)
         embed, min_offset, max_offset = get_embed_min_max_offset(sampler, embedding)
@@ -172,8 +176,8 @@ def retry_embedding(
                 )
             else:
                 with open(
-                    f"../qlp/mds/embeddings/{graph_tag}_{target_min}_{target_range}_v6.yaml",
-                    "w",
+                        f"../qlp/mds/embeddings/{graph_tag}_{target_min}_{target_range}_v6.yaml",
+                        "w",
                 ) as file:
                     safe_embed = {int(k): list(embedding[k]) for k in embedding}
                     yaml.safe_dump(safe_embed, file)
@@ -303,8 +307,8 @@ def experiment_summary(machine, settings, penalty, chain_strength, tag):
     params["tag"] = tag
     params["settings_hash"] = hashlib.md5(
         str([[key, params["settings"][key]] for key in sorted(params["settings"])])
-        .replace(" ", "")
-        .encode("utf-8")
+            .replace(" ", "")
+            .encode("utf-8")
     ).hexdigest()
     return params
 
@@ -313,7 +317,7 @@ def data_summary(raw, graph_params, experiment_params):
     params = dict()
     params["spin_config"] = raw.iloc[:, : graph_params["total_qubits"]].values
     params["energy"] = (
-        raw["energy"].values + experiment_params["p"] * graph_params["total_vertices"]
+            raw["energy"].values + experiment_params["p"] * graph_params["total_vertices"]
     )
     params["chain_break_fraction"] = raw["chain_break_fraction"].values
     params["constraint_satisfaction"] = np.equal(
