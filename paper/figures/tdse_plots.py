@@ -45,8 +45,10 @@ class Data:
         # wave params
         wave_params = dict()
         wave_params["type"] = "mixed"
-        wave_params["temp"] = 0.04
-        wave_params["gamma"] = 1 / 60
+        wave_params["temp"] = 0.001
+        wave_params["temp_local"] = 0.1
+        wave_params["gamma"] = 1 / 0.1
+        wave_params["gamma_local"] = 1/8
         wave_params["initial_wavefunction"] = "transverse"
 
         # graph params
@@ -68,8 +70,8 @@ class Data:
         # solver params
         solver_params = dict()
         solver_params["method"] = "RK45"
-        solver_params["rtol"] = 1.2e-7
-        solver_params["atol"] = 1.2e-8
+        solver_params["rtol"] = 9e-8
+        solver_params["atol"] = 9e-9
 
         params = {
             "offset": offset_params,
@@ -424,11 +426,11 @@ def plot_aggregate(adata, tag):
         ax.errorbar(x=2 * xi, y=y[idx], ls="none", marker="o", color=color)
     X = 2*np.array([-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05])
     y = dwave_data["Binary"]
-    ax.errorbar(x=X, y=y, ls="none", marker='o', color=red, label="D-Wave")
+    #ax.errorbar(x=X, y=y, ls="none", marker='o', color=red, label="D-Wave")
     ax.set_xlabel("offset range (%)")
     ax.set_ylabel("MDS probability")
     if tag == "deco":
-        ax.set_ylim([0.8, 0.93])
+        ax.set_ylim([0.8985, 0.9017])
     else:
         ax.set_ylim([0.9938, 0.99485])
     plt.draw()
@@ -646,12 +648,12 @@ def plot_spectrum(adata):
 
 if __name__ == "__main__":
     # vs offset
-    #adata = aggregate()
+    adata = aggregate()
     # print(list(adata.keys()))
-    #plot_aggregate(adata, "deco")
+    plot_aggregate(adata, "deco")
     # plot_mbl(adata)
     # plot_centropy(adata)
-    #plot_distribution(adata)
+    plot_distribution(adata)
 
     # plot AS
     # print(list(adata.keys()))
@@ -665,5 +667,5 @@ if __name__ == "__main__":
     # plot_aggregate(bdata, "nodeco")
 
     # vs gamma
-    gdata = aggregate_gamma()
-    plot_gamma(gdata)
+    #gdata = aggregate_gamma()
+    #plot_gamma(gdata)
