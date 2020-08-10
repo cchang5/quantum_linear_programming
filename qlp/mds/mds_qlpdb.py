@@ -337,4 +337,6 @@ def QUBO_to_Ising(Q):
     uno = np.ones(len(QQ))
     h = q / 2 + np.dot(QQ, uno) / 4
     g = np.dot(uno, np.dot(QD, uno)) / 4.0 + np.dot(q, uno) / 2.0
+    # 0-1 basis transform
+    h=(-1)*h
     return (J, h, g)
