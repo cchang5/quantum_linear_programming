@@ -47,6 +47,16 @@ class AnnealOffset:
                 np.zeros(len(h)),
                 f"FixEmbedding_Constant_{offset_min}_{offset_range}_v3_1",
             )
+        if self.tag == "single_sided_binary":
+            offset_tag = f"FixEmbedding_Single_Sided_Binary_{offset_min}_v0"
+            offset_fcn = []
+            hmid = abshrange * 0.5 + min(abs(h))
+            for hi in h:
+                if abs(hi) <= hmid:
+                    offset_fcn.append(offset_min)
+                else:
+                    offset_fcn.append(0)
+            return offset_fcn, offset_tag
         if self.tag == "binary":
             offset_tag = f"FixEmbedding_Binary_{offset_min}_{offset_range}_v6.0_80"
             offset_fcn = []
@@ -62,7 +72,7 @@ class AnnealOffset:
             return offset_fcn, offset_tag
         if self.tag == "test":
             offset_tag = "test"
-            offset_fcn = [offset_min, 0]
+            offset_fcn = [offset_min, 0, 0]
             return offset_fcn, offset_tag
         if self.tag == "negbinary":
             offset_tag = f"FixEmbedding_NegBinary_{offset_min}_{offset_range}_v3_1"
