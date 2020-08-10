@@ -81,8 +81,11 @@ class s_to_offset:
                 "B(s) (GHz)": [self.maxB, self.maxB],
             }
         elif anneal_curve == "dwave":
+            #io = "./09-1212A-B_DW_2000Q_5_anneal_schedule.xlsx"
+            io = "./09-1216A-A_DW_2000Q_6_annealing_schedule.xlsx"
+            print(f"anneal schedule from {io}")
             anneal_schedule = read_excel(
-                io="./09-1212A-B_DW_2000Q_5_anneal_schedule.xlsx", sheet_name=1
+                io=io, sheet_name=1
             )
             self.anneal_schedule = {
                 key: anneal_schedule[key].values for key in anneal_schedule.columns
