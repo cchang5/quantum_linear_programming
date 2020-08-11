@@ -177,31 +177,6 @@ def embed_qubo_example(n_vertices: int) -> Tuple[dok_matrix, Dict[int, List[int]
         else:
             J[(i,j)] = qi[2]
 
-
-    """NEED TO REPLACE THIS WITH OWN FUNCTION
-    ising_to_qubo ->
-    mds_qlpdb.Ising_to_QUBO(J, h)
-    return dok_matrix
-   
-    from qlp.mds.mds_qlpdb import QUBO_to_Ising 
-    Cross check with QUBO_to_Ising(dok_matrix.todense().tolist())
-    to see if we get back same Ising that was put in.
-    
-    """
-        dok_qubo[qi] = phase * qubo[qi]
-    # check conversion
-    from qlp.mds.mds_qlpdb import QUBO_to_Ising
-    print("Use own function")
-    print(QUBO_to_Ising(dok_qubo.todense().tolist()))
-    dwavequbo = qubo_to_ising(qubo)
-    dok_dwave = dok_matrix((len(unique(q[:, 0])), len(unique(q[:, 0]))), dtype=float)
-    for qi in dwavequbo[0].keys():
-        dok_dwave[(qi, qi)] = dwavequbo[0][qi]
-    for qi in dwavequbo[1].keys():
-        dok_dwave[qi] = dwavequbo[1][qi]
-    print("Use dwave function")
-    print(dok_dwave.todense())
-
     """NEED TO REPLACE THIS WITH OWN FUNCTION
     ising_to_qubo ->
     mds_qlpdb.Ising_to_QUBO(J, h)
