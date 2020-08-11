@@ -43,6 +43,7 @@ def _set_up_pauli():
     sigx[0, 1] = 1.0
     sigx[1, 0] = 1.0
     sigz[0, 0] = 1.0
+
     sigz[1, 1] = -1.0
     proj0[0, 0] = 1.0
     proj1[1, 1] = 1.0

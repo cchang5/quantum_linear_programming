@@ -350,3 +350,7 @@ def QUBO_to_Ising(Q):
     # 0-1 basis transform
     h=(-1)*h
     return (J, h, g)
+
+def Ising_to_QUBO(J, h):
+    Q = None
+    return Q
