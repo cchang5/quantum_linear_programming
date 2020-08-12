@@ -45,6 +45,6 @@ for i in range(100):
 
     #print("Q2")
     #print(Q2)
-    print("difference",np.amax(np.absolute(Q-Q2)))
+    #print("difference",np.amax(np.absolute(Q-Q2)))
 
 

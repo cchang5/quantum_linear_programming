@@ -2,10 +2,9 @@
 """
 from typing import List, Dict, Tuple
 
-from numpy import unique, array, concatenate, diagonal
+from numpy import unique, array, concatenate, zeros
 from scipy.sparse import dok_matrix
-from dimod import ising_to_qubo, qubo_to_ising
-
+import qlp.mds.transformation as transform
 
 def embed_qubo_example(n_vertices: int) -> Tuple[dok_matrix, Dict[int, List[int]]]:
     """Returns qubo and explicit embedding for NN(n_vertices) graph
@@ -161,38 +160,55 @@ def embed_qubo_example(n_vertices: int) -> Tuple[dok_matrix, Dict[int, List[int]
     else:
         raise ValueError("No embedded graph defined.")
 
+    nqubits = 0
+    for qubit in embedding:
+        nqubits += len(embedding[qubit])
+
     q = array([[float(i) for i in qn.split(" ")] for qn in q.split("\n")])
 
     remap = {
         key: idx
         for idx, key in enumerate(unique(concatenate((q[:, 0], q[:, 1]), axis=0)))
     }
-    h = dict()
-    J = dict()
+    Qarray = zeros((nqubits, nqubits))
     for qi in q:
         i = remap[qi[0]]
         j = remap[qi[1]]
-        if i == j:
-            h[i] = qi[2]
-        else:
-            J[(i,j)] = qi[2]
+        Qarray[i,j] = qi[2]
+    dok_qubo = dok_matrix(Qarray)
 
-    """NEED TO REPLACE THIS WITH OWN FUNCTION
-    ising_to_qubo ->
-    mds_qlpdb.Ising_to_QUBO(J, h)
-    return dok_matrix
-    
-    from qlp.mds.mds_qlpdb import QUBO_to_Ising 
-    Cross check with QUBO_to_Ising(dok_matrix.todense().tolist())
-    to see if we get back same Ising that was put in.
-    
-    """
-    from qlp.mds.mds_qlpdb import Ising_to_QUBO
+    #h = dict()
+    #J = dict()
+    #for qi in q:
+    #    i = remap[qi[0]]
+    #    j = remap[qi[1]]
+    #    if i == j:
+    #        h[i] = qi[2]
+    #    else:
+    #        J[(i,j)] = qi[2]
 
-    qubo = Ising_to_QUBO(J, h)  # currently h and J are dictionaries. you can change them to vector and matrix if you want
-    dok_qubo = dok_matrix(qubo)
+    #hlist = zeros(nqubits)
+    #Jlist = zeros((nqubits, nqubits))
+    #for hi in h:
+    #    hlist[hi] = h[hi]
+    #for Jij in J:
+    #    Jlist[Jij[0], Jij[1]] = J[Jij]
 
-    from qlp.mds.mds_qlpdb import QUBO_to_Ising
-    print(QUBO_to_Ising(dok_qubo.todense().tolist())) # check if this is the same as the input at the top.
+    #"""NEED TO REPLACE THIS WITH OWN FUNCTION
+    #ising_to_qubo ->
+    #mds_qlpdb.Ising_to_QUBO(J, h)
+    #return dok_matrix
+    #
+    #from qlp.mds.mds_qlpdb import QUBO_to_Ising
+    #Cross check with QUBO_to_Ising(dok_matrix.todense().tolist())
+    #to see if we get back same Ising that was put in.
+    #
+    #"""
+    #qubo = transform.Ising_to_QUBO(Jlist, hlist)  # currently h and J are dictionaries. you can change them to vector and matrix if you want
+    #dok_qubo = dok_matrix(qubo)
+    #print("check transform")
+    #print(hlist)
+    #print(Jlist)
+    #print(transform.QUBO_to_Ising(dok_qubo.todense().tolist())) # check if this is the same as the input at the top.
 
     return dok_qubo, embedding

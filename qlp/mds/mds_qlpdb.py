@@ -1,13 +1,8 @@
 import numpy as np
-import pandas as pd
 import hashlib
 
-# from qlpdb.graph.models import Graph as graph_Graph
-# from qlpdb.experiment.models import Experiment as experiment_Experiment
-# from qlpdb.data.models import Data as data_Data
-
 from minorminer import find_embedding
-from dwave.system.composites import EmbeddingComposite, FixedEmbeddingComposite
+from dwave.system.composites import FixedEmbeddingComposite
 
 import matplotlib.pyplot as plt
 import yaml
@@ -58,7 +53,7 @@ class AnnealOffset:
                     offset_fcn.append(0)
             return offset_fcn, offset_tag
         if self.tag == "binary":
-            offset_tag = f"FixEmbedding_Binary_{offset_min}_{offset_range}_v6.0_80"
+            offset_tag = f"FixEmbedding_Binary_{offset_min}_{offset_range}_0.5str"
             offset_fcn = []
             hmid = abshrange * 0.5 + min(abs(h))
             for hi in h:
