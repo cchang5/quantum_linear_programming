@@ -53,7 +53,7 @@ class AnnealOffset:
                     offset_fcn.append(0)
             return offset_fcn, offset_tag
         if self.tag == "binary":
-            offset_tag = f"FixEmbedding_Binary_{offset_min}_{offset_range}_0.5str"
+            offset_tag = f"FixEmbedding_Binary_{offset_min}_{offset_range}_z0"
             offset_fcn = []
             hmid = abshrange * 0.5 + min(abs(h))
             for hi in h:
@@ -164,6 +164,7 @@ def retry_embedding(
         ) as file:
             embedding = yaml.safe_load(file)
         embed, min_offset, max_offset = get_embed_min_max_offset(sampler, embedding)
+        embedding_set = {k: set(embedding[k]) for k in embedding}
         return embed, embedding, min_offset, max_offset
     except Exception as e:
         print(e)
@@ -211,13 +212,19 @@ def plot_anneal_offset(sampler):
 
 def find_offset(h, fcn, embedding, offset_min, offset_range):
     anneal_offset = np.zeros(2048)  # expects full yield 2000Q
-    offset_value, tag = fcn(h, offset_min, offset_range)
+    hlist = []
+    hkey = []
+    for key in h:
+        hlist.append(h[key])
+        hkey.append(key)
+    offset_value, tag = fcn(hlist, offset_min, offset_range)
+    offset_value = {hkey[idx]: offset_value[idx] for idx in range(len(hkey))}
     offset_dict = dict()
     for logical_qubit, qubit in embedding.items():
         for idx in qubit:
             # sets same offset for all qubits in chain
-            anneal_offset[idx] = offset_value[logical_qubit]
-            offset_dict[idx] = offset_value[logical_qubit]
+            anneal_offset[idx] = offset_value[idx]
+            offset_dict[idx] = offset_value[idx]
     offset_list = []
     for idx in range(len(embedding)):
         for qi in embedding[idx]:
@@ -274,7 +281,7 @@ def insert_result(graph_params, experiment_params, data_params):
             spin_config=list(
                 data_params["spin_config"][idx]
             ),  # Spin configuration of solution, limited to 0, 1
-            chain_break_fraction=data_params["chain_break_fraction"][idx],
+            chain_break_fraction=9999, #data_params["chain_break_fraction"][idx],
             energy=data_params["energy"][
                 idx
             ],  # Energy corresponding to spin_config and QUBO
@@ -330,7 +337,7 @@ def data_summary(raw, graph_params, experiment_params):
     params["energy"] = (
             raw["energy"].values + experiment_params["p"] * graph_params["total_vertices"]
     )
-    params["chain_break_fraction"] = raw["chain_break_fraction"].values
+    #params["chain_break_fraction"] = raw["chain_break_fraction"].values
     params["constraint_satisfaction"] = np.equal(
         params["energy"],
         np.sum(params["spin_config"][:, : graph_params["total_vertices"]], axis=1),
