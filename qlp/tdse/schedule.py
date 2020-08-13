@@ -10,7 +10,7 @@ from pandas import read_excel
 
 from matplotlib.pyplot import subplots, draw, show, savefig
 
-from qlp.mds.mds_qlpdb import AnnealOffset
+from qlp.mds.mds_qlpdb import AnnealOffset, find_offset
 
 
 class s_to_offset:
@@ -81,8 +81,8 @@ class s_to_offset:
                 "B(s) (GHz)": [self.maxB, self.maxB],
             }
         elif anneal_curve == "dwave":
-            #io = "./09-1212A-B_DW_2000Q_5_anneal_schedule.xlsx"
-            io = "./09-1216A-A_DW_2000Q_6_annealing_schedule.xlsx"
+            io = "./09-1212A-B_DW_2000Q_5_anneal_schedule.xlsx"
+            #io = "./09-1216A-A_DW_2000Q_6_annealing_schedule.xlsx"
             print(f"anneal schedule from {io}")
             anneal_schedule = read_excel(
                 io=io, sheet_name=1
@@ -180,6 +180,7 @@ class AnnealSchedule:
         self,
         offset,
         hi_for_offset,
+        embedding,
         offset_min,
         offset_range,
         fill_value: str = "extrapolate",
@@ -194,9 +195,12 @@ class AnnealSchedule:
             fill_value, anneal_curve: Parameters for s_to_offset
         """
         AO = AnnealOffset(offset, graph_params)
-        self.offset_list, self.offset_tag = AO.fcn(
-            hi_for_offset, offset_min, offset_range
-        )
+        #self.offset_list, self.offset_tag = AO.fcn(
+        #    hi_for_offset, embedding, offset_min, offset_range
+        #)
+        _, self.offset_tag, self.offset_list = find_offset(hi_for_offset, AO.fcn, embedding, offset_min, offset_range)
+        print("From find offset")
+        print(self.offset_list)
         self.s2o = s_to_offset(fill_value, anneal_curve)
 
     def C(self, s: float) -> ndarray:

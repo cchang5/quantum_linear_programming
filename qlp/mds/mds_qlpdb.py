@@ -212,11 +212,17 @@ def plot_anneal_offset(sampler):
 def find_offset(h, fcn, embedding, offset_min, offset_range):
     anneal_offset = np.zeros(2048)  # expects full yield 2000Q
     offset_value, tag = fcn(h, offset_min, offset_range)
+    offset_dict = dict()
     for logical_qubit, qubit in embedding.items():
         for idx in qubit:
             # sets same offset for all qubits in chain
             anneal_offset[idx] = offset_value[logical_qubit]
-    return list(anneal_offset), tag
+            offset_dict[idx] = offset_value[logical_qubit]
+    offset_list = []
+    for idx in range(len(embedding)):
+        for qi in embedding[idx]:
+            offset_list.append(offset_dict[qi])
+    return list(anneal_offset), tag, offset_list
 
 
 def insert_result(graph_params, experiment_params, data_params):

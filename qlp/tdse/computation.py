@@ -10,7 +10,6 @@ import pickle
 
 from numpy import ndarray
 import numpy as np
-# from scipy.sparse.linalg import eigsh
 from numpy.linalg import eigh
 
 from scipy.integrate import solve_ivp
@@ -177,9 +176,7 @@ class TDSE:
         self.IsingH = self._constructIsingH(
             self._Bij(self.AS.B(1)) * self.ising["Jij"], self.AS.B(1) * self.ising["hi"]
         )
-        self.IsingH_exact = self._constructIsingH(
-            self._Bij(self.AS.B(1)) * self.ising["Jij_exact"], self.AS.B(1) * self.ising["hi_exact"]
-        )
+        self.IsingH_exact = self.IsingH
         self.gammadict = {"g": [], "glocal": [], "s": []}
 
     def hash_dict(self, d):
@@ -215,8 +212,8 @@ class TDSE:
         ising = dict(self.ising)
         ising["Jij"] = [list(row) for row in ising["Jij"]]
         ising["hi"] = list(ising["hi"])
-        ising["Jij_exact"] = [list(row) for row in ising["Jij_exact"]]
-        ising["hi_exact"] = list(ising["hi_exact"])
+        #ising["Jij_exact"] = [list(row) for row in ising["Jij_exact"]]
+        #ising["hi_exact"] = list(ising["hi_exact"])
         tdse_params["ising"] = ising
         tdse_params["ising_hash"] = self.hash_dict(tdse_params["ising"])
         offset = dict(self.offset)
@@ -506,8 +503,8 @@ class TDSE:
             lindblad = 0
         else:
             #gamma_t = np.mean(self.gamma*(self.AS.B(t)/self.AS.B(1)))
-            gamma_t = self.gamma*np.exp(-((t-1)/0.05)**2)
-            #gamma_t = self.gamma
+            #gamma_t = self.gamma*np.exp(-((t-1)/0.05)**2)
+            gamma_t = self.gamma
             lindblad = self.get_lindblad(ymat, gamma_t, H, t) # full counting
         if self.gamma_local == 0:
             lindblad_local = 0
