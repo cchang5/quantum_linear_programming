@@ -43,7 +43,7 @@ class AnnealOffset:
                 f"FixEmbedding_Constant_{offset_min}_{offset_range}_v3_1",
             )
         if self.tag == "single_sided_binary":
-            offset_tag = f"FixEmbedding_Single_Sided_Binary_{offset_min}_z0"
+            offset_tag = f"FixEmbedding_Single_Sided_Binary_{offset_min}_z1.1"
             offset_fcn = []
             hmid = abshrange * 0.5 + min(abs(h))
             for hi in h:
@@ -311,7 +311,8 @@ def graph_summary(tag, graph, qubo):
     params["tag"] = tag
     params["total_vertices"] = len(vertices)
     params["total_edges"] = len(graph)
-    params["total_qubits"] = len(qubo.todense())
+    keylist = np.unique(np.array([key for key in qubo]).flatten())
+    params["total_qubits"] = len(keylist)
     params["max_edges"] = max(neighbors.values())
     params["adjacency"] = [list(i) for i in list(graph)]
     params["adjacency_hash"] = hashlib.md5(
