@@ -226,46 +226,47 @@ def get_tdse_data():
         #y = {'Binary': [0.924225, 0.91058, 0.8979, 0.885185, 0.86872, 0.85569, 0.84235, 0.82933, 0.82865, 0.837885, 0.859975]}
         y = {'Single_Sided_Binary': [0.9502, 0.9338, 0.93684, 0.91888, 0.9148, 0.90436, 0.90272, 0.88004, 0.86952, 0.85524, 0.8304]}
     else:
-        data = {
-            offx: {
-                minx: data_Data.objects.filter(
-                    experiment__graph__tag=f"NN(2)",
-                    experiment__tag=f"FixEmbedding_{offx}_{minx}_{2*abs(minx)}_z0",
-                    experiment__settings__annealing_time=1,
-                    experiment__settings__num_spin_reversal_transforms=0,
-                ).to_dataframe()
-                for minx in [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
-            }
-            for offx in ["Binary"]
-        }
         #data = {
         #    offx: {
         #        minx: data_Data.objects.filter(
         #            experiment__graph__tag=f"NN(2)",
-        #            experiment__tag=f"FixEmbedding_{offx}_{minx}_0.5str",
+        #            experiment__tag=f"FixEmbedding_{offx}_{minx}_{2*abs(minx)}_z0",
         #            experiment__settings__annealing_time=1,
         #            experiment__settings__num_spin_reversal_transforms=0,
         #        ).to_dataframe()
         #        for minx in [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
         #    }
-        #    for offx in ["Binary"]
+        #    for offx in ["_Binary"]
         #}
+        data = {
+            offx: {
+                minx: data_Data.objects.filter(
+                    experiment__graph__tag=f"NN(2)",
+                    experiment__tag=f"FixEmbedding_{offx}_{minx}_z1",
+                    experiment__settings__annealing_time=1,
+                    experiment__settings__num_spin_reversal_transforms=0,
+                ).to_dataframe()
+                for minx in [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
+            }
+            for offx in ["Single_Sided_Binary"]
+        }
         y = dict()
         for offset in data.keys():
             X = list(data[offset].keys())
             y[offset] = []
             for key in X:
                 print(key)
-                print(data[offset][key].groupby("energy").count()["id"])
+                print(data[offset][key].groupby("energy").count()["id"].sort_index())
                 # mds = 3.25
                 #mds = 3.625
-                mds = 2.909091
+                mds = 2.909090909090909
                 try:
                     energy_count = (
-                        data[offset][key].groupby("energy").count()["id"].loc[mds]
+                        data[offset][key].groupby("energy").count()["id"].sort_index().iloc[0]
                     )
                 except:
                     energy_count = 0
+                print(energy_count)
                 total_count = data[offset][key].count()["id"]
                 y[offset].append(energy_count / total_count)
                 print(key, total_count)
@@ -436,7 +437,7 @@ def plot_tdse(data):
     fig = plt.figure("tdse", figsize=(7,4))
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
     X = [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
-    y = data["Binary"]
+    y = data["Single_Sided_Binary"]
     #X = [-0.1, -0.09, -0.08, -0.07, -0.06, -0.05, -0.04, -0.03, -0.02, -0.01, 0.0]
     #y = data["Single_Sided_Binary"]
     ax.errorbar(x=X, y=y, ls="none", marker='o', color='k')
