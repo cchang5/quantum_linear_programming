@@ -43,14 +43,20 @@ class AnnealOffset:
                 f"FixEmbedding_Constant_{offset_min}_{offset_range}_v3_1",
             )
         if self.tag == "single_sided_binary":
-            offset_tag = f"FixEmbedding_Single_Sided_Binary_{offset_min}_v0"
+            offset_tag = f"FixEmbedding_Single_Sided_Binary_{offset_min}_z0"
             offset_fcn = []
             hmid = abshrange * 0.5 + min(abs(h))
             for hi in h:
                 if abs(hi) <= hmid:
-                    offset_fcn.append(offset_min)
+                    if offset_min < 0:
+                        offset_fcn.append(offset_min)
+                    else:
+                        offset_fcn.append(0)
                 else:
-                    offset_fcn.append(0)
+                    if offset_min < 0:
+                        offset_fcn.append(0)
+                    else:
+                        offset_fcn.append(-1*offset_min)
             return offset_fcn, offset_tag
         if self.tag == "binary":
             offset_tag = f"FixEmbedding_Binary_{offset_min}_{offset_range}_z0"

@@ -230,7 +230,7 @@ def get_tdse_data():
             offx: {
                 minx: data_Data.objects.filter(
                     experiment__graph__tag=f"NN(2)",
-                    experiment__tag=f"FixEmbedding_{offx}_{minx}_{2*abs(minx)}_0.5str",
+                    experiment__tag=f"FixEmbedding_{offx}_{minx}_{2*abs(minx)}_z0",
                     experiment__settings__annealing_time=1,
                     experiment__settings__num_spin_reversal_transforms=0,
                 ).to_dataframe()
@@ -255,10 +255,11 @@ def get_tdse_data():
             X = list(data[offset].keys())
             y[offset] = []
             for key in X:
-                #print(key)
-                #print(data[offset][key].groupby("energy").count()["id"])
+                print(key)
+                print(data[offset][key].groupby("energy").count()["id"])
                 # mds = 3.25
-                mds = 3.625
+                #mds = 3.625
+                mds = 2.909091
                 try:
                     energy_count = (
                         data[offset][key].groupby("energy").count()["id"].loc[mds]
