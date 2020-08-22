@@ -12,6 +12,11 @@ from qlp.mds.mds_qlpdb import graph_summary
 
 figsize = (7, 4)
 ratio = [0.15, 0.15, 0.8, 0.8]
+
+red = "#c82506"
+green = "#70b741"
+blue = "#51a7f9"
+
 """
 ###################################
 #####  Simulation Data Class  #####
@@ -272,8 +277,7 @@ def gettdse(offset=0.0):
 def gettdsetheory(offset=0.0):
     sim = Sim()
     query, sol, tdse = sim.get_data(offset)
-    print(sol.time)
-    print(sol.prob)
+    return query.prob[-1]
 
 def plot_tdse():
     offset = list(0.01 * (np.arange(15) - 7))
@@ -281,7 +285,11 @@ def plot_tdse():
     plt.figure(figsize=figsize)
     ax = plt.axes(ratio)
 
-    ax.errorbar(x=offset, y=prob, ls="-", marker="o")
+    ax.errorbar(x=offset, y=prob, ls="none", marker="o", color="k")
+
+    offset = list(0.01 * (np.arange(11) - 5))
+    prob = [gettdsetheory(os) for os in offset]
+    ax.errorbar(x=offset, y=prob, ls="none", marker="o", color="blue")
 
     plt.draw()
     plt.show()
@@ -301,7 +309,6 @@ if __name__ == "__main__":
     """
     For TDSE simulation
     """
-    #plot_tdse()
+    plot_tdse()
     # plot_distribution()
 
-    gettdsetheory(-0.05)
