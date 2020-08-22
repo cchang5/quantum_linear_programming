@@ -509,6 +509,7 @@ class TDSE:
         if self.gamma_local == 0:
             lindblad_local = 0
         else:
+            #glocal_t = np.mean(self.gamma*(self.AS.B(t)/self.AS.B(1)))
             #glocal_t = np.mean(self.gamma_local*self.AS.A(t)/self.AS.A(0))
             glocal_t = self.gamma_local
             lindblad_local = self.get_lindblad2(ymat, glocal_t, H, t) # local decoherence
