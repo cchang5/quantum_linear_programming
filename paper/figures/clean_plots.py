@@ -3,8 +3,77 @@ from qlpdb.data.models import Data as data_Data
 import pickle
 import numpy as np
 
+from django.conf import settings
+from qlpdb.tdse.models import Tdse
+from qlp.tdse import convert_params, embed_qubo_example
+from qlp.mds import graph_tools as gt
+from qlp.mds.mds_qlpdb import graph_summary
+
+
 figsize = (7, 4)
 ratio = [0.15, 0.15, 0.8, 0.8]
+"""
+###################################
+#####  Simulation Data Class  #####
+###################################
+"""
+class Sim:
+    def __init__(self):
+        self.params = self.parameters()
+
+    def parameters(self):
+        # offset params
+        offset_params = dict()
+        offset_params["annealing_time"] = 1
+        offset_params["offset"] = "single_sided_binary"
+        offset_params["offset_min"] = 0
+        offset_params["fill_value"] = "extrapolate"
+        offset_params["anneal_curve"] = "dwave"
+
+        # wave params
+        wave_params = dict()
+        wave_params["type"] = "mixed"
+        wave_params["temp"] = 0.02
+        wave_params["gamma"] = 1 / 2
+        wave_params["initial_wavefunction"] = "transverse"
+
+        # graph params
+        nvertices = 2
+        graph, tag = gt.generate_nn_graph(nvertices)
+        qubo, embedding = embed_qubo_example(nvertices)
+        graph_params = graph_summary(tag, graph, qubo)
+
+        # solver params
+        solver_params = dict()
+        solver_params["method"] = "RK45"
+        solver_params["rtol"] = 1e-6
+        solver_params["atol"] = 1e-7
+
+        params = {
+            "offset": offset_params,
+            "wave": wave_params,
+            "graph": graph_params,
+            "solver": solver_params,
+        }
+        return params
+
+    def get_data(self, offset):
+        self.params["offset"]["offset_min"] = offset
+        print(self.params["graph"]["tag"])
+        print(convert_params(self.params["offset"]))
+        print(self.params["solver"])
+        print(self.params["wave"])
+        query = Tdse.objects.filter(
+            graph__tag=self.params["graph"]["tag"],
+            offset__contains=convert_params(self.params["offset"]),
+            solver__contains=self.params["solver"],
+            wave__contains=self.params["wave"],
+        ).first()
+        with open(f"{settings.MEDIA_ROOT}/{query.solution}", "rb") as file:
+            sol = pickle.load(file)
+        with open(f"{settings.MEDIA_ROOT}/{query.instance}", "rb") as file:
+            tdse = pickle.load(file)
+        return query, sol, tdse
 
 """
 ###########################################
@@ -178,13 +247,15 @@ def plot_all():
 #####  data for tdse simulation  #####
 ######################################
 """
-
-
 def gettdse(offset=0.0):
     if True:
-        prob = {-0.05: 0.79639, -0.04: 0.82127, -0.03: 0.84074, -0.02: 0.84374, -0.01: 0.88497, 0.0: 0.90447,
-                0.01: 0.9189, 0.02: 0.92944, 0.03: 0.94336, 0.04: 0.94864, 0.05: 0.95251}
-        return prob[offset]
+        prob = {-0.07: 0.70107, -0.06: 0.72948, -0.05: 0.79639, -0.04: 0.82127, -0.03: 0.84074, -0.02: 0.84374,
+                -0.01: 0.88497, 0.0: 0.90447, 0.01: 0.9189, 0.02: 0.92944, 0.03: 0.94336, 0.04: 0.94864, 0.05: 0.95251,
+                0.06: 0.93402, 0.07: 0.92907}
+        if offset in prob.keys():
+            return prob[offset]
+        else:
+            pass
     data = data_Data.objects.filter(
         experiment__graph__tag=f"NN(2)",
         experiment__tag=f"FixEmbedding_Single_Sided_Binary_{offset}_z3",
@@ -198,9 +269,14 @@ def gettdse(offset=0.0):
     print(total_count, prob)
     return prob
 
+def gettdsetheory(offset=0.0):
+    sim = Sim()
+    query, sol, tdse = sim.get_data(offset)
+    print(sol.time)
+    print(sol.prob)
 
 def plot_tdse():
-    offset = list(0.01 * (np.arange(11) - 5))
+    offset = list(0.01 * (np.arange(15) - 7))
     prob = [gettdse(os) for os in offset]
     plt.figure(figsize=figsize)
     ax = plt.axes(ratio)
@@ -221,9 +297,11 @@ if __name__ == "__main__":
     For DWave only
     """
     # plot_anneal_time()
-    plot_all()
+    # plot_all()
     """
     For TDSE simulation
     """
-    # plot_tdse()
+    #plot_tdse()
     # plot_distribution()
+
+    gettdsetheory(-0.05)
