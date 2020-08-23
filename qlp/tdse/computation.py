@@ -735,6 +735,17 @@ class TDSE:
         s = -np.trace(matrho @ logm(matrho)) / np.log(2)
         return s
 
+    def q_mutual_info(self, rho, nA, nB, indicesA, indicesB, reg):
+        """
+        calculate the quantum mutual information
+        """
+        sa=ent_entropy(rho, nA, indicesA, reg)
+        sb=ent_entropy(rho, nB, indicesB, reg)
+        sab=vonNeumann_entropy(rho, reg)
+        s=sa+sb-sab
+        return s
+
+
     def find_partition(self) -> Tuple[int, str]:
         """
         Assumes that offset range is symmetric around zero.
