@@ -3,6 +3,7 @@ from qlpdb.data.models import Data as data_Data
 import pickle
 import numpy as np
 from scipy.linalg import logm
+from numpy.linalg import eigh
 
 from django.conf import settings
 from qlpdb.tdse.models import Tdse
@@ -457,7 +458,11 @@ def gettdse(offset=0.0):
 def gettdsetheory(offset=0.0):
     sim = Sim()
     query, sol, tdse = sim.get_data(offset)
-    return query.prob[-1]
+    H = tdse._constructIsingH(np.array(tdse.ising["Jij"]), np.array(tdse.ising["hi"])).todense().tolist()
+    eval, evec = eigh(H)
+    project = sum([np.kron(evec[:, idx], np.conj(evec[:, idx])) for idx in [0, 1]])
+    prob = np.asarray([np.absolute((np.dot(np.conj(project), sol.y[:, i]))) for i in range(sol.t.size)])
+    return prob[-1]
 
 
 def plot_tdse():
@@ -465,7 +470,8 @@ def plot_tdse():
     ax = plt.axes(p["aspect_ratio"])
     """dwave result
     """
-    offset = list(0.01 * (np.arange(15) - 7))
+    # offset = list(0.01 * (np.arange(15) - 7))
+    offset = list(0.01 * (np.arange(11) - 5))
     prob = [gettdse(os) for os in offset]
     ax.errorbar(x=offset, y=prob, ls="--", marker="o", color=os_color["dwave"], label="DWave")
     """simulation result
@@ -488,6 +494,7 @@ def plot_tdse():
 ##################################
 """
 
+
 def getannealcurve(offset=0.05):
     sim = Sim()
     query, sol, tdse = sim.get_data(offset)
@@ -498,7 +505,7 @@ def getannealcurve(offset=0.05):
 
 
 def plot_annealcurve():
-    offset = list(np.arange(6)/100)
+    offset = list(np.arange(6) / 100)
     plt.figure(figsize=p["figsize"])
     ax = plt.axes(p["aspect_ratio"])
     for os in offset:
@@ -513,7 +520,7 @@ def plot_annealcurve():
             colorB = blue
             alpha = os_alpha[os]
         s, yA, yB = getannealcurve(os)
-        ax.errorbar(x=s, y=yA, color=colorA, alpha=alpha, marker="None", ls = "-", label=label)
+        ax.errorbar(x=s, y=yA, color=colorA, alpha=alpha, marker="None", ls="-", label=label)
         ax.errorbar(x=s, y=yB, color=colorB, alpha=alpha, marker="None", ls="-")
     """labels
        """
@@ -522,17 +529,25 @@ def plot_annealcurve():
 
     plt.legend(title="offset", loc=4)
     plt.savefig("../new_figures/anneal_schedule.pdf", transparent=True)
+
+
 """
 ########################################
 #####  time dependent probability  #####
 ########################################
 """
+
+
 def gettimedependentprobability(offset=0.05):
     sim = Sim()
     query, sol, tdse = sim.get_data(offset)
+    H = tdse._constructIsingH(np.array(tdse.ising["Jij"]), np.array(tdse.ising["hi"])).todense().tolist()
+    eval, evec = eigh(H)
+    project = sum([np.kron(evec[:, idx], np.conj(evec[:, idx])) for idx in [0, 1]])
+    prob = np.asarray([np.absolute((np.dot(np.conj(project), sol.y[:, i]))) for i in range(sol.t.size)])
     X = query.time
-    prob = query.prob
     return X, prob
+
 
 def plot_timedepprob():
     offset = list(0.01 * (np.arange(11) - 5))[::-1]
@@ -550,7 +565,7 @@ def plot_timedepprob():
         else:
             color = blue
         s, prob = gettimedependentprobability(os)
-        ax.errorbar(x=s, y=prob, color=color, alpha=os_alpha[os], marker="None", ls = "-", label=os)
+        ax.errorbar(x=s, y=prob, color=color, alpha=os_alpha[os], marker="None", ls="-", label=os)
     """labels
     """
     ax.set_xlabel("annealing time $s$ ($\mu s$)", p["textargs"])
@@ -559,23 +574,27 @@ def plot_timedepprob():
     plt.legend(title="offset")
     plt.savefig("../new_figures/time_dependent_probability.pdf", transparent=True)
 
+
 """
 ###########################
 #####  hybridization  #####
 ###########################
 """
+
+
 # how large is off-diagonal term in Hamiltonian
 # large is delocalized
 def gethybridization(offset=0.05):
     sim = Sim()
     query, sol, tdse = sim.get_data(offset)
-    ngrid = 10
+    ngrid = 100
     timegrid = np.linspace(0, 1, ngrid)
     offdiag = np.zeros(ngrid)
     for i in range(ngrid):
         H = tdse.annealingH(timegrid[i]).todense()
         offdiag[i] = np.linalg.norm(H - np.diag(np.diag(H)))
     return timegrid, offdiag
+
 
 def plot_hybridization():
     offset = list(0.01 * (np.arange(11) - 5))[::-1]
@@ -589,17 +608,17 @@ def plot_hybridization():
         else:
             color = blue
         timegrid, offdiag = gethybridization(os)
-        ax.errorbar(x=timegrid, y=offdiag, marker="None", color=color, alpha = os_alpha[os], ls="-", label=os)
+        ax.errorbar(x=timegrid, y=offdiag, marker="None", color=color, alpha=os_alpha[os], ls="-", label=os)
     ax.legend()
-    #plt.yscale("log")
+    # plt.yscale("log")
     plt.savefig("../new_figures/hybridization.pdf", transparent=True)
+
 
 """
 ############################################
 #####  time-dependent energy spectrum  #####
 ############################################
 """
-
 
 """
 ################################
@@ -644,6 +663,7 @@ def q_mutual_info(rho, nA, nB, indicesA, indicesB, reg):
     s = sa + sb - sab
     return s
 
+
 def getmi(offset=0.05):
     sim = Sim()
     query, sol, tdse = sim.get_data(offset)
@@ -651,16 +671,17 @@ def getmi(offset=0.05):
     if offset == 0:
         offsetB = 0.01
     else:
-        offsetB = -1*offset
+        offsetB = -1 * offset
     _, _, tdseB = sim.get_data(offsetB)
     nB, indicesB = tdseB.find_partition()
-    reg = 1E-10
+    reg = 1E-6
     s = query.time
     mi = []
     for idx, si in enumerate(s):
         rho = sol.y[:, idx]
         mi.append(q_mutual_info(rho, nA, nB, indicesA, indicesB, reg).real)
     return s, mi
+
 
 def plot_mi():
     offset = list(0.01 * (np.arange(11) - 5))[::-1]
@@ -677,6 +698,54 @@ def plot_mi():
         ax.errorbar(x=s, y=mi, marker="None", color=color, alpha=os_alpha[os], ls="-", label=os)
     ax.legend()
     plt.savefig("../new_figures/mutual_information.pdf", transparent=True)
+
+
+"""
+#####################
+#####  DWave MI #####
+#####################
+"""
+
+
+def calculate_dwave_mi(offset=-0.05):
+    from scipy.stats import entropy
+    # get partition
+    n = 5
+    nA = 4
+    nB = 1
+    indicesA = 'ijklm->jklm'
+    indicesB = 'ijklm->i'
+    # read dwave
+    scount = getallspinconfig(offset=offset)
+    scount = {key[0]: scount[key] for key in scount}
+    pr = np.zeros(2 ** n)
+    for I in range(2 ** n):
+        dwstate = tuple(np.array([int(i) for i in '{0:05b}'.format(I)]))
+        if dwstate in scount:
+            pr[I] = scount[(tuple(dwstate))]
+        else:
+            pr[I] = 0
+    prtensor = pr.reshape([2 for i in range(n)])
+    prAtensor = np.einsum(indicesA, prtensor)
+    prBtensor = np.einsum(indicesB, prtensor)
+    prA = prAtensor.reshape(2 ** nA)
+    prB = prBtensor.reshape(2 ** nB)
+    mi = entropy(prA, base=2) + entropy(prB, base=2) - entropy(pr, base=2)
+    print(mi)
+    return mi
+
+def plot_dwave_mi():
+    offset = list(0.01 * (np.arange(11) - 5))[::-1]
+    plt.figure(figsize=p["figsize"])
+    ax = plt.axes(p["aspect_ratio"])
+    for os in offset:
+        mi = calculate_dwave_mi(os)
+        ax.errorbar(x=os, y=mi, marker="o", color="k")
+        # plot simulation final mi
+        _, mi = getmi(os)
+        ax.errorbar(x=os, y=mi[-1], marker="o", color=red)
+    plt.savefig("../new_figures/dwave_mutual_information.pdf", transparent=True)
+
 """
 ##################
 #####  main  #####
@@ -687,13 +756,14 @@ if __name__ == "__main__":
     For DWave only
     """
     # plot_anneal_time() # this is not current, maybe drop this
-    #plot_all()
+    # plot_all()
+    plot_dwave_mi()
     """
     For TDSE simulation
     """
-    #plot_tdse()
-    #plot_distribution()
-    #plot_annealcurve()
-    #plot_timedepprob()
-    plot_hybridization()
-    #plot_mi()
+    # plot_tdse()
+    # plot_distribution()
+    # plot_annealcurve()
+    # plot_timedepprob()
+    # plot_hybridization()
+    # plot_mi()
