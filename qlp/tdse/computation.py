@@ -706,26 +706,11 @@ class TDSE:
            indicesA: einsum string for partial trace
            reg: infinitesimal regularization
         """
-        # print("hello world")
-        # print(self.graph["total_qubits"])
-        # print("rho")
-        # print(type(rho))
-        # print(rho.shape)
-        # print('test rho')
-        # testrho=rho.reshape(2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"])
-        # e,v=eigh(testrho)
-        # print(testrho.shape)
-        # print('eig rho',e)
         tensorrho = rho.reshape(
             tuple([2 for i in range(2 * self.graph["total_qubits"])])
         )
         rhoA = np.einsum(indicesA, tensorrho)
-        # print("rhoA")
-        # print(type(rhoA))
-        # print(rhoA.shape)
         matrhoA = rhoA.reshape(2 ** nA, 2 ** nA) + reg * np.identity(2 ** nA)
-        # e,v=eigh(matrhoA)
-        # print('eig rhoA',e)
         s = -np.trace(matrhoA @ logm(matrhoA)) / np.log(2)
         return s
 
@@ -764,7 +749,7 @@ class TDSE:
             """
             op = dict(self.offset)
             op["offset_min"] = -0.1
-            op["offset_range"] = 0.2
+            op["offset_range"] = 0.1
             A = AnnealSchedule(**op, graph_params=self.graph)
             offsets = A.offset_list
         else:
