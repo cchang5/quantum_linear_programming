@@ -176,7 +176,7 @@ class TDSE:
         self.IsingH = self._constructIsingH(
             self._Bij(self.AS.B(1)) * self.ising["Jij"], self.AS.B(1) * self.ising["hi"]
         )
-        self.IsingH_exact = self.IsingH
+        self.IsingH_exact = self._constructIsingH(np.array(self.ising["Jij"]), self.ising["hi"])
         self.gammadict = {"g": [], "glocal": [], "s": []}
 
     def hash_dict(self, d):
@@ -271,8 +271,8 @@ class TDSE:
         Returns: Ids for gs vectors, all eigenvalues, all eigenvectors
         """
         eigval, eigv = eigh(H.toarray())
-        mask = [abs((ei - eigval[0]) / eigval[0]) < degeneracy_tol for ei in eigval]
-        gs_idx = np.arange(len(eigval))[mask]
+        #mask = [abs((ei - eigval[0]) / eigval[0]) < degeneracy_tol for ei in eigval]
+        gs_idx = [0, 1] #np.arange(len(eigval))[mask]
         if debug:
             print(
                 f"Num. degenerate states @"
