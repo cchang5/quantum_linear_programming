@@ -66,8 +66,9 @@ class Sim:
         # wave params
         wave_params = dict()
         wave_params["type"] = "mixed"
-        wave_params["temp"] = 0.02
-        wave_params["gamma"] = 1 / 2
+        wave_params["temp"] = 0.015
+        wave_params["gamma"] = 1 / 1
+        wave_params["gamma_local"] = 1 / 10
         wave_params["initial_wavefunction"] = "transverse"
 
         # graph params
@@ -667,13 +668,16 @@ def q_mutual_info(rho, nA, nB, indicesA, indicesB, reg):
 def getmi(offset=0.05):
     sim = Sim()
     query, sol, tdse = sim.get_data(offset)
-    nA, indicesA = tdse.find_partition()
-    if offset == 0:
-        offsetB = 0.01
-    else:
-        offsetB = -1 * offset
-    _, _, tdseB = sim.get_data(offsetB)
-    nB, indicesB = tdseB.find_partition()
+    #nA = 4
+    #indicesA = "abdfhacegi->bdfhcegi"
+    #nB = 1
+    #indicesB = "acdefbcdef->ab"
+
+    nA = 2
+    indicesA = "abdfhabdgi->fhgi"
+    nB = 3
+    indicesB = "abcghdefgh->abcdef"
+
     reg = 1E-6
     s = query.time
     mi = []
@@ -757,13 +761,13 @@ if __name__ == "__main__":
     """
     # plot_anneal_time() # this is not current, maybe drop this
     # plot_all()
-    plot_dwave_mi()
+    #plot_dwave_mi()
     """
     For TDSE simulation
     """
-    # plot_tdse()
-    # plot_distribution()
+    #plot_tdse()
+    #plot_distribution()
     # plot_annealcurve()
-    # plot_timedepprob()
-    # plot_hybridization()
-    # plot_mi()
+    #plot_timedepprob()
+    #plot_hybridization()
+    plot_mi()
