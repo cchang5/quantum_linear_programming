@@ -576,6 +576,46 @@ def plot_timedepprob():
     plt.savefig("../new_figures/time_dependent_probability.pdf", transparent=True)
 
 
+
+def gettimedependentsz(offset=0.05):
+    sim = Sim()
+    query, sol, tdse = sim.get_data(offset)
+    #H = tdse._constructIsingH(np.array(tdse.ising["Jij"]), np.array(tdse.ising["hi"])).todense().tolist()
+    #eval, evec = eigh(H)
+    #project = sum([np.kron(evec[:, idx], np.conj(evec[:, idx])) for idx in [0, 1]])
+    from functools import reduce
+    totalsz=reduce(lambda a,b:a+b, tdse.FockZ)
+    fockn=totalsz.shape[0]
+    sz = np.asarray([ (np.trace( totalsz @ sol.y[:, i].reshape(fockn,fockn))).real   for i in range(sol.t.size)])
+    X = query.time
+    return X, sz
+
+
+def plot_timedepsz():
+    offset = list(0.01 * (np.arange(11) - 5))[::-1]
+    plt.figure(figsize=p["figsize"])
+    ax = plt.axes(p["aspect_ratio"])
+    for os in offset:
+        if os == 0.05:
+            color = red
+        elif os == -0.05:
+            color = "k"
+        elif os > 0:
+            color = yellow
+        elif os < 0:
+            color = green
+        else:
+            color = blue
+        s, sz = gettimedependentsz(os)
+        ax.errorbar(x=s, y=sz, color=color, alpha=os_alpha[os], marker="None", ls="-", label=os)
+    """labels
+    """
+    ax.set_xlabel("annealing time $s$ ($\mu s$)", p["textargs"])
+    ax.set_ylabel("sz", p["textargs"])
+
+    plt.legend(title="offset")
+    plt.savefig("../new_figures/time_dependent_sz.pdf", transparent=True)
+
 """
 ###########################
 #####  hybridization  #####
@@ -770,4 +810,5 @@ if __name__ == "__main__":
     # plot_annealcurve()
     #plot_timedepprob()
     #plot_hybridization()
-    plot_mi()
+    #plot_mi()
+    plot_timedepsz()
