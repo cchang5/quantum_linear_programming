@@ -78,7 +78,7 @@ class Sim:
         """==============================="""
         wave_params["temp"] = 0.0225
         wave_params["gamma"] = 1 / 1
-        wave_params["gamma_local"] = 1 / 20
+        wave_params["gamma_local"] = 1 / 15 # 1/15 or 1/20
         """==============================="""
         wave_params["initial_wavefunction"] = "transverse"
 
@@ -665,17 +665,23 @@ def plot_hybridization():
     # plt.yscale("log")
     plt.savefig("../new_figures/hybridization.pdf", transparent=True)
 
+"""
+###########################
+#####  level spacing  #####
+###########################
+"""
+
 def getlevelspacing(offset=0.05):
     sim = Sim()
     query, sol, tdse = sim.get_data(offset)
     ngrid = 1000
-    fockn=tdse.Focksize
+    fockn= tdse.Focksize
     timegrid = np.linspace(0, 1, ngrid)
     r = np.zeros(ngrid)
     for i in range(ngrid):
         H = tdse.annealingH(timegrid[i]).todense()
         val, evec = eigh(H)
-        spacing = val[1:]-val[0:fockn-1]
+        spacing = val[1:fockn]-val[0:fockn-1]
         temp=np.asarray([min((spacing[n],spacing[n+1]))/max((spacing[n],spacing[n+1])) for n in range(fockn-2)])
         r[i]=np.sum(temp)/(fockn-2)
     return timegrid, r
@@ -688,7 +694,7 @@ def plot_levelspacing():
         timegrid, r = getlevelspacing(os)
         all_levels.append(r)
     print(np.shape(all_levels))
-    sns.heatmap(all_levels)
+    sns.heatmap(all_levels, yticklabels=offset)
     #ax.legend()
     #plt.yscale("log")
     #plt.savefig("../new_figures/levelspacing.pdf", transparent=True)
@@ -699,6 +705,42 @@ def plot_levelspacing():
 #####  time-dependent energy spectrum  #####
 ############################################
 """
+
+def getspectrum(offset=0.05):
+    sim = Sim()
+    query, sol, tdse = sim.get_data(offset)
+    ngrid = 100
+    es= 3
+    timegrid = np.linspace(0, 1, ngrid)
+    r = {idx: [] for idx in range(es)}
+    gap = {0: [], 1: []}
+    gap_density = []
+    for i in range(ngrid):
+        H = tdse.annealingH(timegrid[i]).todense()
+        val, evec = eigh(H)
+        for idx in range(es):
+            r[idx].append(val[idx])
+        gap[1].append(val[2]-val[1])
+        gap[0].append(val[2]-val[0])
+        gap_density.append((val[2]+val[1]-2*val[0])/2)
+    return timegrid, r, gap, gap_density
+
+def plot_spectrum():
+    offset = [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
+    plt.figure("spectrum", figsize=p["figsize"])
+    ax = plt.axes(p["aspect_ratio"])
+    color = [red, "k", blue]
+    for idx, os in enumerate(offset):
+        timegrid, r, gap, gap_density = getspectrum(os)
+        #for es in r:
+        #    ax.errorbar(x=timegrid, y=r[es], marker="None", ls="-", color=color[idx])
+        for es in [0]: #gap:
+            ax.errorbar(x=timegrid, y=gap[es], marker="None", ls="-")
+        #ax.errorbar(x=timegrid, y=gap_density, marker="None", ls="-")
+    #ax.legend()
+    #plt.yscale("log")
+    #plt.savefig("../new_figures/levelspacing.pdf", transparent=True)
+    plt.show()
 
 """
 ################################
@@ -861,4 +903,5 @@ if __name__ == "__main__":
     #plot_hybridization()
     #plot_mi()
     #plot_timedepsz()
-    plot_levelspacing()
+    #plot_levelspacing()
+    plot_spectrum()
