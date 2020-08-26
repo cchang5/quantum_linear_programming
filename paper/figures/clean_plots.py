@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import seaborn as sns
 from qlpdb.data.models import Data as data_Data
 import pickle
 import numpy as np
@@ -595,7 +596,7 @@ def gettimedependentsz(offset=0.05):
     #project = sum([np.kron(evec[:, idx], np.conj(evec[:, idx])) for idx in [0, 1]])
     from functools import reduce
     totalsz=reduce(lambda a,b:a+b, tdse.FockZ)
-    fockn=totalsz.shape[0]
+    fockn=tdse.Focksize #totalsz.shape[0]
     sz = np.asarray([ (np.trace( totalsz @ sol.y[:, i].reshape(fockn,fockn))).real   for i in range(sol.t.size)])
     X = query.time
     return X, sz
@@ -664,6 +665,34 @@ def plot_hybridization():
     # plt.yscale("log")
     plt.savefig("../new_figures/hybridization.pdf", transparent=True)
 
+def getlevelspacing(offset=0.05):
+    sim = Sim()
+    query, sol, tdse = sim.get_data(offset)
+    ngrid = 1000
+    fockn=tdse.Focksize
+    timegrid = np.linspace(0, 1, ngrid)
+    r = np.zeros(ngrid)
+    for i in range(ngrid):
+        H = tdse.annealingH(timegrid[i]).todense()
+        val, evec = eigh(H)
+        spacing = val[1:]-val[0:fockn-1]
+        temp=np.asarray([min((spacing[n],spacing[n+1]))/max((spacing[n],spacing[n+1])) for n in range(fockn-2)])
+        r[i]=np.sum(temp)/(fockn-2)
+    return timegrid, r
+
+
+def plot_levelspacing():
+    offset = list(0.01 * (np.arange(11) - 5))[::-1]
+    all_levels = []
+    for os in offset:
+        timegrid, r = getlevelspacing(os)
+        all_levels.append(r)
+    print(np.shape(all_levels))
+    sns.heatmap(all_levels)
+    #ax.legend()
+    #plt.yscale("log")
+    #plt.savefig("../new_figures/levelspacing.pdf", transparent=True)
+    plt.show()
 
 """
 ############################################
@@ -830,5 +859,6 @@ if __name__ == "__main__":
     # plot_annealcurve()
     #plot_timedepprob()
     #plot_hybridization()
-    plot_mi()
+    #plot_mi()
     #plot_timedepsz()
+    plot_levelspacing()
