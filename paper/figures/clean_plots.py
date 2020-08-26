@@ -66,9 +66,19 @@ class Sim:
         # wave params
         wave_params = dict()
         wave_params["type"] = "mixed"
-        wave_params["temp"] = 0.015
+        """==============================="""
+        #wave_params["temp"] = 0.015
+        #wave_params["gamma"] = 1 / 1
+        #wave_params["gamma_local"] = 1 / 10
+        """==============================="""
+        #wave_params["temp"] = 0.03
+        #wave_params["gamma"] = 1 / 1
+        #wave_params["gamma_local"] = 1 / 30
+        """==============================="""
+        wave_params["temp"] = 0.0225
         wave_params["gamma"] = 1 / 1
-        wave_params["gamma_local"] = 1 / 10
+        wave_params["gamma_local"] = 1 / 20
+        """==============================="""
         wave_params["initial_wavefunction"] = "transverse"
 
         # graph params
@@ -705,24 +715,34 @@ def q_mutual_info(rho, nA, nB, indicesA, indicesB, reg):
     return s
 
 
-def getmi(offset=0.05):
+def getmi(offset=0.05, type="quantum"):
     sim = Sim()
     query, sol, tdse = sim.get_data(offset)
-    #nA = 4
-    #indicesA = "abdfhacegi->bdfhcegi"
-    #nB = 1
-    #indicesB = "acdefbcdef->ab"
+    nA = 4
+    nB = 1
+    indicesA = "abcdeafghi->bcdefghi"
+    indicesB = "abcdefbcde->af"
+    #indicesA = "abdfhcbegi->adfhcegi"
+    #indicesB = "acdefabdef->cb"
+    #indicesA = "abcdefgchi->abdefghi"
+    #indicesB = "abcdeabfde->cf"
+    #indicesA = "abcdefghdi->abcefghi"
+    #indicesB = "abcdeabcfe->df"
+    #indicesA = "abcdefghie->abcdfghi"
+    #indicesB = "abcdeabcdf->ef"
 
-    nA = 2
-    indicesA = "abdfhabdgi->fhgi"
-    nB = 3
-    indicesB = "abcghdefgh->abcdef"
+    #nA = 2
+    #indicesA = "abdfhabdgi->fhgi"
+    #nB = 3
+    #indicesB = "abcghdefgh->abcdef"
 
     reg = 1E-6
     s = query.time
     mi = []
     for idx, si in enumerate(s):
         rho = sol.y[:, idx]
+        if type == "classical":
+            rho = np.diag(np.diag(rho))
         mi.append(q_mutual_info(rho, nA, nB, indicesA, indicesB, reg).real)
     return s, mi
 
@@ -786,7 +806,7 @@ def plot_dwave_mi():
         mi = calculate_dwave_mi(os)
         ax.errorbar(x=os, y=mi, marker="o", color="k")
         # plot simulation final mi
-        _, mi = getmi(os)
+        _, mi = getmi(os, type="classical")
         ax.errorbar(x=os, y=mi[-1], marker="o", color=red)
     plt.savefig("../new_figures/dwave_mutual_information.pdf", transparent=True)
 
@@ -810,5 +830,5 @@ if __name__ == "__main__":
     # plot_annealcurve()
     #plot_timedepprob()
     #plot_hybridization()
-    #plot_mi()
-    plot_timedepsz()
+    plot_mi()
+    #plot_timedepsz()
