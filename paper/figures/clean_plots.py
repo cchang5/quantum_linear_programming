@@ -80,6 +80,10 @@ class Sim:
         wave_params["gamma"] = 1 / 1
         wave_params["gamma_local"] = 1 / 15 # 1/15 or 1/20
         """==============================="""
+        #wave_params["temp"] = 0.04
+        #wave_params["gamma"] = 1 / 10
+        #wave_params["gamma_local"] = 1 / 10 # 1/15 or 1/20
+        """==============================="""
         wave_params["initial_wavefunction"] = "transverse"
 
         # graph params
@@ -892,16 +896,16 @@ if __name__ == "__main__":
     """
     # plot_anneal_time() # this is not current, maybe drop this
     # plot_all()
-    #plot_dwave_mi()
+    plot_dwave_mi()
     """
     For TDSE simulation
     """
-    #plot_tdse()
-    #plot_distribution()
+    plot_tdse()
+    plot_distribution()
     # plot_annealcurve()
-    #plot_timedepprob()
-    #plot_hybridization()
-    #plot_mi()
-    #plot_timedepsz()
-    #plot_levelspacing()
+    plot_timedepprob()
+    plot_hybridization()
+    plot_mi()
+    plot_timedepsz()
+    plot_levelspacing()
     plot_spectrum()
