@@ -59,11 +59,11 @@ class Sim:
         # offset params
         offset_params = dict()
         offset_params["annealing_time"] = 1
+        offset_params["normalized_time"] = "[0, 1]"
         offset_params["offset"] = "single_sided_binary"
         offset_params["offset_min"] = 0
-        offset_params["fill_value"] = "extrapolate"
         offset_params["anneal_curve"] = "dwave"
-
+        print(offset_params)
         # wave params
         wave_params = dict()
         wave_params["type"] = "mixed"
@@ -106,8 +106,9 @@ class Sim:
         }
         return params
 
-    def get_data(self, offset):
+    def get_data(self, offset, normalized_time = [0.0, 1.0]):
         self.params["offset"]["offset_min"] = offset
+        self.params["offset"]["normalized_time"] = normalized_time
         print(self.params["graph"]["tag"])
         print(convert_params(self.params["offset"]))
         print(self.params["solver"])
@@ -118,6 +119,8 @@ class Sim:
             solver__contains=self.params["solver"],
             wave__contains=self.params["wave"],
         ).first()
+        from django.db import connection
+        print(connection.queries)
         with open(f"{settings.MEDIA_ROOT}/{query.solution}", "rb") as file:
             sol = pickle.load(file)
         with open(f"{settings.MEDIA_ROOT}/{query.instance}", "rb") as file:
@@ -491,9 +494,9 @@ def gettdse(offset=0.0):
     return prob
 
 
-def gettdsetheory(offset=0.0):
+def gettdsetheory(offset=0.0, normalized_time = "[0, 1]"):
     sim = Sim()
-    query, sol, tdse = sim.get_data(offset)
+    query, sol, tdse = sim.get_data(offset, normalized_time)
     H = tdse._constructIsingH(np.array(tdse.ising["Jij"]), np.array(tdse.ising["hi"])).todense().tolist()
     eval, evec = eigh(H)
     project = sum([np.kron(evec[:, idx], np.conj(evec[:, idx])) for idx in [0, 1]])
@@ -523,6 +526,24 @@ def plot_tdse():
     plt.legend()
     plt.savefig("../new_figures/NN2_offset_scaling.pdf", transparent=True)
 
+def plot_tdse_extended():
+    plt.figure(figsize=p["figsize"])
+    ax = plt.axes(p["aspect_ratio"])
+    """simulation result
+    """
+    offset = list(0.01 * (np.arange(11) - 5))
+    prob = [gettdsetheory(os, normalized_time = [-0.1, 1.1]) for os in offset]
+    ax.errorbar(x=offset, y=prob, ls="-", marker="o", color="k", alpha=0.5, label="extended")
+
+    prob = [gettdsetheory(os, normalized_time = [0.0, 1.0]) for os in offset]
+    ax.errorbar(x=offset, y=prob, ls="--", marker="o", color=os_color["sim"], label="truncated")
+    """labels
+    """
+    ax.set_xlabel("offset", p["textargs"])
+    ax.set_ylabel("probability", p["textargs"])
+
+    plt.legend()
+    plt.savefig("../new_figures/NN2_offset_scaling_extended.pdf", transparent=True)
 
 """
 ##################################
@@ -932,7 +953,8 @@ if __name__ == "__main__":
     """
     For TDSE simulation
     """
-    # plot_tdse()
+    #plot_tdse()
+    plot_tdse_extended()
     # plot_distribution()
     # plot_annealcurve()
     # plot_timedepprob()
@@ -940,4 +962,4 @@ if __name__ == "__main__":
     # plot_mi()
     # plot_timedepsz()
     # plot_levelspacing()
-    plot_spectrum()
+    #plot_spectrum()
