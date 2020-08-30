@@ -533,16 +533,16 @@ def plot_tdse_extended():
     """
     offset = list(0.01 * (np.arange(11) - 5))
     prob = [gettdsetheory(os, normalized_time = [-0.1, 1.1]) for os in offset]
-    ax.errorbar(x=offset, y=prob, ls="-", marker="o", color="k", alpha=0.5, label="extended")
+    ax.errorbar(x=offset, y=prob, ls="-", marker="o", color="k", alpha=0.5)
 
-    prob = [gettdsetheory(os, normalized_time = [0.0, 1.0]) for os in offset]
-    ax.errorbar(x=offset, y=prob, ls="--", marker="o", color=os_color["sim"], label="truncated")
+    #prob = [gettdsetheory(os, normalized_time = [0.0, 1.0]) for os in offset]
+    #ax.errorbar(x=offset, y=prob, ls="--", marker="o", color=os_color["sim"], label="truncated")
     """labels
     """
     ax.set_xlabel("offset", p["textargs"])
     ax.set_ylabel("probability", p["textargs"])
 
-    plt.legend()
+    #plt.legend()
     plt.savefig("../new_figures/NN2_offset_scaling_extended.pdf", transparent=True)
 
 """
@@ -552,9 +552,9 @@ def plot_tdse_extended():
 """
 
 
-def getannealcurve(offset=0.05):
+def getannealcurve(offset=0.05, normalized_time=[0.0, 1.0]):
     sim = Sim()
-    query, sol, tdse = sim.get_data(offset)
+    query, sol, tdse = sim.get_data(offset, normalized_time)
     X = np.linspace(*query.offset["normalized_time"])
     yA = np.array([tdse.AS.A(Xi) for Xi in X])[:, 0]
     yB = np.array([tdse.AS.B(Xi) for Xi in X])[:, 0]
@@ -562,7 +562,7 @@ def getannealcurve(offset=0.05):
 
 
 def plot_annealcurve():
-    offset = list(np.arange(6) / 100)
+    offset = [0.0, 0.05] #list(np.arange(6) / 100)
     plt.figure(figsize=p["figsize"])
     ax = plt.axes(p["aspect_ratio"])
     for os in offset:
@@ -576,7 +576,7 @@ def plot_annealcurve():
             colorA = blue
             colorB = blue
             alpha = os_alpha[os]
-        s, yA, yB = getannealcurve(os)
+        s, yA, yB = getannealcurve(os, normalized_time=[-0.1, 1.1])
         ax.errorbar(x=s, y=yA, color=colorA, alpha=alpha, marker="None", ls="-", label=label)
         ax.errorbar(x=s, y=yB, color=colorB, alpha=alpha, marker="None", ls="-")
     """labels
@@ -585,7 +585,7 @@ def plot_annealcurve():
     ax.set_ylabel("$A(s)$ and $B(s)$ (GHz)", p["textargs"])
 
     plt.legend(title="offset", loc=4)
-    plt.savefig("../new_figures/anneal_schedule.pdf", transparent=True)
+    plt.savefig("../new_figures/anneal_schedule_extended.pdf", transparent=True)
 
 
 """
@@ -956,7 +956,7 @@ if __name__ == "__main__":
     #plot_tdse()
     plot_tdse_extended()
     # plot_distribution()
-    # plot_annealcurve()
+    #plot_annealcurve()
     # plot_timedepprob()
     # plot_hybridization()
     # plot_mi()

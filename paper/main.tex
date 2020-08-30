@@ -326,7 +326,7 @@ In order to understand the effects of annealing offsets, we simulate the anneali
 
 Simulation results are obtained by solving the von Neumann equation subject to two decoherence models: local damping and full-counting statistics. Details of the master equation are given in Sec.~\ref{sec:methods:lindblad}. The time dependence of $A(s)$ and $B(s)$ are given by the DWave annealing schedule with offsets in Fig.~\ref{fig:anneal_schedule}. The graph $G(2)$ has the interesting feature of having a degenerate ground state depending on whether qubit 0 or 1 is chosen to be the MDS solution. This degeneracy is reflected in the experimental result and provides a non-trivial benchmark for our simulation. Fig.~\ref{fig:final_state_distribution} show the final state distribution of the three lowest lying state. The states $(0, 1, 0, 0, 0)$ and $(1, 0, 0, 1, 0)$ are the two degenerate ground states of the embedded Hamiltonian, while $(1, 1, 1, 1, 1)$ is the first excited state which yields an incorrect solution. All other states receive negligible probability at the end of annealing. The simulation (black) captures main features of the experimental result: 1) significant probability to populate both ground states (rather than populating only one), 2) asymmetry in ground state population due to systematic effects of offset lifting the final state degeneracy spanning approximately the correct range, 3) population of first excited state with systematically lower probability when the strong field is delayed. This result can be obtained by tuning three free parameters: the simulation temperature to the order of 10 milliKelvin, and the two coefficients of the two decoherence models at the order of 1 to 10 $ns$. Additional insights of the simulation are given in Sec.~\ref{sec:methods:simulation_details}.
 
-The resulting probability of recovering the correct solution as a function of annealing offset is given in Fig.~\ref{fig:dwave1us}. We confirm that scaling with respect to offset from the simulation matches what is observed from experiment. Furthermore, in Sec.~\ref{}, we provide the results of an ideal quantum annealer, where the annealing schedule is faithfully delayed (all qubits start and end with the same values of $A$ and $B$) and all decoherence terms are removed. The scaling with respect to offset is preserved indicating that the improvements are related to quantum mechanics.
+The resulting probability of recovering the correct solution as a function of annealing offset is given in Fig.~\ref{fig:dwave1us}. We confirm that scaling with respect to offset from the simulation matches what is observed from experiment, and provides evidence suggesting that the improvements are related to quantum mechanics. An additional study where an extended annealing schedule is employed in the simulation which removes systematic errors introduced by annealing offsets is presented in Sec.~\ref{sec:app:offset}, and further supports this observation.
 
 \begin{figure}
 	\centering
@@ -347,11 +347,11 @@ To solve for time evolution dynamics of quantum annealing including thermal and 
 \begin{align}
 \partial_t \rho (t) =  \frac{-i}{\hbar} [H(t) , \rho(t)] + \mathcal{L}[\rho (t)] ,
 \end{align}
-where $\rho (t)$ is the density matrix at time $t$. $H(t)$ is the time-dependent Hamiltonian 
+where $\rho (t)$ is the density matrix at time $t$. The time-dependent Hamiltonian $H(t)$ solved by DWave as documented in Ref.~\cite{dwave_offset} is
 \begin{align}
 \label{eq:annealH}
- H_{anneal}(t)&  =  - \sum_i  A_i(t)\sigma^x_i & \notag \\ 
- +&  \sum_{i>j} \sqrt{B_{i}(t)B_{j}(t)} J_{ij} \sigma^z_i \sigma^z_j +\sum_i B_{i}(t) h_i \sigma^z_i  ,&
+ H^{\textrm{anneal}}(t)  =&  - \sum_i  A_i(t)\sigma^x_i +\sum_i B_{i}(t) h_i \sigma^z_i \notag \\
+ +&  \sum_{i>j} \sqrt{B_{i}(t)B_{j}(t)} J_{ij} \sigma^z_i \sigma^z_j ,&
 \end{align}
 where $A_i(t)$ and $B_{i}(t)$ are site-dependent annealing schedule functions. The site dependency takes into account of the annealing offset. $[,]$ denotes the Lie bracket and $\mathcal{L}$ is the Lindblad operator.
 
@@ -378,6 +378,32 @@ The probability to get the ground state at measurement is
 P =  \mbox{Tr} \{  \rho (t) \pi_{\mbox{gnd}} \}  ,
 \end{align}
 where the projection operator onto the degenerated ground states subspace is defined as $\pi_{\mbox{gnd}}=\sum_{i\in G} |\mbox{gnd}_i\rangle \langle \mbox{gnd}_i| $. Here $\{ | \mbox{gnd}_i \rangle | i \in G \}$ forms an orthonormal basis for the degenerated ground states subspace, i.e., $\langle \mbox{gnd}_j | \mbox{gnd}_i \rangle = \delta_{ij}$.
+
+\subsection{Systematic effects of annealing offsets}
+\label{sec:app:offset}
+We verify that our implementation of annealing offsets on the simulator is consistent with DWave by solving the following three qubit Hamiltonian
+\begin{align}
+	\label{eq:offset_test_hamiltonian}
+	H^{\textrm{problem}} =
+	\begin{pmatrix}
+		-0.25 & 1 & 0 \\
+		0 & -0.25 & 0 \\
+		0 & 0 & -0.25
+	\end{pmatrix}
+\end{align}
+which has a doubly-degenerate ground state of $(0, 1, 1)$ and $(1, 0, 1)$. An annealing offset is then applied to either qubit 0 or 1, and breaks the ground state degeneracy of the system. Because of the systematic error introduced when assigning an offset to a qubit, the final Hamiltonian given by Eq.~(\ref{eq:annealH}) will have small deviations from the input problem Hamiltonian. For example, we expect a negative offset to qubit 0 to Eq.~(\ref{eq:offset_test_hamiltonian}) will yield $(1, 0, 1)$ as the unique ground state given Eq.~(\ref{eq:annealH}).
+
+We confirm that with different combinations of annealing offsets, the degeneracy is lifted on the DWave results as expected by solving for the modified problem Hamiltonian spectrum, as well as dialing in annealing offset in the simulation of this three qubit test case.
+
+In the simulation, we are also reserve the ability to remove the systematic errors by extending the annealing schedule as shown in Fig.~\ref{fig:anneal_schedule_ext}. With the extended schedule, all qubits start and end with the same values of $A$ and $B$ and faithfully preserves the initial and final Hamiltonians. The dependence on offset for $G(2)$ (Fig.~(\ref{fig:dwave1us})) remains the same under the extended anneal schedule (Fig.~\ref{fig:anneal_schedule_ext}), confirming that the behavior is not a systematic artifact.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\columnwidth]{./new_figures/anneal_schedule_extended.pdf}
+	\includegraphics[width=\columnwidth]{./new_figures/NN2_offset_scaling_extended.pdf}
+	\caption{{\color{red}I need to add dwave final state distribution here too.}}
+	\label{fig:anneal_schedule_ext}
+\end{figure}
 
 \subsection{Minor Embedding}
 \label{sec:methods:minor_embedding}
