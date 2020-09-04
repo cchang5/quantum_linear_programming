@@ -92,9 +92,9 @@ subject to
 \begin{align}
  \label{eq:ilp-constraints}
   & \sum_i A_{ai}x_i +b_a \leq 0 \,, \\
-  & x_i  \in \mathbbm{N}\, ,
+  & x_i  \in \mathbbm{Z} \geq 0\, ,
 \end{align}
-where the natural numbers $\mathbbm{N}$ include zero, $i=1, \cdots,  N$ is the number of dependent variables and $a=1, \cdots, M$ the number of constraint equations. {\color{red} I don't actually understand this sentence.}
+where $i=1, \cdots,  N$ is the number of dependent variables and $a=1, \cdots, M$ the number of constraint equations.
 
 ILP is a commonly tackled problem applicable to situations such as x~\cite{}, y~\cite{}, and the Minimum Dominating Set Problem (MDS)~\cite{}.
 In general, however, ILP is classically NP-complete, and as a result, heuristic methods are employed~\cite{}.
@@ -128,7 +128,7 @@ As a result, the solution to the dominating set problem can not be obtained by s
 	\label{fig:dominating_sets}
 \end{figure*}
 
-For general graphs, existing "classical" algorithms either find MDS solutions in exponential time $\sim O( 1.5^n)$ \cite{Fomin2009, vanRooij2009} or approximate solutions in polynomial time. For example, greedy algorithms locally optimize decisions about which nodes to add to the dominating set.
+For general graphs, existing algorithms on classical computers find MDS solutions in exponential time $\sim O( 1.5^n)$ \cite{Fomin2009, vanRooij2009} or approximate solutions in polynomial time. For example, greedy algorithms locally optimize decisions about which nodes to add to the dominating set.
 Thus one is guaranteed to find a dominating set but not necessarily a MDS.
 
 Due to the importance and difficulty, in this work, we present a method to obtain the optimal solution to ILP by employing methods of quantum annealing.
@@ -141,10 +141,9 @@ In this paper, we propose a new algorithm that maps ILP problems to QUBOs.
 This is achieved by the introduction of slack variables $s$ which turn the inequalities eq.~\eqref{eq:ilp-constraints} to equalities
 \begin{align}
   & \sum_i A_{a i}x_i + s_a + b_a = 0, \\
-  & s_a \in \mathbb{N},                \\
-  & x_i \in \mathbb{N}.
+  & s_a \geq 0,                \\
+  & x_i \in \mathbb{Z} \geq 0.
 \end{align}
-As a result, we can restrict both $x_i$ and $s_i$ to sample over only positive integer values. {\color{blue} In general, $s$ can be relaxed to span a fixed-point decimal number following Ref.~\cite{Chang:2018uoc} if the constraint equation is defined by non-integer coefficients.}
 
 \ghissue{Decoherence \& Localization}{14}
 
@@ -152,28 +151,12 @@ As a result, we can restrict both $x_i$ and $s_i$ to sample over only positive i
 A quantum annealer evolves the ground state of an initial Hamiltonian into the ground state of the problem Hamiltonian by adiabatically changing the hardware which implements Hamiltonian.
 Thus, the implemented Hamiltonian is explicitly time dependent
 \begin{equation}
- H(s) = A(s) H^{\textrm{init}} + B(s) H^{\textrm{problem}}, \label{eq:tdhamiltonian}
+ H(t) = A(t) H^{\textrm{init}} + B(t) H^{\textrm{problem}}, \label{eq:tdhamiltonian}
 \end{equation}
 and $H^\textrm{init}=\sum_i\sigma^x_i$ on the DWave, while $H^\textrm{problem}$ encodes the problem to be solved.
-The variable $s\in [0, 1]$ is the normalized annealing time and, in physical units, is allowed to vary between 1$\mu s$ to 2$ms$ on DWave.
 
-On DWave solvers, annealing offsets effectively advance or delay the annealing schedule of individual qubits ($B(s) \to B_i(s)$).
-In Fig.~\ref{fig:anneal_schedule}, the default DWave annealing schedule is shown in black, in addition to the effects of applying negative offsets (effective time delay) to $A(s)$ and $B(s)$ in blue.
-Details of the DWave annealing schedule use to generate Fig.~\ref{fig:anneal_schedule} and further documentation are provided by DWave in Ref.~\cite{dwave_as, dwave_as_docu}.
-
-
-\begin{figure}[htb]
- \centering
-  \includegraphics[width=\columnwidth]{./new_figures/anneal_schedule.pdf}
-  \caption{
-  Anneal schedules for amplitudes of initial Hamiltonian (top left to bottom right) and final Hamiltonian (bottom left to top right) are displayed for a complete anneal schedule.
-  Different colors represent different offesets: delayed (light to dark), default (black).
- }
- \label{fig:anneal_schedule}
-\end{figure}
-
-If the annealer does not reach thermal equilibrium, for example, strong external magnetic fields freeze in individual qubits, the final solution of the annealing process might not encode the ground state of the final Hamiltonian. {\color{red} @CC is this statement actually correct?}
-It is thus essential to prepare the system such that Many-Body Localizations are absent, and thus one must define a measure for MBL.
+{\color{red} If the annealer does not reach thermal equilibrium, for example, strong external magnetic fields freeze in individual qubits, the final solution of the annealing process might not encode the ground state of the final Hamiltonian.
+It is thus essential to prepare the system such that Many-Body Localizations are absent, and thus one must define a measure for MBL. }
 
 {\color{blue} These two paragraphs need to be changed (softened). The mutual information does not paint the story we need. Or more specifically, the MI we plot is not useful yet because we have no finite size scaling. In general, we do not have a good observable for MBL without finite size scaling. This is future work. The problem size is too small also to really see this effect. The best we can say is that we have this MBL hypothesis, and we set offsets with respect to that. So I think the paragraph above, and below should be changed to a short summary of Anderson Localization, and how our system is like a spin-glass, so we follow the AL logic. We then observe that the simulation agrees with DWave, and in the absense of unknown hardware effects like qubits freezing due to hardware limitations (this is a hardware problem actually, not a QM problem), that this scaling holds. So DWave claims offset is good to cure ``freezing'' problems cuz of hardware issues. We can claim this is more than hardware, but rooted in QM. This is the strongest statement we can make without getting skewered.}
 {\color{red}
@@ -190,16 +173,15 @@ On the other hand, decoherence in the hardware leads to the loss of quantum info
 It is, therefore, desirable to minimize the effect of relaxation and shorten the annealing process.
 The interplay between these two competing effects can be observed by looking at the non-monotonous time dependency of the probability for reaching the global ground state.
 }
-
-To improve annealing results we propose a qubitwise offsets associated with exeternal field alignments.
-The motivation behind implementing per-qubit level offsets is rooted in the hypothesis that as the problem Hamiltonian is turned on, the system, in general, will exhibit more disorder.
-When recasting the QUBO into its Ising form such that the problem Hamiltonian has the form
+{\color{green} We further improve the performance of the quantum annealer by utilizing annealing offsets which effectively delays the annealing schedule on a per-qubit basis. The improvement strategy is motivated by recognizing that a general QUBO exhibits properties of a spin-glass model.
+Explicilty, the Ising representation of the the problem Hamiltonian has the form
 \begin{equation}
  H^{\textrm{Ising}} = \sum_{ij} J_{ij} \sigma^z_i \sigma^z_j + \sum_i h_i \sigma^z_i,
 \end{equation}
-we recognize that if $h_i$ is randomly drawn from a Bernoulli distribution, we recover the spin-glass model.
-The spin-glass model enters its glassy state when $|h_i|$ is large, and as a consequence, the wavefunction experiences many-body localization effects, the many-body analogue of Anderson Localization (MBL)~{\color{red} cite some AL papers here}.
-
+where in the case that $h_i$ is randomly drawn from a Bernoulli distribution, we recover the spin-glass model.
+The spin-glass model enters its glassy state when more disorder is introduced ($|h_i|$ becomes large), and as a consequence, the wavefunction experiences many-body localization effects, the many-body analogue of Anderson Localization (MBL)~{\color{red} cite some AL papers here}.
+In the case of quantum annealing, when an algorithm is mapped to its QUBO representation, the values of $h_i$ will often times take on various values, mimicking spin-glass like behavior. As a result, the system of qubits can be interpreted to posses more disordered over time, and guides our choice of annealing offsets.
+}
 \ghissue{Simulations}{15}
 
 To understand which quantum phenomena are relevant for describing the scaling behavior of the proposed offset study, we simulate the anneal for a small MDS problem.
@@ -333,7 +315,7 @@ Additional insights of the simulation are given in Sec.~\ref{sec:methods:simulat
 
 The resulting probability of recovering the correct solution as a function of annealing offset is given in Fig.~\ref{fig:dwave1us}.
 We confirm that scaling with respect to offset from the simulation matches what is observed from experiment, and provides evidence suggesting that the improvements are related to quantum mechanics.
-An additional study where an extended annealing schedule is employed in the simulation which removes systematic errors introduced by annealing offsets is presented in Sec.~\ref{sec:app:offset}, and further supports this observation.
+An additional study where an extended annealing schedule is employed in the simulation which removes systematic errors introduced by annealing offsets and effects of local damping are presented in Sec.~\ref{sec:app:offset}, and further supports this observation.
 
 \begin{figure}
 	\centering
@@ -457,7 +439,7 @@ After normalization of the QUBO, this corresponds to decreasing the energy gap b
 Thus, if solvers have finite precision, one must estimate reasonable values for $p$: for large $p$ more solutions fulfill the constraints, while for small $p$, more solutions minimize the objective function.
 
 %----------------------------------------------------------------------------------------
-\subsubsection{Notes}
+\subsubsection{{\color{green} Integer quadratic optimization}}
 \label{sec:methods:ilp:notes}
 %----------------------------------------------------------------------------------------
 
@@ -468,6 +450,25 @@ Because quantum annealing is capable of solving quadratic problems, we extend th
 without the introduction of auxiliary qubits.
 
 While the coefficients of the inequality constraints are not required to be integer valued, the inequalities can be trivially rescaled such that $s_i \in \mathbbm{N}$ given fixed precision coefficients $A_{ij}$ and $b_i$.
+
+%----------------------------------------------------------------------------------------
+\subsubsection{Minor Embedding}
+\label{sec:methods:minor_embedding}
+%----------------------------------------------------------------------------------------
+Our proposed offset strategy is motivated by the structure of the Hamiltonian being evaluated by the annealer.
+As a result, details of the embedding are important. We obtain an embedding for $G(n)$ with the \texttt{embed\_qubo} function provided by the DWave Oceans Python package~\cite{dwave_oceans} under the \texttt{dwave.embedding} module.
+The same embedding is used for all DWave solves of the same graph (independent of offset), and consequently the simulation solves the resulting embedded Hamiltonian for $G(2)$.
+Additionally, solving the same graph as a function of offset on the exact same qubits removes (or at least keeps consistent) the systematic effects due to solving a problem on different physical qubits.
+We note that comparisons between different graphs in Fig.~\ref{fig:baseline} are subject to this uncontrolled systematic.
+
+After embedding the QUBO for $G(2)$ requires 5 qubits (an increase from 4), where by construction, qubits 0 and 3 form the qubit chain.
+We confirm through brute force evaluation of the eigenvalue decomposition of the 5 qubit Hamiltonian, that the embedding provided by DWave solves the expected ILP problem for $G(2)$, with degenerate ground states at $(0, 1, 0, 0, 0)$ and $(1, 0, 0, 1, 0)$ corresponding to whether vertex 0 or 1 is chosen for the MDS solution, and $(1, 1, 1, 1, 1)$ as the first (non-degenerate) excited state where both vertex 1 and 0 are in the set yielding a valid dominating set but not the minimum dominating set.
+
+The resulting Ising Hamiltonian has external field equal to $h = (2.75, 1.5, -1.0, -1.25, -1.0)$.
+Following the offset strategy described in Sec.~\ref{sec:discussion:offsets}, qubit(s) 0 (1, 2, 3, 4) are placed in the set with relatively stronger (weaker) final external fields.
+This imbalance in the two groups may perhaps explain the reason why effects of delaying the weaker fields are more pronounced, since delaying the strong fields only differs from the baseline by a single qubit.
+
+
 
 %----------------------------------------------------------------------------------------
 \subsection{Simulation of a Quantum Annealer}
@@ -530,36 +531,32 @@ P =  \mbox{Tr} \{  \rho (t) \pi_{\mbox{gnd}} \}  ,
 where the projection operator onto the degenerated ground states subspace is defined as $\pi_{\mbox{gnd}}=\sum_{i\in G} |\mbox{gnd}_i\rangle \langle \mbox{gnd}_i| $.
 Here $\{ | \mbox{gnd}_i \rangle | i \in G \}$ forms an orthonormal basis for the degenerated ground states subspace, i.e., $\langle \mbox{gnd}_j | \mbox{gnd}_i \rangle = \delta_{ij}$.
 
+{\color{green}For the simulation results presented, we set the temperature to 22.5 milliKelvin. The coherence time for local decoherence is set to 15$ns$, and 1$ns$ for full-counting statistics.
+}
 %----------------------------------------------------------------------------------------
-\subsubsection{Finite Annealing Schedules}
+\subsubsection{Annealing schedule and offsets}
 \label{sec:methods:annealing-schedule}
 %----------------------------------------------------------------------------------------
-The time dependent coefficients are nonlinear in time because the underlying control variable $c(s)$ which is designed to grow the persistent current $I_p(s)$ linearly in time.
+{\color{red} I moved the details of annealing schedules here. This doesn't belong in the main text. This is way too detailed.}
+In this section, we discuss the details of the annealing schedule with respect to the dimensionless normalized time $s$. On DWave solvers, annealing offsets effectively advance or delay the annealing schedule of individual qubits ($B(s) \to B_i(s)$).
+In Fig.~\ref{fig:anneal_schedule}, the default DWave annealing schedule is shown in black, in addition to the effects of applying negative offsets (effective time delay) to $A(s)$ and $B(s)$ in blue.
+Details of the DWave annealing schedule use to generate Fig.~\ref{fig:anneal_schedule} and further documentation are provided by DWave in Ref.~\cite{dwave_as, dwave_as_docu}.
+
+\begin{figure}[htb]
+ \centering
+  \includegraphics[width=\columnwidth]{./new_figures/anneal_schedule.pdf}
+  \caption{
+  Anneal schedules for amplitudes of initial Hamiltonian (top left to bottom right) and final Hamiltonian (bottom left to top right) are displayed for a complete anneal schedule.
+  Different colors represent different offesets: delayed (light to dark), default (black).
+ }
+ \label{fig:anneal_schedule}
+\end{figure}
+
+The coefficients are nonlinear in time because the underlying control variable $c(s)$ which is designed to grow the persistent current $I_p(s)$ linearly in time.
 The effective time delay is implemented by introducing an offset as $c(s) + \delta$.
 As a result, systematic errors are introduced because the final values of $A(s)$ and $B(s)$ will differ for qubits with different offsets.
 Additionally, the values of the coefficients are unknown outside of $s\in [0, 1]$.
 We extrapolate their values by a linear extrapolation, and only employ negative offsets such that this effect only enters at the beginning of the annealing process rather than the end.
-
-%----------------------------------------------------------------------------------------
-\subsubsection{Decoherence Time}
-\label{sec:methods:deco}
-%----------------------------------------------------------------------------------------
-
-\ghissue{Decoherence section}{16}
-
-FC gives correct distribution. Local the simplest relaxation mode. Maybe run a plot showing we turn of local, and see same scaling. So offset is not directly tackling only this. Can show that in Fig. 7.
-
-%----------------------------------------------------------------------------------------
-\subsubsection{Many-Body Localization}
-\label{sec:methods:mbl}
-%----------------------------------------------------------------------------------------
-{\color{red} I think we discussed enough about this in the main text. There's no need to talk about this here.}
-
-%----------------------------------------------------------------------------------------
-
-\subsubsection{Systematic effects of annealing offsets}
-\label{sec:app:offset}
-%----------------------------------------------------------------------------------------
 
 We verify that our implementation of annealing offsets on the simulator is consistent with DWave by solving the following three qubit Hamiltonian
 \begin{align}
@@ -584,24 +581,6 @@ In the simulation, we are also reserve the ability to remove the systematic erro
 	\caption{{\color{red}I need to add dwave final state distribution here too.}}
 	\label{fig:anneal_schedule_ext}
 \end{figure}
-
-%----------------------------------------------------------------------------------------
-\subsubsection{Minor Embedding}
-\label{sec:methods:minor_embedding}
-%----------------------------------------------------------------------------------------
-Our proposed offset strategy is motivated by the structure of the Hamiltonian being evaluated by the annealer.
-As a result, details of the embedding are important. We obtain an embedding for $G(n)$ with the \texttt{embed\_qubo} function provided by the DWave Oceans Python package~\cite{dwave_oceans} under the \texttt{dwave.embedding} module.
-The same embedding is used for all DWave solves of the same graph (independent of offset), and consequently the simulation solves the resulting embedded Hamiltonian for $G(2)$.
-Additionally, solving the same graph as a function of offset on the exact same qubits removes (or at least keeps consistent) the systematic effects due to solving a problem on different physical qubits.
-We note that comparisons between different graphs in Fig.~\ref{fig:baseline} are subject to this uncontrolled systematic.
-
-After embedding the QUBO for $G(2)$ requires 5 qubits (an increase from 4), where by construction, qubits 0 and 3 form the qubit chain.
-We confirm through brute force evaluation of the eigenvalue decomposition of the 5 qubit Hamiltonian, that the embedding provided by DWave solves the expected ILP problem for $G(2)$, with degenerate ground states at $(0, 1, 0, 0, 0)$ and $(1, 0, 0, 1, 0)$ corresponding to whether vertex 0 or 1 is chosen for the MDS solution, and $(1, 1, 1, 1, 1)$ as the first (non-degenerate) excited state where both vertex 1 and 0 are in the set yielding a valid dominating set but not the minimum dominating set.
-
-The resulting Ising Hamiltonian has external field equal to $h = (2.75, 1.5, -1.0, -1.25, -1.0)$.
-Following the offset strategy described in Sec.~\ref{sec:discussion:offsets}, qubit(s) 0 (1, 2, 3, 4) are placed in the set with relatively stronger (weaker) final external fields.
-This imbalance in the two groups may perhaps explain the reason why effects of delaying the weaker fields are more pronounced, since delaying the strong fields only differs from the baseline by a single qubit.
-
 
 %----------------------------------------------------------------------------------------
 \subsubsection{Other Simulation Details}
@@ -644,6 +623,30 @@ The final state distribution gives us a very sensitive observable to tune the si
 \ghissue{Simulation details}{18}
 
 
+{\color{red}
+%----------------------------------------------------------------------------------------
+\subsubsection{Decoherence Time}
+\label{sec:methods:deco}
+%----------------------------------------------------------------------------------------
+
+\ghissue{Decoherence section}{16}
+I think the following two sections can be merged / removed.
+
+I talk about this in the section above.
+
+The AL discussion is a bit too textbooky for a paper I think.
+
+
+FC gives correct distribution. Local the simplest relaxation mode. Maybe run a plot showing we turn of local, and see same scaling. So offset is not directly tackling only this. Can show that in Fig. 7.
+
+%----------------------------------------------------------------------------------------
+\subsubsection{Anderson Localization}
+\label{sec:methods:mbl}
+%----------------------------------------------------------------------------------------
+{\color{green} If we want, we can write a short summary of Anderson Localization. Anderson Hamiltonian -> spin representation. This requires some more reading though I think.}
+%----------------------------------------------------------------------------------------
+
+}
 %========================================================================================
 \section{DATA AVAILABILITY}
 \label{sec:open-source}
