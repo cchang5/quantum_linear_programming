@@ -722,7 +722,7 @@ def getlevelspacing(offset=0.05):
     sim = Sim()
     query, sol, tdse = sim.get_data(offset)
     ngrid = 1000
-    fockn = tdse.Focksize
+    fockn = 3 #tdse.Focksize
     timegrid = np.linspace(0, 1, ngrid)
     r = np.zeros(ngrid)
     for i in range(ngrid):
@@ -745,8 +745,8 @@ def plot_levelspacing():
     sns.heatmap(all_levels, yticklabels=offset)
     # ax.legend()
     # plt.yscale("log")
-    # plt.savefig("../new_figures/levelspacing.pdf", transparent=True)
-    plt.show()
+    plt.savefig("../new_figures/levelspacing.pdf", transparent=True)
+    #plt.show()
 
 
 """
@@ -954,12 +954,12 @@ if __name__ == "__main__":
     For TDSE simulation
     """
     #plot_tdse()
-    plot_tdse_extended()
+    #plot_tdse_extended()
     # plot_distribution()
     #plot_annealcurve()
     # plot_timedepprob()
     # plot_hybridization()
     # plot_mi()
     # plot_timedepsz()
-    # plot_levelspacing()
+    plot_levelspacing()
     #plot_spectrum()
