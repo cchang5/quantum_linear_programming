@@ -61,6 +61,7 @@
  This work presents the formalism of how to map ILP problems to the annealing architectures.
  It illustrates the effects of decorrelation and many-body localization, for the minimum dominating set problem, and compares annealing results against numerical simulations of the quantum architecture.
  We find that the QA ILP algorithm outperforms random guessing but is limited to small problems and that annealing schedules can be adjusted to reduce the effects of decorrelation--which is qualitatively confirmed by simulations.
+ {\color{red}Furthermore we find evidence for Many-body localization effects ... and find that FC decoherence is more relevant than local decoherence...}
 
  \ghissue{Finalize abstract}{13}
 
@@ -197,8 +198,19 @@ When recasting the QUBO into its Ising form such that the problem Hamiltonian ha
 we recognize that if $h_i$ is randomly drawn from a Bernoulli distribution, we recover the spin-glass model.
 The spin-glass model enters its glassy state when $|h_i|$ is large, and as a consequence, the wavefunction experiences many-body localization effects, the many-body analogue of Anderson Localization (MBL)~{\color{red} cite some AL papers here}.
 
-
 \ghissue{Simulations}{15}
+
+To understand which quantum phenomena are relevant for describing the scaling behavior of the proposed offset study, we simulate the anneal for a small MDS problem.
+This requires solving the von Neumann equations of the time dependent problem.
+To solve for time evolution dynamics of quantum annealing including thermal and the decoherence effects, we solve for the master equation in Lindblad form
+\begin{align}
+ \partial_t \rho (t) =  \frac{-i}{\hbar} [H(t) , \rho(t)] + \mathcal{L}(\rho(t), H(t))
+\end{align}
+where $\rho (t)$ is the density matrix at time $t$, $H(t)$ is the time-dependent Hamiltonian and $\mathcal{L}$ is the Linblad operator implementing the decoherence models.
+In this work, we consider two types of decoherence models: full counting statistics and local damping.
+The full counting statistics term models the global decoherence to all the qubits due to the classical reservoir.
+The local damping term models the decoherence of each qubit independently.
+
 
  and present an example implementation in case of the Minimal Dominating Set problem (\ref{sec:methods:mds}).
 We review the annealing process on the utilized hardware (\ref{sec:methods:annealing}) and describe the computational framework which we used to simulate the annealing process (\ref{sec:methods:simulation}).
