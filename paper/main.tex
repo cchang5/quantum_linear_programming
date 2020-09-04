@@ -1,12 +1,12 @@
 %! suppress = LineBreak
 \documentclass[prd,twocolumn,tightenlines,preprintnumbers,showpacs,superscriptaddress,notitlepage,nofootinbib,eqsecnum,
-floatfix,longbibliography]{revtex4-2}
+floatfix,longbibliography,aps,10pt]{revtex4-2}
 \usepackage{CJK}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath}
 \usepackage{mathtools}
-\usepackage{amsfonts}
+\usepackage{amsfonts,dsfont}
 \usepackage{bm,bbm}
 \usepackage{graphicx}
 \usepackage{xcolor}
@@ -146,7 +146,7 @@ E = &
 \end{pmatrix}
 \begin{pmatrix}
 Q_{xx} & Q_{xs}\\
-Q_{sx} & Q_{ss} 
+Q_{sx} & Q_{ss}
 \end{pmatrix}
 \begin{pmatrix}
 \Psi^x\\ \Psi^s
@@ -355,18 +355,18 @@ where $\rho (t)$ is the density matrix at time $t$. The time-dependent Hamiltoni
 \end{align}
 where $A_i(t)$ and $B_{i}(t)$ are site-dependent annealing schedule functions. The site dependency takes into account of the annealing offset. $[,]$ denotes the Lie bracket and $\mathcal{L}$ is the Lindblad operator.
 
-We consider two types of decoherence models: full counting statistics and local damping. The full counting statistics term models the global decoherence to all the qubits due to the classical reservoir. The local damping term models the decoherence of each qubit independently. 
-For full counting statistics, the Lindblad operator is 
+We consider two types of decoherence models: full counting statistics and local damping. The full counting statistics term models the global decoherence to all the qubits due to the classical reservoir. The local damping term models the decoherence of each qubit independently.
+For full counting statistics, the Lindblad operator is
 \begin{align}
 \mathcal{L}[\rho (t)] &=& \Gamma_{fc} \sum_j   (2 S_j \rho(t) S_j^\dagger - \{ S^\dagger_j S_j, \rho(t) \}) \notag \\
 && + e^{-\beta \Delta E_j} (2 S_j^\dagger \rho(t) S_j - \{ S_j S^\dagger_j, \rho(t) \} )
 \end{align}
-where $j$ is the index for the inter-level spacing $\Delta E_j=E_\mu-E_\nu>0$. $S_j=|E_\nu \rangle \langle E_\mu|$ denotes the many-body lowering operator. $\{, \}$ denotes the anti-commutator. $\Gamma = 1/T_c$ is the decoherence rate for coherence time $T_c$. That is, due to the interaction with the classical thermal bath, there is a probability that the system hops from each higher-energy many-body state to a lower-energy many-body state. The probability of the inverse process is given by a Boltzmann factor. To model the local decoherence of each qubits in the non-interacting limit, we also consider the amplitude damping for non-interacting qubits. The Lindblad operator is 
+where $j$ is the index for the inter-level spacing $\Delta E_j=E_\mu-E_\nu>0$. $S_j=|E_\nu \rangle \langle E_\mu|$ denotes the many-body lowering operator. $\{, \}$ denotes the anti-commutator. $\Gamma = 1/T_c$ is the decoherence rate for coherence time $T_c$. That is, due to the interaction with the classical thermal bath, there is a probability that the system hops from each higher-energy many-body state to a lower-energy many-body state. The probability of the inverse process is given by a Boltzmann factor. To model the local decoherence of each qubits in the non-interacting limit, we also consider the amplitude damping for non-interacting qubits. The Lindblad operator is
 \begin{align}
 \mathcal{L}[\rho (t)] &=&  \Gamma_{loc} \sum_j (2L_j \rho(t) L_j^\dagger - \{ L^\dagger_j L_j, \rho(t) \} \notag \\
 && + e^{-\beta 2|h_j| }  (2L_j^\dagger \rho(t) L_j - \{ L_j L_j^\dagger, \rho(t) \}) ),
 \end{align}
-where $j$ is the index for qubit. $L_j= \sigma^{+}_j=|1\rangle \langle 0|$ for $h_j>0$ and $L_j= \sigma^{-}_j=|0\rangle \langle 1|$ for $h_j<0$. That is, each qubit is damped toward its local ground state if we ignore all the interactions. 
+where $j$ is the index for qubit. $L_j= \sigma^{+}_j=|1\rangle \langle 0|$ for $h_j>0$ and $L_j= \sigma^{-}_j=|0\rangle \langle 1|$ for $h_j<0$. That is, each qubit is damped toward its local ground state if we ignore all the interactions.
 
 The initial condition is the Gibbs canonical ensemble
 \begin{equation}
@@ -436,7 +436,7 @@ Next, the simulator is applied to the $G(2)$ problem and the result is summarize
 Finally, we comment that in order for the simulation to obtain the final state distribution shown in Fig.~\ref{fig:final_state_distribution}, effects of full-counting statistics are required. Absent some dynamical thermalization effect, the $G(2)$ problem is too small such that at a total annealing time of 1$\mu s$, the annealing offsets lift the ground state degeneracy by an amount such that diabatic transitions are absent, and the simulation is populated predominantly by the unique ground state. The final state distribution gives us a very sensitive observable to tune the simulation temperature, and agrees well with the experimental operating temperature.
 
 \section{DATA AVAILABILITY}
-	
+
 Link to GitHub.
 
 \section{ACKNOWLEDGEMENTS}
@@ -451,7 +451,7 @@ We thank x, y, z...
 
 \textbf{Competing Interests:} The authors declare no competing interests.
 
-\bibliographystyle{naturemag-doi}
+\bibliographystyle{apsrev4-1}
 \bibliography{qilp}
 
 \end{document}
