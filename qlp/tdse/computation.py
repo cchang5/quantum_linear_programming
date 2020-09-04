@@ -10,12 +10,13 @@ import pickle
 
 from numpy import ndarray
 import numpy as np
-#from scipy.sparse.linalg import eigsh
 from numpy.linalg import eigh
 
 from scipy.integrate import solve_ivp
 from scipy.linalg import logm
 from scipy import sparse as sp
+
+from random import normalvariate as rnormal
 
 from numba import jit
 
@@ -36,20 +37,21 @@ def _set_up_pauli():
     id2 = np.identity(2)
     proj0 = np.zeros((2, 2))
     proj1 = np.zeros((2, 2))
-    sigplus=np.zeros((2, 2))
-    sigminus=np.zeros((2, 2))
+    sigplus = np.zeros((2, 2))
+    sigminus = np.zeros((2, 2))
     sigx[0, 1] = 1.0
     sigx[1, 0] = 1.0
     sigz[0, 0] = 1.0
+
     sigz[1, 1] = -1.0
     proj0[0, 0] = 1.0
     proj1[1, 1] = 1.0
-    sigplus[1,0]=1.0
-    sigminus[0,1]=1.0
+    sigplus[1, 0] = 1.0
+    sigminus[0, 1] = 1.0
     return id2, sigx, sigz, proj0, proj1, sigplus, sigminus
 
 
-ID2, SIG_X, SIG_Z, PROJ_0, PROJ_1, SIG_PLUS, SIG_MINUS= _set_up_pauli()
+ID2, SIG_X, SIG_Z, PROJ_0, PROJ_1, SIG_PLUS, SIG_MINUS = _set_up_pauli()
 
 
 class PureSolutionInterface:
@@ -106,6 +108,24 @@ def save_file(query, instance, solution, filename, save=False):
             pickle.dump(solution, file)
 
 
+def add_jchaos(Jij_exact, hi_exact, jchaos):
+    Jij = np.array(Jij_exact)
+    hi = np.array(hi_exact)
+    for i, Ji in enumerate(Jij):
+        for j, J in enumerate(Ji):
+            if Jij[i, j] == 0:
+                pass
+            else:
+                Jij[i, j] += rnormal(0, jchaos * Jij[i, j])
+
+    for i, h in enumerate(hi):
+        if hi[j] == 0:
+            pass
+        else:
+            hi[i] += rnormal(0, jchaos)
+    return Jij, hi
+
+
 class TDSE:
     """Time dependent Schrödinger equation solver class
 
@@ -123,11 +143,11 @@ class TDSE:
     """
 
     def __init__(
-        self,
-        graph_params: Dict[str, Any],
-        ising_params: Dict[str, Any],
-        offset_params: Dict[str, Any],
-        solver_params: Dict[str, Any],
+            self,
+            graph_params: Dict[str, Any],
+            ising_params: Dict[str, Any],
+            offset_params: Dict[str, Any],
+            solver_params: Dict[str, Any],
     ):
         """Init the class with
 
@@ -156,6 +176,8 @@ class TDSE:
         self.IsingH = self._constructIsingH(
             self._Bij(self.AS.B(1)) * self.ising["Jij"], self.AS.B(1) * self.ising["hi"]
         )
+        self.IsingH_exact = self._constructIsingH(np.array(self.ising["Jij"]), self.ising["hi"])
+        self.gammadict = {"g": [], "glocal": [], "s": []}
 
     def hash_dict(self, d):
         hash = hashlib.md5(
@@ -164,7 +186,7 @@ class TDSE:
         return hash
 
     def summary(
-        self, wave_params, instance, solution, time, probability, save=False,
+            self, wave_params, instance, solution, time, probability, save=False,
     ):
         """
         output dictionary used to store tdse run into EspressodB
@@ -190,6 +212,8 @@ class TDSE:
         ising = dict(self.ising)
         ising["Jij"] = [list(row) for row in ising["Jij"]]
         ising["hi"] = list(ising["hi"])
+        #ising["Jij_exact"] = [list(row) for row in ising["Jij_exact"]]
+        #ising["hi_exact"] = list(ising["hi_exact"])
         tdse_params["ising"] = ising
         tdse_params["ising_hash"] = self.hash_dict(tdse_params["ising"])
         offset = dict(self.offset)
@@ -233,7 +257,7 @@ class TDSE:
         return -1j * self.annealingH(t) @ psi
 
     def ground_state_degeneracy(
-        self, H: ndarray, degeneracy_tol: float = 1e-6, debug: bool = False
+            self, H: ndarray, degeneracy_tol: float = 1e-6, debug: bool = False
     ) -> Tuple[ndarray, ndarray, ndarray]:
         """Computes the number of degenerate ground states
 
@@ -247,8 +271,8 @@ class TDSE:
         Returns: Ids for gs vectors, all eigenvalues, all eigenvectors
         """
         eigval, eigv = eigh(H.toarray())
-        mask = [abs((ei - eigval[0]) / eigval[0]) < degeneracy_tol for ei in eigval]
-        gs_idx = np.arange(len(eigval))[mask]
+        #mask = [abs((ei - eigval[0]) / eigval[0]) < degeneracy_tol for ei in eigval]
+        gs_idx = [0, 1] #np.arange(len(eigval))[mask]
         if debug:
             print(
                 f"Num. degenerate states @"
@@ -281,16 +305,17 @@ class TDSE:
         if dtype == "true":
             # true ground state
             eigvalue, eigvector = eigh(
-                ((self.annealingH(s=self.offset["normalized_time"][0])).toarray())/(self.ising["energyscale"])
+                ((self.annealingH(s=self.offset["normalized_time"][0])).toarray()) / (self.ising["energyscale"])
             )
         elif dtype == "transverse":
             # DWave initial wave function
+            # Ghz
             eigvalue, eigvector = eigh((
-                -1
-                * self._constructtransverseH(
-                    self.AS.A(0) * np.ones(self.graph["total_qubits"])
-                )
-            ).toarray())
+                                               -1
+                                               * self._constructtransverseH(
+                                           self.AS.A(0) * np.ones(self.graph["total_qubits"])
+                                       )
+                                       ).toarray())
         else:
             raise TypeError("Undefined initial wavefunction.")
         return eigvalue, eigvector
@@ -302,7 +327,7 @@ class TDSE:
         return (1.0 + 0.0j) * np.array(eigvector[:, 0]).flatten()
 
     def init_densitymatrix(
-        self, temp: float = 13e-3, dtype: str = "transverse", debug: bool = False
+            self, temp: float = 13e-3, temp_local: float = 13e-3, dtype: str = "transverse", debug: bool = False
     ) -> ndarray:
         """Returns density matrix for s=0
 
@@ -315,10 +340,13 @@ class TDSE:
             debug: More output messages
         """
         kb = 8.617333262145e-5  # Boltzmann constant [eV / K]
-        h = 4.135667696e-15  # Plank constant [eV s] (no 2 pi)
+        # h = 4.135667696e-15  # Plank constant [eV s] (no 2 pi)
+        h = 6.582119569e-16
         one = 1e-9  # GHz s
         beta = 1 / (temp * kb / h * one)  # inverse temperature [h/GHz]
-        self.beta=beta
+        self.beta = beta
+        beta_local = 1 / (temp_local * kb / h * one)
+        self.beta_local = beta_local
         # construct initial density matrix
         eigvalue, eigvector = self.init_eigen(dtype)
 
@@ -409,7 +437,7 @@ class TDSE:
         """Computes ``H(s) = A(s) H_init + B(s) H_final`` in units of "energyscale"
         """
         AxtransverseH = self._constructtransverseH(
-            self.AS.A(s) * np.ones(self.graph["total_qubits"])
+            (self.AS.A(s) + self.offset["Aoffset"]) * np.ones(self.graph["total_qubits"])
         )
         BxIsingH = self._constructIsingH(
             self._Bij(self.AS.B(s)) * self.ising["Jij"], self.AS.B(s) * self.ising["hi"]
@@ -419,7 +447,7 @@ class TDSE:
 
     # @jit(nopython=True)
     def solve_pure(
-        self, y1: ndarray, ngrid: int = 11, debug: bool = False
+            self, y1: ndarray, ngrid: int = 11, debug: bool = False
     ) -> PureSolutionInterface:
         """Solves time depepdent Schrödinger equation for pure inital state
         """
@@ -471,51 +499,129 @@ class TDSE:
         # print(self.Focksize)
         ymat = y.reshape((self.Focksize, self.Focksize))
         H = self.annealingH(t)
-        lindblad=self.get_lindblad(ymat,self.gamma,H)
-        ymat = -1j * (H.dot(ymat) - ymat@H) + lindblad
+        if self.gamma == 0:
+            lindblad = 0
+        else:
+            #gamma_t = np.mean(self.gamma*(self.AS.B(t)/self.AS.B(1)))
+            #gamma_t = self.gamma*np.exp(-((t-1)/0.05)**2)
+            gamma_t = self.gamma
+            lindblad = self.get_lindblad(ymat, gamma_t, H, t) # full counting
+        if self.gamma_local == 0:
+            lindblad_local = 0
+        else:
+            #glocal_t = np.mean(self.gamma*(self.AS.B(t)/self.AS.B(1)))
+            #glocal_t = np.mean(self.gamma_local*self.AS.A(t)/self.AS.A(0))
+            glocal_t = self.gamma_local
+            lindblad_local = self.get_lindblad2(ymat, glocal_t, H, t) # local decoherence
+        #self.gammadict["s"].append(t)
+        #self.gammadict["g"].append(gamma_t)
+        #self.gammadict["glocal"].append(glocal_t)
+        ymat = -1j * (H.dot(ymat) - ymat @ H)
+        ymat += lindblad
+        ymat += lindblad_local
         f = ymat.reshape(self.Focksize ** 2)
         return f
 
-    def get_lindblad2(self,ymat,gamma,H):
+    def get_lindblad2(self,ymat,gamma,H, t):
         ''' gamma: decoherence rate = 1/(decoherence time), the unit is the same as the Hamiltonian
         '''
-        lindblad=np.zeros(((self.Focksize, self.Focksize)))
+        lindblad = np.zeros(((self.Focksize, self.Focksize)), dtype=complex)
         for i in range(self.graph["total_qubits"]):
-                if ((self.ising["hi"])[i] > 0):
-                    lindblad=lindblad+2.0*(self.Fockplus[i])@(ymat)@(self.Fockminus[i])-(self.Fockproj0[i])@(ymat)-(ymat)@(self.Fockproj0[i])
-                else:
-                    lindblad=lindblad+2.0*(self.Fockminus[i])@(ymat)@(self.Fockplus[i])-(self.Fockproj1[i])@(ymat)-(ymat)@(self.Fockproj1[i])
-        lindblad=gamma*lindblad
+            gap = 2.0 * abs((self.ising["hi"])[i])
+            e = np.exp(-self.beta_local * self.AS.B(t) * gap)
+            if ((self.ising["hi"])[i] > 0):
+                lindblad = lindblad + 2.0 * (self.Fockplus[i]) @ (ymat) @ (self.Fockminus[i]) - (self.Fockproj0[i]) @ (
+                    ymat) - (ymat) @ (self.Fockproj0[i])
+                lindblad = lindblad + e[i] * (
+                            2.0 * (self.Fockminus[i]) @ (ymat) @ (self.Fockplus[i]) - (self.Fockproj1[i]) @ (ymat) - (
+                        ymat) @ (self.Fockproj1[i]))
+            else:
+                lindblad = lindblad + 2.0 * (self.Fockminus[i]) @ (ymat) @ (self.Fockplus[i]) - (self.Fockproj1[i]) @ (
+                    ymat) - (ymat) @ (self.Fockproj1[i])
+                lindblad = lindblad + e[i] * (
+                            2.0 * (self.Fockplus[i]) @ (ymat) @ (self.Fockminus[i]) - (self.Fockproj0[i]) @ (ymat) - (
+                        ymat) @ (self.Fockproj0[i]))
+        lindblad = gamma * lindblad
         return lindblad
 
-    def get_lindblad(self,ymat,gamma,H):
+    def get_lindblad1(self, ymat, gamma, H):
+        ''' gamma: decoherence rate = 1/(decoherence time), the unit is the same as the Hamiltonian
+        '''
+        lindblad = np.zeros(((self.Focksize, self.Focksize)))
+        for i in range(self.graph["total_qubits"]):
+            if ((self.ising["hi"])[i] > 0):
+                lindblad = lindblad + 2.0 * (self.Fockplus[i]) @ (ymat) @ (self.Fockminus[i]) - (self.Fockproj0[i]) @ (
+                    ymat) - (ymat) @ (self.Fockproj0[i])
+            else:
+                lindblad = lindblad + 2.0 * (self.Fockminus[i]) @ (ymat) @ (self.Fockplus[i]) - (self.Fockproj1[i]) @ (
+                    ymat) - (ymat) @ (self.Fockproj1[i])
+        lindblad = gamma * lindblad
+        return lindblad
+
+    def get_lindblad3(self, ymat, gamma, H, t):
         '''full counting statistics under wide-band-limit
         '''
-        value,vector=np.linalg.eigh(H.toarray())
-        lindblad=np.zeros((len(value),len(value)),dtype=complex)
+        value, vector = np.linalg.eigh(H.toarray())
+        lindblad = np.zeros((len(value), len(value)), dtype=complex)
         for j in range(len(value)):
-            for i in range(j):        
-                gap=value[j]-value[i]
-                e=np.exp(-self.beta*gap)
-                #p=e/(1.0+e)
-                lowering=np.kron(vector[:,i],np.conjugate(vector[:,j]))
-                lowering=lowering.reshape(H.shape)
-                raising=np.conjugate(np.transpose(lowering))
+            for i in range(j):
+                gap = value[j] - value[i]
+                e = np.exp(-self.beta * gap / self.ising["energyscale"])
+                # p=e/(1.0+e)
+                lowering = np.kron(vector[:, i], np.conjugate(vector[:, j]))
+                lowering = lowering.reshape(H.shape)
+                raising = np.conjugate(np.transpose(lowering))
 
                 # store some matrix multiplications to save computation
-                rhoraising=(ymat)@(raising)
-                rholowering=(ymat)@(lowering)
-                raisingrho=(raising)@(ymat)
-                loweringrho=(lowering)@(ymat)
+                rhoraising = (ymat) @ (raising)
+                # if (e>1.e-10):
+                rholowering = (ymat) @ (lowering)
+                raisingrho = (raising) @ (ymat)
+                # else:
+                #    rholowering=np.zeros((len(value),len(value)),dtype=complex)
+                #    raisingrho=np.zeros((len(value),len(value)),dtype=complex)
+                loweringrho = (lowering) @ (ymat)
 
                 # re-factored lindblad operator
-                lindblad+=((lowering)@(2.0*rhoraising-e*(raisingrho))+(raising)@(2.0*e*(rholowering)-loweringrho)-(rhoraising)@(lowering)-e*(rholowering)@(raising))
+                lindblad += ((lowering) @ (2.0 * rhoraising - e * (raisingrho)) + (raising) @ (
+                            2.0 * e * (rholowering) - loweringrho) - (rhoraising) @ (lowering) - e * (rholowering) @ (
+                                 raising))
 
-        #lindblad=(1-p)*lower+p*np.conjugate(np.transpose(lower))
-        #lindblad=(1-p)*( 2.0*(lower)@(ymat)@(raiseop)-raiseop@(lower)@(ymat)-(ymat)@(raiseop)@(lower) )
-        #lindblad+=p*( 2.0*(raiseop)@(ymat)@(lower)-lower@(raiseop)@(ymat)-(ymat)@(lower)@(raiseop) )
+        # lindblad=(1-p)*lower+p*np.conjugate(np.transpose(lower))
+        # lindblad=(1-p)*( 2.0*(lower)@(ymat)@(raiseop)-raiseop@(lower)@(ymat)-(ymat)@(raiseop)@(lower) )
+        # lindblad+=p*( 2.0*(raiseop)@(ymat)@(lower)-lower@(raiseop)@(ymat)-(ymat)@(lower)@(raiseop) )
 
-        lindblad=gamma*lindblad
+        lindblad = gamma * lindblad
+        return lindblad
+
+    def get_lindblad(self,ymat,gamma,H,t):
+        '''full counting statistics under wide-band-limit
+        '''
+        value, vector = np.linalg.eigh(H.toarray())
+        lindblad = np.zeros((len(value), len(value)), dtype=complex)
+        conjvector = np.conjugate(vector)
+
+        # pre-compute
+        rhoii = np.zeros(len(value), dtype=complex)
+        proj = np.zeros((len(value), len(value), len(value)), dtype=complex)
+        projrho = np.zeros((len(value), len(value), len(value)), dtype=complex)
+        rhoproj = np.zeros((len(value), len(value), len(value)), dtype=complex)
+
+        for i in range(len(value)):
+            rhoii[i] = np.dot(conjvector[:, i], np.dot(ymat, vector[:, i]))
+            proj[i, :, :] = np.kron(vector[:, i][None].T, conjvector[:, i])
+            projrho[i, :, :] = np.kron(vector[:, i][None].T, np.dot(conjvector[:, i], ymat))
+            rhoproj[i, :, :] = np.kron(np.dot(ymat, vector[:, i])[None].T, conjvector[:, i])
+
+        for j in range(len(value)):
+            for i in range(j):
+                gap=value[j]-value[i]
+                e=np.exp(-self.beta*gap/self.ising["energyscale"])
+
+                lindblad += 2.0 * (rhoii[j] * proj[i, :, :] + e * rhoii[i] * proj[j, :, :]) - (
+                            projrho[j, :, :] + rhoproj[j, :, :]) - e * (projrho[i, :, :] + rhoproj[i, :, :])
+
+        lindblad = gamma * lindblad
         return lindblad
 
     def solve_mixed(self, rho: ndarray) -> ndarray:
@@ -600,26 +706,11 @@ class TDSE:
            indicesA: einsum string for partial trace
            reg: infinitesimal regularization
         """
-        #print("hello world")
-        #print(self.graph["total_qubits"]) 
-        #print("rho")
-        #print(type(rho))
-        #print(rho.shape)
-        #print('test rho')
-        #testrho=rho.reshape(2 ** self.graph["total_qubits"], 2 ** self.graph["total_qubits"])
-        #e,v=eigh(testrho)
-        #print(testrho.shape)
-        #print('eig rho',e)
         tensorrho = rho.reshape(
             tuple([2 for i in range(2 * self.graph["total_qubits"])])
         )
         rhoA = np.einsum(indicesA, tensorrho)
-        #print("rhoA")
-        #print(type(rhoA))
-        #print(rhoA.shape)
         matrhoA = rhoA.reshape(2 ** nA, 2 ** nA) + reg * np.identity(2 ** nA)
-        #e,v=eigh(matrhoA)
-        #print('eig rhoA',e)
         s = -np.trace(matrhoA @ logm(matrhoA)) / np.log(2)
         return s
 
@@ -628,6 +719,17 @@ class TDSE:
         matrho = rho.reshape(2 ** totaln, 2 ** totaln) + reg * np.identity(2 ** totaln)
         s = -np.trace(matrho @ logm(matrho)) / np.log(2)
         return s
+
+    def q_mutual_info(self, rho, nA, nB, indicesA, indicesB, reg):
+        """
+        calculate the quantum mutual information
+        """
+        sa=ent_entropy(rho, nA, indicesA, reg)
+        sb=ent_entropy(rho, nB, indicesB, reg)
+        sab=vonNeumann_entropy(rho, reg)
+        s=sa+sb-sab
+        return s
+
 
     def find_partition(self) -> Tuple[int, str]:
         """
@@ -647,7 +749,7 @@ class TDSE:
             """
             op = dict(self.offset)
             op["offset_min"] = -0.1
-            op["offset_range"] = 0.2
+            op["offset_range"] = 0.1
             A = AnnealSchedule(**op, graph_params=self.graph)
             offsets = A.offset_list
         else:
@@ -705,6 +807,7 @@ _PROJ_0 = PROJ_0.astype(np.int8)
 _PROJ_1 = PROJ_1.astype(np.int8)
 _SIG_PLUS = SIG_PLUS.astype(np.int8)
 _SIG_MINUS = SIG_MINUS.astype(np.int8)
+
 
 @jit(nopython=True)
 def _init_Fock(total_qubits: int) -> Tuple[ndarray, ndarray, ndarray]:

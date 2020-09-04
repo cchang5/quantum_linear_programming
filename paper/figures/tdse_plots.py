@@ -11,6 +11,8 @@ from qlp.mds.qubo import get_mds_qubo
 from qlp.tdse import convert_params, embed_qubo_example
 
 from django.conf import settings
+from ta_plots import get_tdse_data, plot_tdse, getallspinconfig
+
 
 label_params = dict()
 label_params["fontsize"] = 7
@@ -43,8 +45,10 @@ class Data:
         # wave params
         wave_params = dict()
         wave_params["type"] = "mixed"
-        wave_params["temp"] = 15e-3
-        wave_params["gamma"] = 0.05
+        wave_params["temp"] = 0.001
+        wave_params["temp_local"] = 0.1
+        wave_params["gamma"] = 1 / 0.1
+        wave_params["gamma_local"] = 1/8
         wave_params["initial_wavefunction"] = "transverse"
 
         # graph params
@@ -60,13 +64,14 @@ class Data:
             qubo = get_mds_qubo(
                 graph, directed=directed, penalty=penalty, triangularize=True, dtype="d"
             )
+            qubo = qubo / 4
         graph_params = graph_summary(tag, graph, qubo)
 
         # solver params
         solver_params = dict()
         solver_params["method"] = "RK45"
-        solver_params["rtol"] = 1e-6
-        solver_params["atol"] = 1e-7
+        solver_params["rtol"] = 9e-8
+        solver_params["atol"] = 9e-9
 
         params = {
             "offset": offset_params,
@@ -77,6 +82,9 @@ class Data:
         return params
 
     def get_data(self):
+        print(convert_params(self.params["offset"]))
+        print(self.params["solver"])
+        print(self.params["wave"])
         query = Tdse.objects.filter(
             graph__tag=self.params["graph"]["tag"],
             offset__contains=convert_params(self.params["offset"]),
@@ -96,11 +104,6 @@ def aggregate():
         0.02,
         0.01,
         0.0,
-        -0.0005,
-        -0.001,
-        -0.002,
-        -0.004,
-        -0.005,
         -0.01,
         -0.02,
         -0.03,
@@ -108,7 +111,7 @@ def aggregate():
         -0.05,
     ]:
         # for offset in [-0.04, 0.04]:
-        #for offset in [-0.04, 0.04]:
+        # for offset in [-0.04, 0.04]:
         data.params["offset"]["offset"] = "binary"
         data.params["offset"]["offset_min"] = offset
         data.params["offset"]["offset_range"] = abs(offset) * 2
@@ -124,21 +127,22 @@ def aggregate_nodeco():
     adata = dict()
     data = Data()
     data.params["wave"]["gamma"] = 0.0
+    data.params["offset"]["annealing_time"] = 0.001
     data.params["offset"]["offset"] = "binary"
-    #for offset in [
-    #    0.05,
-    #    0.04,
-    #    0.03,
-    #    0.02,
-    #    0.01,
-    #    0.0,
-    #    -0.01,
-    #    -0.02,
-    #    -0.03,
-    #    -0.04,
-    #    -0.05,
-    #]:
-    for offset in [0.04, -0.04]:
+    for offset in [
+        0.05,
+        0.04,
+        0.03,
+        0.02,
+        0.01,
+        0.0,
+        -0.01,
+        -0.02,
+        -0.03,
+        -0.04,
+        -0.05,
+    ]:
+        # for offset in [0.04, -0.04]:
         data.params["offset"]["offset_min"] = offset
         data.params["offset"]["offset_range"] = abs(offset) * 2
         adata[offset] = data.get_data()
@@ -153,23 +157,18 @@ def aggregate_gamma():
     adata = dict()
     data = Data()
     data.params["offset"]["offset"] = "binary"
-    data.params["wave"]["temp"] = 15e-3
+    data.params["wave"]["temp"] = 0.04
     for gamma in [
-        0.001,
-        0.01,
-        0.02,
-        0.03,
-        0.035,
-        0.04,
-        0.045,
-        0.05,
-        0.055,
-        0.06,
-        0.065,
-        0.07,
-        0.08,
-        0.09,
-        0.1,
+        1 / 10,
+        1 / 20,
+        1 / 30,
+        1 / 40,
+        1 / 50,
+        1 / 60,
+        1 / 70,
+        1 / 80,
+        1 / 90,
+        1 / 100,
     ]:
         print(gamma)
         data.params["wave"]["gamma"] = gamma
@@ -181,23 +180,240 @@ def aggregate_gamma():
     return adata
 
 
-def plot_aggregate(adata, tag):
-    plt.figure("full probability", figsize=(7, 4))
+def plot_mbl(adata):
+    ngrid = 10
+    timegrid = np.linspace(0, 1, ngrid)
+    offdiag = np.zeros(ngrid)
+    plt.figure("many body hybridization", figsize=(7, 4))
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
-    for idx, key in enumerate(adata):
-        if key > 0:
-            color = red
-        else:
-            color = blue
-        tdse = adata[key].tdse
-        idx, en, evec = tdse.ground_state_degeneracy(tdse.IsingH, 2e-2, debug=False)
-        ax.errorbar(x=adata[key].time, y=adata[key].prob, color=color, label=f"{int(key*2*100)}%")
-    ax.set_xlabel("normalized time")
-    ax.set_ylabel("MDS probability")
+    for offset in adata:
+        for i in range(ngrid):
+            H = adata[offset].tdse.annealingH(timegrid[i]).todense()
+            offdiag[i] = np.linalg.norm(H - np.diag(np.diag(H)))
+        ax.errorbar(x=timegrid, y=offdiag, marker="None", ls="-", label=offset)
     ax.legend()
+    plt.title(
+        "many body hybridization (Frobenius norm of off diagonal matrix elements) "
+    )
     plt.draw()
-    plt.savefig(f"full_prob_{tag}.pdf", transparent=True)
-    """
+    plt.savefig("./hybridization.pdf", transparent=True)
+
+
+def plot_centropy(adata):
+    import scipy.stats as stats
+
+    plt.figure("centropy", figsize=(7, 4))
+    ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+    for offset in adata:
+        centropy = np.asarray(
+            [
+                stats.entropy(
+                    abs(np.diag(adata[offset].sol.y[:, i].reshape(32, 32))), base=2
+                )
+                for i in range(adata[offset].sol.t.size)
+            ]
+        ).real
+        timegrid = np.linspace(0, 1, adata[offset].sol.t.size)
+        ax.errorbar(x=timegrid, y=centropy, marker="None", ls="-", label=offset)
+    ax.legend()
+    plt.title("classical entropy")
+    plt.draw()
+    plt.show()
+
+
+def plot_distribution(adata):
+    prdict = getallspinconfig()
+
+    plt.figure("distribution", figsize=(7, 11))
+    rhodim = 2 ** 5
+    height = 0.085
+    top = 0.98
+    ax0 = plt.axes([0.15, top - height, 0.8, height])
+    ax0.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[-0.05].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+        color=red,
+        label="simulation"
+    )
+    ax0.get_xaxis().set_ticks([])
+    ax0.set_ylim([0, 1.1])
+    ax0.text(
+        top-0.03, top-0.13, "-10% offset", horizontalalignment="right", transform=ax0.transAxes
+    )
+
+    ax1 = plt.axes([0.15, top - height * 2, 0.8, height])
+    ax1.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[-0.04].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+        color=red
+
+    )
+    ax1.set_ylim([0, 1.1])
+    ax1.text(
+        top-0.03, top-0.13, "-8% offset", horizontalalignment="right", transform=ax1.transAxes
+    )
+    ax1.get_xaxis().set_ticks([])
+
+    ax2 = plt.axes([0.15, top - height * 3, 0.8, height])
+    ax2.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[-0.03].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+        color=red
+    )
+    ax2.set_ylim([0, 1.1])
+    ax2.text(
+        top-0.03, top-0.13, "-6% offset", horizontalalignment="right", transform=ax2.transAxes
+    )
+    ax2.get_xaxis().set_ticks([])
+
+    ax3 = plt.axes([0.15, top - height * 4, 0.8, height])
+    ax3.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[-0.02].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+        color=red
+    )
+    ax3.set_ylim([0, 1.1])
+    ax3.text(
+        top-0.03, top-0.13, "-4% offset", horizontalalignment="right", transform=ax3.transAxes
+    )
+    ax3.get_xaxis().set_ticks([])
+
+    ax4 = plt.axes([0.15, top - height * 5, 0.8, height])
+    ax4.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[-0.01].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+        color=red
+    )
+    ax4.set_ylim([0, 1.1])
+    ax4.text(
+        top-0.03, top-0.13, "-2% offset", horizontalalignment="right", transform=ax4.transAxes
+    )
+    ax4.get_xaxis().set_ticks([])
+
+    ax5 = plt.axes([0.15, top - height * 6, 0.8, height])
+    ax5.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[0.0].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+        color=red
+    )
+    ax5.set_ylim([0, 1.1])
+    ax5.text(
+        top-0.03, top-0.13, "0% offset", horizontalalignment="right", transform=ax5.transAxes
+    )
+    ax5.get_xaxis().set_ticks([])
+
+    ax6 = plt.axes([0.15, top - height * 7, 0.8, height])
+    ax6.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[0.01].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+        color=red
+    )
+    ax6.set_ylim([0, 1.1])
+    ax6.text(
+        top-0.03, top-0.13, "2% offset", horizontalalignment="right", transform=ax6.transAxes
+    )
+    ax6.get_xaxis().set_ticks([])
+
+    ax7 = plt.axes([0.15, top - height * 8, 0.8, height])
+    ax7.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[0.02].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+        color=red
+    )
+    ax7.set_ylim([0, 1.1])
+    ax7.text(
+        top-0.03, top-0.13, "4% offset", horizontalalignment="right", transform=ax7.transAxes
+    )
+    ax7.get_xaxis().set_ticks([])
+
+    ax8 = plt.axes([0.15, top - height * 9, 0.8, height])
+    ax8.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[0.03].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+        color=red
+    )
+    ax8.set_ylim([0, 1.1])
+    ax8.text(
+        top-0.03, top-0.13, "6% offset", horizontalalignment="right", transform=ax8.transAxes
+    )
+    ax8.get_xaxis().set_ticks([])
+
+    ax9 = plt.axes([0.15, top - height * 10, 0.8, height])
+    ax9.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[0.04].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+        color=red
+    )
+    ax9.set_ylim([0, 1.1])
+    ax9.text(
+        top-0.03, top-0.13, "8% offset", horizontalalignment="right", transform=ax9.transAxes
+    )
+    ax9.get_xaxis().set_ticks([])
+
+    ax10 = plt.axes([0.15, top - height * 11, 0.8, height])
+    ax10.bar(
+        x=np.linspace(0, rhodim - 1, rhodim),
+        height=np.diagonal(adata[0.05].sol.y[:, -1].reshape((rhodim, rhodim))).real,
+        width=1,
+        color=red
+    )
+    ax10.set_ylim([0, 1.1])
+    ax10.text(
+        top-0.03, top-0.13, "10% offset", horizontalalignment="right", transform=ax10.transAxes
+    )
+
+    ax0.bar(x=range(len(prdict[1][-0.05])), height=prdict[1][-0.05], width=1, alpha=0.5, color=blue, label="D-Wave")
+    ax1.bar(x=range(len(prdict[1][-0.04])), height=prdict[1][-0.04], width=1, alpha=0.5, color=blue)
+    ax2.bar(x=range(len(prdict[1][-0.03])), height=prdict[1][-0.03], width=1, alpha=0.5, color=blue,)
+    ax3.bar(x=range(len(prdict[1][-0.02])), height=prdict[1][-0.02], width=1, alpha=0.5, color=blue,)
+    ax4.bar(x=range(len(prdict[1][-0.01])), height=prdict[1][-0.01], width=1, alpha=0.5, color=blue,)
+    ax5.bar(x=range(len(prdict[1][0.0])), height=prdict[1][0.0], width=1, alpha=0.5, color=blue,)
+    ax6.bar(x=range(len(prdict[1][0.01])), height=prdict[1][0.01], width=1, alpha=0.5, color=blue,)
+    ax7.bar(x=range(len(prdict[1][0.02])), height=prdict[1][0.02], width=1, alpha=0.5, color=blue,)
+    ax8.bar(x=range(len(prdict[1][0.03])), height=prdict[1][0.03], width=1, alpha=0.5, color=blue,)
+    ax9.bar(x=range(len(prdict[1][0.04])), height=prdict[1][0.04], width=1, alpha=0.5, color=blue,)
+    ax10.bar(x=range(len(prdict[1][0.05])), height=prdict[1][0.05], width=1, alpha=0.5, color=blue,)
+    ax0.legend(loc=2)
+    ax5.set_ylabel("probability")
+    ax10.set_xlabel("eigenstates (00000 to 11111)")
+    plt.draw()
+    plt.savefig("./final_state_distribution.pdf", transparent=True)
+
+
+def plot_aggregate(adata, tag):
+    if False:
+        plt.figure("full probability", figsize=(7, 4))
+        ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+        for idx, key in enumerate(adata):
+            if key > 0:
+                color = red
+            else:
+                color = blue
+            tdse = adata[key].tdse
+            idx, en, evec = tdse.ground_state_degeneracy(tdse.IsingH, 2e-2, debug=False)
+            ax.errorbar(
+                x=adata[key].time,
+                y=adata[key].prob,
+                color=color,
+                label=f"{int(key*2*100)}%",
+            )
+        ax.set_xlabel("normalized time")
+        ax.set_ylabel("MDS probability")
+        ax.legend()
+        plt.draw()
+        plt.savefig(f"full_prob_{tag}.pdf", transparent=True)
+
+    dwave_data = get_tdse_data()
     plt.figure("prob", figsize=(7, 4))
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
     x = list(adata.keys())
@@ -206,55 +422,64 @@ def plot_aggregate(adata, tag):
         if float(xi) < 0 and float(xi) > -0.01:
             color = red
         else:
-            color = blue
-        ax.errorbar(x=2*xi, y=y[idx], ls="none", marker="o", color=color)
+            color = "k"
+        ax.errorbar(x=2 * xi, y=y[idx], ls="none", marker="o", color=color)
+    X = 2*np.array([-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05])
+    y = dwave_data["Binary"]
+    #ax.errorbar(x=X, y=y, ls="none", marker='o', color=red, label="D-Wave")
     ax.set_xlabel("offset range (%)")
     ax.set_ylabel("MDS probability")
     if tag == "deco":
-        ax.set_ylim([0.85, 0.92])
+        ax.set_ylim([0.8985, 0.9017])
     else:
         ax.set_ylim([0.9938, 0.99485])
     plt.draw()
     plt.savefig(f"./sim_{tag}.pdf", transparent=True)
-    """
-    reg = 1e-9
-    plt.figure(f"mutual information", figsize=(7, 4))
-    ax = plt.axes([0.15, 0.15, 0.8, 0.8])
-    mi = dict()
-    for idx, key in enumerate(adata):
-        if key > 0:
-            color = red
-        else:
-            color = blue
-        sol = adata[key].sol
-        tdse = adata[key].tdse
-        entropy_params = {"nA": 2, "indicesA": "abcdfabceg->dfeg", "reg": reg}
-        entropyA = np.asarray(
-            [tdse.ent_entropy(sol.y[:, i], **entropy_params) for i in range(sol.t.size)]
-        ).real
-        entropy_params = {"nA": 3, "indicesA": "aceghbdfgh->acebdf", "reg": reg}
-        entropyB = np.asarray(
-            [tdse.ent_entropy(sol.y[:, i], **entropy_params) for i in range(sol.t.size)]
-        ).real
-        entropyAB = np.asarray(
-            [tdse.vonNeumann_entropy(sol.y[:, i], reg) for i in range(sol.t.size)]
-        ).real
-        mutual_information = entropyA + entropyB - entropyAB
-        ax.errorbar(x=adata[key].time, y=mutual_information, color=color, label=f"{int(key*2*100)}%")
-        mi[key] = mutual_information
-    ax.set_xlabel("normalized time")
-    ax.set_ylabel("mutual information")
-    ax.legend()
-    plt.draw()
-    plt.savefig(f"mutual_info_{tag}.pdf", transparent=True)
 
-    plt.figure(f"final mutual information", figsize=(7, 4))
-    ax = plt.axes([0.15, 0.15, 0.8, 0.8])
-    x = list(mi.keys())
-    y = [mi[key][-1] for key in x]
-    ax.errorbar(x=x, y=y, ls="None", marker="o")
-    ax.set_xlabel("offset")
-    plt.show()
+    if False:
+        reg = 1e-9
+        plt.figure(f"mutual information", figsize=(7, 4))
+        ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+        mi = dict()
+        for idx, key in enumerate(adata):
+            if key > 0:
+                color = red
+            else:
+                color = blue
+            sol = adata[key].sol
+            tdse = adata[key].tdse
+            entropy_params = {"nA": 2, "indicesA": "abcdfabceg->dfeg", "reg": reg}
+            entropyA = np.asarray(
+                [tdse.ent_entropy(sol.y[:, i], **entropy_params) for i in range(sol.t.size)]
+            ).real
+            entropy_params = {"nA": 3, "indicesA": "aceghbdfgh->acebdf", "reg": reg}
+            entropyB = np.asarray(
+                [tdse.ent_entropy(sol.y[:, i], **entropy_params) for i in range(sol.t.size)]
+            ).real
+            entropyAB = np.asarray(
+                [tdse.vonNeumann_entropy(sol.y[:, i], reg) for i in range(sol.t.size)]
+            ).real
+            mutual_information = entropyA + entropyB - entropyAB
+            ax.errorbar(
+                x=adata[key].time,
+                y=mutual_information,
+                color=color,
+                label=f"{int(key*2*100)}%",
+            )
+            mi[key] = mutual_information
+        ax.set_xlabel("normalized time")
+        ax.set_ylabel("mutual information")
+        ax.legend()
+        plt.draw()
+        plt.savefig(f"mutual_info_{tag}.pdf", transparent=True)
+
+        plt.figure(f"final mutual information", figsize=(7, 4))
+        ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+        x = list(mi.keys())
+        y = [mi[key][-1] for key in x]
+        ax.errorbar(x=x, y=y, ls="None", marker="o")
+        ax.set_xlabel("offset")
+        plt.show()
 
 
 def plot_gamma(gdata):
@@ -264,10 +489,10 @@ def plot_gamma(gdata):
     X = 1 / (np.array(x) * 1e9) * 1e9
     y = [gdata[key].prob[-1] for key in x]
     for idx, xi in enumerate(X):
-        if xi == 20:
+        if idx == 7:
             color = blue
         else:
-            color = 'k'
+            color = "k"
         ax.errorbar(x=xi, y=y[idx], ls="none", color=color, marker="o")
     ax.set_xlabel("coherence time (ns)")
     ax.set_ylabel("MDS probability")
@@ -423,9 +648,12 @@ def plot_spectrum(adata):
 
 if __name__ == "__main__":
     # vs offset
-    #adata = aggregate()
+    adata = aggregate()
     # print(list(adata.keys()))
-    #plot_aggregate(adata, "deco")
+    plot_aggregate(adata, "deco")
+    # plot_mbl(adata)
+    # plot_centropy(adata)
+    plot_distribution(adata)
 
     # plot AS
     # print(list(adata.keys()))
@@ -435,9 +663,9 @@ if __name__ == "__main__":
     # plot_spectrum(adata)
 
     # vs offset no decoherence
-    #bdata = aggregate_nodeco()
-    #plot_aggregate(bdata, "nodeco")
+    # bdata = aggregate_nodeco()
+    # plot_aggregate(bdata, "nodeco")
 
     # vs gamma
-    gdata = aggregate_gamma()
-    plot_gamma(gdata)
+    #gdata = aggregate_gamma()
+    #plot_gamma(gdata)

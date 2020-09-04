@@ -19,3 +19,8 @@ __pycache__/
 qlpdb/media/
 *profile*
 *gpu*
+notebooks/~$09-1216A-A_DW_2000Q_6_annealing_schedule.xlsx
+.DS_Store
+.idea/
+paper/.DS_Store
+paper/new_figures/.DS_Stores

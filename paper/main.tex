@@ -1,12 +1,14 @@
-\documentclass[prd,twocolumn,tightenlines,preprintnumbers,showpacs,superscriptaddress,notitlepage,nofootinbib,eqsecnum,floatfix,longbibliography]{revtex4}
-
+%! suppress = LineBreak
+\documentclass[prd,twocolumn,tightenlines,preprintnumbers,showpacs,superscriptaddress,notitlepage,nofootinbib,eqsecnum,floatfix,longbibliography,aps,10pt]{revtex4-2}
+\usepackage{CJK}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{amsmath,amssymb}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{amsfonts,dsfont}
 \usepackage{bm,bbm}
 \usepackage{graphicx}
-\usepackage{color}
-\usepackage{dsfont}
+\usepackage{xcolor}
 
 \usepackage{hyperref}
 \hypersetup{
@@ -26,11 +28,11 @@
 \begin{document}
 \title{Solutions to Integer Programming from Quantum Annealing}
 
-\author{Chia~Cheng~Chang}
+\author{Chia~Cheng~Chang (\begin{CJK*}{UTF8}{bsmi}張家丞\end{CJK*})}
 \affiliation{RIKEN Interdisciplinary Theoretical and Mathematical Sciences (iTHEMS), Wako, Saitama 351-0198, Japan}
 \affiliation{Department of Physics, University of California, Berkeley, California 94720, USA}
 \affiliation{Nuclear Science Division, Lawrence Berkeley National Laboratory, Berkeley, California 94720, USA}
-\author{Chih-Chieh~Chen}
+	\author{Chih-Chieh~Chen (\begin{CJK*}{UTF8}{bsmi}\mbox{陳志傑}\end{CJK*})}
 \affiliation{R\&D Group, Grid Inc., Tokyo 107-0061, Japan}
 \author{Christopher K\"orber}
 \affiliation{Department of Physics, University of California, Berkeley, California 94720, USA}
@@ -64,13 +66,13 @@
 
 \end{abstract}
 
-\preprint{LLNL-JRNL-809712, RIKEN-iTHEMS-Report-20}
+\preprint{RIKEN-iTHEMS-Report-20}
 
 \maketitle
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\tableofcontents
+%\tableofcontents
 
 \flushbottom
 \maketitle
@@ -281,28 +283,24 @@ We emphasize that while the maximum independent set is always a minimal dominati
 As a result, the solution to the dominating set problem can not be obtained by solving for the maximum independent set, a problem that is well studied for quantum annealers~\cite{}.
 
 \begin{figure*}
- \centering
- \begin{tabular}{p{0.3\textwidth}p{0.3\textwidth}p{0.3\textwidth}}
-  \includegraphics[width=0.20\textwidth]{./figures/subaru_ds.pdf}
-                   &
-  \includegraphics[width=0.20\textwidth]{./figures/subaru_mds4.pdf}
-                   &
-  \includegraphics[width=0.20\textwidth]{./figures/subaru_mds2.pdf} \\
-  \centering\bf{a} & \centering\bf{b} & \centering\bf{c}
- \end{tabular}
- \caption{Example of different dominating sets for $G(V, E)$.
-  Vertices in the dominating set $D$ are highlighted in blue.
-   {\bf{a)}} A dominating set of $G$ with domination number $\overline{\overline{D}} = 5$.
-   {\bf{b)}} A minimal dominating set of $G$ with domination number of $\overline{\overline{D}} = 4$.
-  We note that $D$ is also the maximum independent set of $G$.
-   {\bf{c)}} The minimum dominating set of $G$ with domination number of $\overline{\overline{D}} = 2$.}
- \label{fig:dominating_sets}
+	\centering
+	\begin{tabular}{p{0.2\textwidth}p{0.1\textwidth}p{0.2\textwidth}p{0.1\textwidth}p{0.2\textwidth}}
+	\includegraphics[width=0.2\textwidth]{./new_figures/MDS_mds0.pdf}
+&&
+	\includegraphics[width=0.2\textwidth]{./new_figures/MDS_mds1.pdf}
+&&
+	\includegraphics[width=0.2\textwidth]{./new_figures/MDS_mds2.pdf}\\
+	\centering\bf{a} && \centering\bf{b} && \centering\bf{c}
+	\end{tabular}
+	\caption{Example of different dominating sets for $G(V, E)$. Vertices in the dominating set $D$ are highlighted in blue. {\bf{a)}} A dominating set of $G$ with domination number $\overline{\overline{D}} = 2$. {\bf{b)}} A minimal dominating set of $G$ with domination number of $\overline{\overline{D}} = 2$. {\bf{c)}} The minimum dominating set of $G$ with domination number of $\overline{\overline{D}} = 1$.}
+	\label{fig:dominating_sets}
 \end{figure*}
 
-For general graphs, existing "classical" algorithms either find minimal solutions in exponential time $\sim O( 1.5^n)$ \cite{Fomin2009, vanRooij2009} or approximate solutions in polynomial time.
-For example, greedy algorithms locally optimize decisions about which nodes to add to the dominating set.
-Thus one is guaranteed to find a dominating set but not necessarily a MDS.
-We demonstrate an example greedy algorithm in figure Fig.~\ref{fig:mds-greedy}.
+For general graphs, existing "classical" algorithms either find minimal solutions in exponential time $\sim O( 1.5^n)$ \cite{Fomin2009, vanRooij2009} or approximate solutions in polynomial time. For example, greedy algorithms locally optimize decisions about which nodes to add to the dominating set.
+Thus one is guaranteed to find a dominating set but not necessarily a MDS. {\color{red} Write some pseudo code for greedy search.}
+%We demonstrate an example greedy algorithm in figure Fig.~\ref{fig:mds-greedy}.
+
+\iffalse
 \begin{figure*}
  \centering
  \begin{tabular}{p{0.22\textwidth}p{0.22\textwidth}p{0.22\textwidth}p{0.22\textwidth}}
@@ -328,6 +326,7 @@ We demonstrate an example greedy algorithm in figure Fig.~\ref{fig:mds-greedy}.
  }
  \label{fig:mds-greedy}
 \end{figure*}
+\fi
 
 %----------------------------------------------------------------------------------------
 \subsubsection{Minimum Dominating Set Qubo}
@@ -383,16 +382,21 @@ and $H^\textrm{init}=\sum_i\sigma^x_i$ on the DWave, while $H^\textrm{problem}$ 
 The variable $s\in [0, 1]$ is the normalized annealing time and, in physical units, is allowed to vary between 1$\mu s$ to 2$ms$ on DWave.
 
 On DWave solvers, annealing offsets effectively advance or delay the annealing schedule of individual qubits ($B(s) \to B_i(s)$).
-In Fig.~\ref{fig:anneal_schedule}, the default DWave annealing schedule is shown in addition to the effects of applying positive and negative offsets.
-Note that due to the way the offsets are implemented on the hardware level, systematic errors are introduced since the initial and final values of $A(s)$ and $B(s)$ will differ for qubits with different offsets ($B_i(s) \neq B_j(s)$).
-Fig.~\ref{fig:anneal_schedule} shows the maximum offset that we use for the study, which translates to approximately (due to non-linearity) a 5\% advancement (blue) or delay (red) in the schedule.
+In Fig.~\ref{fig:anneal_schedule}, the default DWave annealing schedule is shown in black, in addition to the effects of applying negative offsets (effective time delay) to $A(s)$ and $B(s)$ in blue.
+The time dependent coefficients are nonlinear in time because the underlying control variable $c(s)$ which is designed to grow the persistent current $I_p(s)$ linearly in time.
+The effective time delay is implemented by introducing an offset as $c(s) + \delta$.
+As a result, systematic errors are introduced because the final values of $A(s)$ and $B(s)$ will differ for qubits with different offsets.
+Additionally, the values of the coefficients are unknown outside of $s\in [0, 1]$.
+We extrapolate their values by a linear extrapolation, and only employ negative offsets such that this effect only enters at the beginning of the annealing process rather than the end.
+Details of the DWave annealing schedule use to generate Fig.~\ref{fig:anneal_schedule} and further documentation are provided by DWave in Ref.~\cite{dwave_as, dwave_as_docu}.
+
 
 \begin{figure}[htb]
  \centering
- \includegraphics[width=\columnwidth]{./figures/anneal_schedule.pdf}
- \caption{
-  Anneal schedules for amplitudes of initial Hamiltonian (solid) and final Hamiltonian (dashed) are displayed for a complete anneal schedule.
-  Different colors represent different offesets: advanced (blue), default (black) and delayed (red).
+  \includegraphics[width=\columnwidth]{./new_figures/anneal_schedule.pdf}
+  \caption{
+  Anneal schedules for amplitudes of initial Hamiltonian (top left to bottom right) and final Hamiltonian (bottom left to top right) are displayed for a complete anneal schedule.
+  Different colors represent different offesets: delayed (light to dark), default (black).
  }
  \label{fig:anneal_schedule}
 \end{figure}
@@ -403,8 +407,16 @@ When recasting the QUBO into its Ising form such that the problem Hamiltonian ha
  H^{\textrm{Ising}} = \sum_{ij} J_{ij} \sigma^z_i \sigma^z_j + \sum_i h_i \sigma^z_i,
 \end{equation}
 we recognize that if $h_i$ is randomly drawn from a Bernoulli distribution, we recover the spin-glass model.
-The spin-glass model enters its glassy state when $|h_i|$ is large, and as a consequence, the wavefunction experiences many-body localization effects, the many-body analog of Anderson Localization.
+The spin-glass model enters its glassy state when $|h_i|$ is large, and as a consequence, the wavefunction experiences many-body localization effects, the many-body analogue of Anderson Localization (MBL)~{\color{red} cite some AL papers here}.
 
+%----------------------------------------------------------------------------------------
+\subsubsection{Implementation of annealing offsets}
+\label{sec:methods:annealing-schedule}
+%----------------------------------------------------------------------------------------
+
+For even the smallest graph $NN(2)$, the MDS problem is not native to the chimera graph and must be embedded. Following the hypothesis of MBL, we therefore, must look at the values of $h_i$ after embedding. The qubits then split into two groups depending on the value of $h_i$ relative to $(\textrm{max}|\{h\}| - \textrm{min}|\{h\}|) / 2$ given the set of external magnetic fields $\{h\}$ defined by a specific embedding. Further detail is given in Sec.~\ref{sec:methods:minor_embedding} {\color{red} put in methods more details}. We study the effects offset the two groups of qubits over a total range between 0\% and 5\% of $c$. The results of this study is shown in Fig.~\ref{fig:dwave_offset}.
+
+The results in yellow (green) delays the annealing of qubits subject to stronger (weaker) external fields. We observe improvement (diminishment) in the experimental results when qubits subject to stronger (weaker) final external fields are delayed in the anneal schedule, in agreement with the MBL hypothesis. The phenomena is observed across different problem sizes and hints at the possibility of a generic improvement strategy. In the following section, we provide evidence that the improvement is rooted in quantum mechanics, and not other causes such as imperfections in hardware~\cite{} {\color{red} cite dwave's use of annealing offsets}. The master equation for quantum annealing is solved subject to the DWave anneal schedule with annealing offsets in order to reproduce the observed phenomenon.
 
 %----------------------------------------------------------------------------------------
 \subsection{Simulation of a Quantum Annealer}
@@ -432,25 +444,40 @@ The site dependency takes into account of the annealing offset.
 $[,]$ denotes the Lie bracket.
 $L_j$ are the Lindblad operators for decoherence.
 $\{, \}$ denotes the anti-commutator.
-In this study, we only include a minimal model for decoherence, i.e., the amplitude damping for non-interacting qubits.
-The Lindblad operator is $L_j=\sqrt{\gamma} \sigma^{+}_j$ for $h_j>0$ and $L_j=\sqrt{\gamma} \sigma^{-}_j$ for $h_j<0$, where $\gamma = 1/T_1$ is the decoherence rate for relaxation time $T_1$.
-For simplicity, we assume all qubits have the same relaxation time.
+
+We consider two types of decoherence models: full counting statistics and local damping.
+The full counting statistics term models the global decoherence to all the qubits due to the classical reservoir.
+The local damping term models the decoherence of each qubit independently.
+For full counting statistics, the Lindblad operator is
+\begin{align}
+\mathcal{L}[\rho (t)] &=& \Gamma_{fc} \sum_j   (2 S_j \rho(t) S_j^\dagger - \{ S^\dagger_j S_j, \rho(t) \}) \notag \\
+&& + e^{-\beta \Delta E_j} (2 S_j^\dagger \rho(t) S_j - \{ S_j S^\dagger_j, \rho(t) \} )
+\end{align}
+where $j$ is the index for the inter-level spacing $\Delta E_j=E_\mu-E_\nu>0$. $S_j=|E_\nu \rangle \langle E_\mu|$ denotes the many-body lowering operator.
+$\{, \}$ denotes the anti-commutator. $\Gamma = 1/T_c$ is the decoherence rate for coherence time $T_c$.
+That is, due to the interaction with the classical thermal bath, there is a probability that the system hops from each higher-energy many-body state to a lower-energy many-body state.
+The probability of the inverse process is given by a Boltzmann factor.
+To model the local decoherence of each qubits in the non-interacting limit, we also consider the amplitude damping for non-interacting qubits.
+The Lindblad operator is
+\begin{align}
+\mathcal{L}[\rho (t)] &=&  \Gamma_{loc} \sum_j (2L_j \rho(t) L_j^\dagger - \{ L^\dagger_j L_j, \rho(t) \} \notag \\
+&& + e^{-\beta 2|h_j| }  (2L_j^\dagger \rho(t) L_j - \{ L_j L_j^\dagger, \rho(t) \}) ),
+\end{align}
+where $j$ is the index for qubit.
+$L_j= \sigma^{+}_j=|1\rangle \langle 0|$ for $h_j>0$ and $L_j= \sigma^{-}_j=|0\rangle \langle 1|$ for $h_j<0$.
+That is, each qubit is damped toward its local ground state if we ignore all the interactions.
+
 The initial condition is the Gibbs canonical ensemble
 \begin{equation}
- \rho (0) =  \frac{e^{-\beta H(0)}}{\mbox{Tr}[e^{-\beta H(0)}]} ,
+\rho (0) =  \frac{e^{-\beta H(0)}}{\mbox{Tr}[e^{-\beta H(0)}]} ,
 \end{equation}
 where $\beta$ is the inverse temperature.
-The probability to obtain the ground state at for a single measurement is
+The probability to get the ground state at measurement is
 \begin{align}
- P_{\mbox{gnd}} =  \mbox{Tr} \{  \rho (t) \pi_{\mbox{gnd}} \}  ,
+P =  \mbox{Tr} \{  \rho (t) \pi_{\mbox{gnd}} \}  ,
 \end{align}
-where the projection operator onto the degenerated ground states subspace is defined as
-\begin{equation}
- \pi_{\mbox{gnd}}=\sum_{i\in G} |\mbox{gnd}_i\rangle \langle \mbox{gnd}_i|
- \, .
-\end{equation}
+where the projection operator onto the degenerated ground states subspace is defined as $\pi_{\mbox{gnd}}=\sum_{i\in G} |\mbox{gnd}_i\rangle \langle \mbox{gnd}_i| $.
 Here $\{ | \mbox{gnd}_i \rangle | i \in G \}$ forms an orthonormal basis for the degenerated ground states subspace, i.e., $\langle \mbox{gnd}_j | \mbox{gnd}_i \rangle = \delta_{ij}$.
-
 
 %----------------------------------------------------------------------------------------
 \subsubsection{Decoherence Time}
@@ -458,13 +485,6 @@ Here $\{ | \mbox{gnd}_i \rangle | i \in G \}$ forms an orthonormal basis for the
 %----------------------------------------------------------------------------------------
 
 \ghissue{Decoherence section}{16}
-
-\begin{figure}
- \centering
- \includegraphics[width=\columnwidth]{./figures/coherence.pdf}
- \caption{To be updated}
- \label{fig:prob_mi}
-\end{figure}
 
 
 %----------------------------------------------------------------------------------------
@@ -475,26 +495,12 @@ Here $\{ | \mbox{gnd}_i \rangle | i \in G \}$ forms an orthonormal basis for the
 If the annealer does not reach thermal equilibrium, for example, strong external magnetic fields freeze in individual qubits, the final solution of the annealing process might not encode the ground state of the final Hamiltonian.
 It is thus essential to prepare the system such that Many-Body Localizations are absent, and thus one must define a measure for MBL.
 
-We consider the mutual information as a measure for shared information between different partitions (sets of qubits) of the entire system.
-Given two partitions $A$ and $B$, the mutual information is defined as
-\begin{equation}
- I(A:B)=S(\rho_A)+S(\rho_B)-S(\rho_{A,B}) \geq 0\,,
-\end{equation}
-which is only zero if partitions $A$ and $B$ do not share information.
-We describe individual density information measures by the von Neumann entropy $S(\rho)=-\mbox{Tr}\rho \log_2 \rho$.
-The density matrix $\rho_{A,B}$ represents the entire system while $\rho_{A}=\mbox{Tr}_{B} (\rho_{A,B})$ is the reduced density matrix for the subsystem A (and equivalent $B$ for exchanged indicies).
 
 We note that this measure depends on the choice of partitions, which is, in principle, arbitrary.
 To define a measure for MBL, the choice for partitions should encode the likelihood of frozen qubits.
 Thus a natural choice for partitions are regions of different external magnetic fields.
 For this choice, at the beginning of the anneal, the mutual information will be zero as all spins start orthogonal to the external field, and, in the end, the mutual information will be constant once a final solution is obtained.
 Intermediate values for the mutual information encode the communication probability of different spin alignments.
-
-
-%----------------------------------------------------------------------------------------
-\subsubsection{Decoherence and Many-Body Localization}
-\label{sec:methods:decoherence-and-mbl}
-%----------------------------------------------------------------------------------------
 
 Intuitively, to find a final state which globally minimizes the energy, we want the system to explore the entire state space.
 That is, we want the system to have ergodicity in order to avoid Many-Body Localizations.
@@ -503,17 +509,97 @@ On the other hand, decoherence in the hardware leads to the loss of quantum info
 It is, therefore, desirable to minimize the effect of relaxation and shorten the annealing process.
 The interplay between these two competing effects can be observed by looking at the non-monotonous time dependency of the probability for reaching the global ground state.
 
+%----------------------------------------------------------------------------------------
+
+\subsubsection{Systematic effects of annealing offsets}
+\label{sec:app:offset}
+%----------------------------------------------------------------------------------------
+
+We verify that our implementation of annealing offsets on the simulator is consistent with DWave by solving the following three qubit Hamiltonian
+\begin{align}
+	\label{eq:offset_test_hamiltonian}
+	H^{\textrm{problem}} =
+	\begin{pmatrix}
+		-0.25 & 1 & 0 \\
+		0 & -0.25 & 0 \\
+		0 & 0 & -0.25
+	\end{pmatrix}
+\end{align}
+which has a doubly-degenerate ground state of $(0, 1, 1)$ and $(1, 0, 1)$. An annealing offset is then applied to either qubit 0 or 1, and breaks the ground state degeneracy of the system. Because of the systematic error introduced when assigning an offset to a qubit, the final Hamiltonian given by Eq.~(\ref{eq:annealH}) will have small deviations from the input problem Hamiltonian. For example, we expect a negative offset to qubit 0 to Eq.~(\ref{eq:offset_test_hamiltonian}) will yield $(1, 0, 1)$ as the unique ground state given Eq.~(\ref{eq:annealH}).
+
+We confirm that with different combinations of annealing offsets, the degeneracy is lifted on the DWave results as expected by solving for the modified problem Hamiltonian spectrum, as well as dialing in annealing offset in the simulation of this three qubit test case.
+
+In the simulation, we are also reserve the ability to remove the systematic errors by extending the annealing schedule as shown in Fig.~\ref{fig:anneal_schedule_ext}. With the extended schedule, all qubits start and end with the same values of $A$ and $B$ and faithfully preserves the initial and final Hamiltonians. The dependence on offset for $G(2)$ (Fig.~(\ref{fig:dwave1us})) remains the same under the extended anneal schedule (Fig.~\ref{fig:anneal_schedule_ext}), confirming that the behavior is not a systematic artifact.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\columnwidth]{./new_figures/anneal_schedule_extended.pdf}
+	\includegraphics[width=\columnwidth]{./new_figures/NN2_offset_scaling_extended.pdf}
+	\caption{{\color{red}I need to add dwave final state distribution here too.}}
+	\label{fig:anneal_schedule_ext}
+\end{figure}
+
+%----------------------------------------------------------------------------------------
+\subsubsection{Minor Embedding}
+\label{sec:methods:minor_embedding}
+%----------------------------------------------------------------------------------------
+Our proposed offset strategy is motivated by the structure of the Hamiltonian being evaluated by the annealer.
+As a result, details of the embedding are important. We obtain an embedding for $G(n)$ with the \texttt{embed\_qubo} function provided by the DWave Oceans Python package~\cite{dwave_oceans} under the \texttt{dwave.embedding} module.
+The same embedding is used for all DWave solves of the same graph (independent of offset), and consequently the simulation solves the resulting embedded Hamiltonian for $G(2)$.
+Additionally, solving the same graph as a function of offset on the exact same qubits removes (or at least keeps consistent) the systematic effects due to solving a problem on different physical qubits.
+We note that comparisons between different graphs in Fig.~\ref{fig:baseline} are subject to this uncontrolled systematic.
+
+After embedding the QUBO for $G(2)$ requires 5 qubits (an increase from 4), where by construction, qubits 0 and 3 form the qubit chain.
+We confirm through brute force evaluation of the eigenvalue decomposition of the 5 qubit Hamiltonian, that the embedding provided by DWave solves the expected ILP problem for $G(2)$, with degenerate ground states at $(0, 1, 0, 0, 0)$ and $(1, 0, 0, 1, 0)$ corresponding to whether vertex 0 or 1 is chosen for the MDS solution, and $(1, 1, 1, 1, 1)$ as the first (non-degenerate) excited state where both vertex 1 and 0 are in the set yielding a valid dominating set but not the minimum dominating set.
+
+The resulting Ising Hamiltonian has external field equal to $h = (2.75, 1.5, -1.0, -1.25, -1.0)$.
+Following the offset strategy described in Sec.~\ref{sec:discussion:offsets}, qubit(s) 0 (1, 2, 3, 4) are placed in the set with relatively stronger (weaker) final external fields.
+This imbalance in the two groups may perhaps explain the reason why effects of delaying the weaker fields are more pronounced, since delaying the strong fields only differs from the baseline by a single qubit.
 
 
 %----------------------------------------------------------------------------------------
 \subsubsection{Other Simulation Details}
+\label{sec:methods:simulation_details}
 %----------------------------------------------------------------------------------------
+To check the correctness of simulator and unit conversion, we tested a simple annealing schedule for pure transverse field, i.e. $A(s)=A(0)$ and $B(s)=0$.
+The initial state is pure zero state $\rho=|00...0\rangle \langle 00...0|$.
+In this case the analytical solution can be obtained for the wave function oscillation.
+The time-dependent probability is $P_{0}=\cos^{2n}(s)=\cos^{2n}(t/T)$ where $n$ is the number of qubits and $T$ is the annealing time.
+For annealing time $T=1/A(0)$, we expect to see perfect one-period oscillation. The energy spectrum for this system can be analytically obtained, so we also checked the Boltzmann distribution in the initial density matrix construction.
+{\color{red} Are you suppose to reference Fig. 7 here?}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\columnwidth]{./figures/check.png}
+	\caption{check}
+	\label{fig:check}
+\end{figure}
+
+Next, the simulator is applied to the $G(2)$ problem and the result is summarized in Fig.~\ref{fig:td_prob} where the time-dependent overlap with the exact Ising ground state is shown. We observe for all cases that the system undergoes what is analogous to a magnetic phase transition around $s\sim 0.4$.
+After the phase transition, we are able to confirm that the system collapses to effectively a classical state in the sense that the density matrix becomes a diagonal matrix.
+The steady increase in probability after the phase transition is a sensitive balance between the competing effects between full-counting statistics and local damping.
+In our example, full-counting statistics is tuned to be slightly stronger, resulting in what amounts to a final thermal annealing step.
+If local damping is relatively stronger, then the probability after the phase transition will slowly decrease as the system decoheres into its local ground state.
+While we believe both effects are important in DWave, the experimental results are not precise enough for us to conclude which is the dominant effect.
+We emphasize however, that the simulation suggests that the ground state is recovered predominantly due to the quantum phase transition.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\columnwidth]{./new_figures/time_dependent_probability.pdf}
+	\caption{(Left) The time-dependent probability of resolving the ground state and (Right) the corresponding mutual information. (Top) Simulation with decoherence included and (Bottom) without decoherence.}
+	\label{fig:td_prob}
+\end{figure}
+
+Finally, we comment that in order for the simulation to obtain the final state distribution shown in Fig.~\ref{fig:final_state_distribution}, effects of full-counting statistics are required.
+Absent some dynamical thermalization effect, the $G(2)$ problem is too small such that at a total annealing time of 1$\mu s$, the annealing offsets lift the ground state degeneracy by an amount such that diabatic transitions are absent, and the simulation is populated predominantly by the unique ground state.
+The final state distribution gives us a very sensitive observable to tune the simulation temperature, and agrees well with the experimental operating temperature.
+
 
 \ghissue{Simulation details}{18}
 
 
 %========================================================================================
-\section{RESULTS \& DISCUSSION}
+\section{RESULTS}
 \label{sec:results}
 %========================================================================================
 
@@ -521,160 +607,89 @@ The interplay between these two competing effects can be observed by looking at 
 \subsection{Finding the Dominating Set with a Quantum Annealer}
 \label{sec:discussion:qa}
 %----------------------------------------------------------------------------------------
-
 \begin{figure}[b]
- \centering
- \includegraphics[width=0.5\columnwidth]{./figures/linear_crop.pdf}
- \caption{Linear graphs $G(n)$ used in this study.
-  Nodes denote vertices of the graphs and lines are undirected edges.}
- \label{fig:linear}
+	\centering
+	\begin{tabular}{cc}
+	$G(n):$ &
+	\raisebox{-.4\height}{\includegraphics[width=0.8\columnwidth]{./new_figures/linear_graph.pdf}}
+	\end{tabular}
+	\caption{Linear graphs $G(n)$ used in this study. Nodes denote vertices of the graphs and lines are undirected edges.}
+\label{fig:linear}
 \end{figure}
 
-We demonstrate the proposed algorithm in order to obtain the MDS on a series of linear graphs $G(n)$ as shown in Fig.~\ref{fig:linear}.
-This type of graph is chosen because the small number of nearest-neighbor connections is more efficiently embedded into the chimera graph allowing for scaling plots to be generated when using a DWave quantum annealer.
-Additionally the MDS solution is known analytically, and contains both unique and degenerate solutions.
-In particular, the domination number for $G(n)$ is $\lceil n/3 \rceil$ while the number of MDS solutions for $n$ vertices is
+We demonstrate the proposed algorithm in order to obtain the MDS on a series of linear graphs $G(n)$ as shown in Fig.~\ref{fig:linear}. This type of graph is chosen because the small number of nearest-neighbor connections is more efficiently embedded into the chimera graph allowing for scaling plots to be generated when using a DWave quantum annealer. Additionally the MDS solution is known analytically, and contains both unique and degenerate solutions. In particular, the domination number for $G(n)$ is $\lceil n/3 \rceil$ while the number of MDS solutions for $n$ vertices is
 \begin{align}
-  & 1                        &  & \textrm{if} &  & n\textrm{ mod }3=0,\nonumber \\
-  & 2\lfloor n/3 \rfloor + 1 &  & \textrm{if} &  & n\textrm{ mod }3=1,\nonumber \\
-  & \lfloor n/3 \rfloor + 2  &  & \textrm{if} &  & n \textrm{ mod }3 = 2,
+&1 &&\textrm{if} && n\textrm{ mod }3=0,\nonumber \\
+&2\lfloor n/3 \rfloor + 1 && \textrm{if}&& n\textrm{ mod }3=1,\nonumber \\
+&\lfloor n/3 \rfloor + 2 && \textrm{if} && n \textrm{ mod }3 = 2,
 \end{align}
 and gives the probability of randomly guessing the MDS of $G(n)$.
 
-\begin{figure}[b]
- \centering
- \includegraphics[width=\columnwidth]{./figures/anneal_time_scaling.pdf}
- \caption{Probability of finding the MDS for $G(6)$ as a function of total annealing time.}
- \label{fig:at_scale}
-\end{figure}
-
-cpan -i File::HomeDir Unicode::GCString
-
-For the following studies, we perform experiments on the \texttt{DW\_2000Q\_5} solver.
-After performing a study on the $G(6)$ graph, We selected an annealing time is of 600$\mu$s that optimizes the probability of finding the ground state, as shown in Fig.~\ref{fig:at_scale}.
-In Fig.~\ref{fig:baseline}, we show results from the baseline experiment, without modification to the default DWave annealing schedule, and observe improvement over random guessing.
-However, the experiment results reflect the same degeneracy structure as random guessing and scale exponentially poorly for a larger number of vertices $n$.
-We explore one avenue towards improving the experiment results by introducing per-qubit annealing offsets into the time evolution.
+For the following studies, we perform experiments on the \texttt{DW\_2000Q\_6} solver. The annealing time is set to 500$\mu$s after performing a study on various annealing times the $G(6)$ graph. The black line (offset$=0.0$) in Fig.~\ref{fig:baseline} shows results from the baseline experiment, without modification to the DWave annealing schedule, and observe improvement over random guessing (blue). However, We explore one avenue towards improving the experiment results by introducing per-qubit annealing offsets into the time evolution.
 
 \begin{figure}
- \centering
- \includegraphics[width=\columnwidth]{./figures/scaling_baseline.pdf}
- \caption{Baseline result of DWave (blue) compared to random guessing (red).
-  The jagged nature of random guessing reflects the degeneracy of the ground state.}
- \label{fig:baseline}
+	\centering
+	\includegraphics[width=\columnwidth]{./new_figures/DWave_scaling.pdf}
+	\caption{Baseline result of DWave (black) compared to random guessing (blue). The jagged nature of random guessing reflects the degeneracy of the ground state. The legend labels the values of annealing offsets employed. A positive offsets (yellow) indicates that qubits with large values of $|h_i|$ are annealing with a delayed schedule, while negative offsets (green) delay the schedule of qubits with small values of $h_i$.}
+	\label{fig:baseline}
 \end{figure}
 
 
-%----------------------------------------------------------------------------------------
-\subsubsection{Modified annealing schedule}
-%----------------------------------------------------------------------------------------
-
-Following this logic, we split the qubits into two groups depending on the value of $h_i$ relative to $(\max(h_i) - \min(h_i)) / 2$ given the set of external magnetic fields $\{h\}$ defined by a specific problem.
-We then symmetrically offset the two groups of qubits over a total range between 0\% and 10\% (-5\% to +5\%).
-The results of this study are shown in Fig.~\ref{fig:dwave_offset}.
-
-\begin{figure}[htb]
- \centering
- \includegraphics[width=\columnwidth]{./figures/scaling_comparison_all.pdf}
- \caption{The legend labels the entire range of the symmetric offset employed.
-  A positive range indicates that the group of qubits with small values of $|h_i|$ are advanced (qubits with large values of $|h_i|$ are equivalently delayed), and vice versa for results labeled with a negative range.}
- \label{fig:dwave_offset}
-\end{figure}
-
-Finally, we note that due to the inherent variance in performance when using different physical qubits, we perform the offset study on the same physical qubits for each graph.
-Additionally, the largest offset ranges sampled are at the limits of the hardware capabilities of the DWave annealer.
-
-We observe from Fig.~\ref{fig:dwave_offset} that advancing qubits subject to \textit{larger} final external magnetic fields yields approximately an order of magnitude improvement over the baseline results at the largest offset range.
-In contrast, advancing qubits with weaker magnetic fields consistently hurts the performance of the annealer.
-This result is surprising in light of the expectation from many-body localization.
-We explain this surprising result by simulating the annealing process of the annealer, which we discuss in the following sections.
 
 %----------------------------------------------------------------------------------------
 \subsection{Simulation Results}
 %----------------------------------------------------------------------------------------
 
-In order to understand the effects of annealing offsets, we simulate the annealing process on five qubits for a $G(2)$ graph embedded in chimera topography.
-To shorten the simulation time, we resample the DWave with a total annealing time of 1 $\mu s$.
-The resulting ground state probability as a function of offset measured over 200,000 observations is shown in Fig.~\ref{fig:dwave1us} (Top).
+In order to understand the effects of annealing offsets, we simulate the annealing process for the $G(2)$ graph embedded in chimera topography.
+In order to shorten the simulation time, we resample the DWave with a total annealing time of 1 $\mu s$.
+The resulting ground state probability as a function of offset measured over 100,000 observations is shown in Fig.~\ref{fig:dwave1us}.
 
 \begin{figure}
- \centering
- \includegraphics[width=\columnwidth]{./figures/dwave1us.pdf}
- \includegraphics[width=\columnwidth]{./figures/sim_deco.pdf}
- \includegraphics[width=\columnwidth]{./figures/sim_nodeco.pdf}
- \caption{ (Top) The probability of finding the MDS for $G(2)$ from DWave.
-  The machine parameters are identical to Sec.~\ref{sec:discussion:qa} with the exception of shortening the total annealing time to 1 $\mu s$ to accommodate reasonable simulation times.
-  (Middle) Result from simulation with decoherence and (Bottom) simulation without decoherence.
-  In both simulations, at +10\% offset, the probability of finding the ground state vanishes.
-  The red simulation points are not present in the DWave result.}
- \label{fig:dwave1us}
+	\centering
+	\includegraphics[width=\columnwidth]{./new_figures/NN2_offset_scaling.pdf}
+	\caption{The probability of finding the MDS for $G(2)$ from DWave (orange) and results from simulation with both decoherence terms (blue).
+     The machine parameters are identical to Sec.~\ref{sec:discussion:qa} with the exception of shortening the total annealing time to 1 $\mu s$ to accommodate reasonable simulation times.}
+	\label{fig:dwave1us}
 \end{figure}
 
-The simulation utilizes the same Hamiltonian as DWave, which corresponds to the embedded original MDS QUBO.
-The time-dependent solution is obtained by solving the Lindblad equation subject to the DWave annealing schedule with offsets allowing us to incorporate a decoherence model in our simulation.
-The details of the Lindbladian are given in Sec.~\ref{sec:methods:lindblad}.
-Following Ref.~\cite{}, we fix the temperature of the simulation to 15 milliKelvins to reflect the reported operating temperature of the DWave.
-Due to the small size of the problem, the minimum gap to the second excited state (first non-degenerate state) of the time-dependent Hamiltonian is approximately 2 Kelvins, as shown in Fig.~\ref{fig:spectrum}.
-As a result, the DWave operates at effectively zero-temperature for this example problem.
+Simulation results are obtained by solving the von Neumann equation subject to two decoherence models: local damping and full-counting statistics.
+Details of the master equation are given in Sec.~\ref{sec:methods:lindblad}. The time dependence of $A(s)$ and $B(s)$ are given by the DWave annealing schedule with offsets in Fig.~\ref{fig:anneal_schedule}.
+The graph $G(2)$ has the interesting feature of having a degenerate ground state depending on whether qubit 0 or 1 is chosen to be the MDS solution.
+This degeneracy is reflected in the experimental result and provides a non-trivial benchmark for our simulation.
+Fig.~\ref{fig:final_state_distribution} show the final state distribution of the three lowest lying state.
+The states $(0, 1, 0, 0, 0)$ and $(1, 0, 0, 1, 0)$ are the two degenerate ground states of the embedded Hamiltonian, while $(1, 1, 1, 1, 1)$ is the first excited state which yields an incorrect solution.
+All other states receive negligible probability at the end of annealing.
+The simulation (black) captures main features of the experimental result: 1) significant probability to populate both ground states (rather than populating only one), 2) asymmetry in ground state population due to systematic effects of offset lifting the final state degeneracy spanning approximately the correct range, 3) population of first excited state with systematically lower probability when the strong field is delayed.
+This result can be obtained by tuning three free parameters: the simulation temperature to the order of 10 milliKelvin, and the two coefficients of the two decoherence models at the order of 1 to 10 $ns$.
+Additional insights of the simulation are given in Sec.~\ref{sec:methods:simulation_details}.
 
-We then set an effective $T_1$ coherence time to 20 $ns$ to match the DWave probability of finding the MDS of $G(2)$ at approximately 86\%.
-A detailed study of $T_1$ is given in Sec.~\ref{sec:methods:deco}.
-We emphasize that the effective coherence time is much longer than the single qubit coherence time of 0.5 $ns$ reported by DWave, while still being orders of magnitude shorter than the total anneal time.
-The simulation and the experiment, however, both can recover the ground state with high probability regardless and exemplify quantum annealing's robustness.
+The resulting probability of recovering the correct solution as a function of annealing offset is given in Fig.~\ref{fig:dwave1us}.
+We confirm that scaling with respect to offset from the simulation matches what is observed from experiment, and provides evidence suggesting that the improvements are related to quantum mechanics.
+An additional study where an extended annealing schedule is employed in the simulation which removes systematic errors introduced by annealing offsets is presented in Sec.~\ref{sec:app:offset}, and further supports this observation.
 
 \begin{figure}
- \centering
- \includegraphics[width=\columnwidth]{./figures/spectrum.pdf}
- \includegraphics[width=\columnwidth]{./figures/spectrum_offset.pdf}
- \caption{The energy spectrum of the first 5 states of the time-dependent Hamiltonian (Top) without annealing offsets and (Bottom) -10\% annealing offset.
-  The spectrum in dimensionless units at the end of the anneal is an integer spectrum and correspond to the number of vertices in the dominating set.
-  For $G(2)$, the MDS has 1 vertex.
-  Annealing offsets lift the ground-state degeneracy.}
- \label{fig:spectrum}
+	\centering
+	\includegraphics[width=\columnwidth]{./new_figures/final_state_distribution.pdf}
+	\caption{{\color{red}I need to add dwave final state distribution here too.}}
+	\label{fig:final_state_distribution}
 \end{figure}
-
-We present the simulated probability of finding the MDS with and without decoherence in Fig.~\ref{fig:dwave1us} (Middle) and (Bottom).
-We observe that with decoherence, the simulation captures the rough features of the experiment, including a steady improvement for negative offsets, and similar non-linear behavior at positive offsets.
-Additionally, the range of probabilities in the simulation non-trivially matches the range observed in the experiment.
-In contrast, simulations without decoherence exemplify the opposite behavior concerning offsets, in line with expectations from many-body localization.
-Therefore, the simulation provides evidence in relating the improvement seen on the DWave to the effects of decoherence rather than many-body localization, while for idealized annealing, the effects of many-body localization become essential.
-
-In both simulations, the system experience a relatively big jump in probability, at -10\% and +30\%, respectively.
-For the simulation with decoherence, this behavior is inconsistent with experiment.
- {\color{red} eh..
-  guess a reason?} Additionally, both simulations experience vanishing probability at a +10\% offset.
-This behavior is expected to happen eventually in the experiment as well when the two sets of qubits become too aggressively staggered and effectively decouple.
-The simulation, however, incorrectly predicts when the decoupling happens.
 
 %----------------------------------------------------------------------------------------
 \subsection{Decoherence and Many-Body Localization}
 %----------------------------------------------------------------------------------------
 
-We provide further evidence of the competing effects between decoherence and many-body localization in this section.
-
-\begin{figure*}
- \centering
- \includegraphics[width=\columnwidth]{./figures/full_prob_deco.pdf}
- \includegraphics[width=\columnwidth]{./figures/mutual_info_deco.pdf}
- \includegraphics[width=\columnwidth]{./figures/full_prob_nodeco.pdf}
- \includegraphics[width=\columnwidth]{./figures/mutual_info_nodeco.pdf}
- \caption{(Left) The time-dependent probability of resolving the ground state and (Right) the corresponding mutual information.
-  (Top) Simulation with decoherence included and (Bottom) without decoherence.}
- \label{fig:prob_mi}
-\end{figure*}
-
-From Fig.~\ref{fig:prob_mi}, we observe that when the annealing schedule is modified to delay stronger external magnetic fields, the phase transition is delayed, yielding larger mutual information, and in turn probes a larger state space.
-This observation is independent of the effects of decoherence, and only relies on delaying the phase transition later in the annealing process.
-It then follows that the effects of decoherence competes with delocalization because the system is required to exhibit its quantum mechanical nature for longer.
-In contrast, if the phase transition is advanced, effects of decoherence are more suppressed since the system freezes to its classical solution earlier in the annealing process and become unaffected by dephasing. The left panels in Fig.~\ref{fig:prob_mi} demonstrate this phenomenon wherein the case of decoherence, the schedule which delays the phase transition consistently underperforms the (bahhh help me word this.
-top one the red is always below blue, the bottom one, the red crosses the blue after the phase transition).
-
 \ghissue{Finalize results}{19}
 
 %========================================================================================
-\section{CONCLUSION}
-\label{sec:conclusion}
+\section{DISCUSSION}
+\label{sec:discussion}
 %========================================================================================
+
+\subsection{Final remarks}
+We would like to emphasize that while the annealing offsets are motivated by the MBL hypothesis, and the results also follow those expectations, we do not have definitive proof that MBL plays a crucial role.
+The reason is because observations of MBL inevitably require the study of finite-size scaling, and our current simulation while being extremely thorough and explicit, is exponentially slow to evaluate making evaluations of even $G(3)$ untenable.
+However, the intersection of time-dependent quantum mechanics and emergent phenomena such at MBL is an exciting direction that is pertinent to adiabatic quantum computing.
+
 
 \ghissue{Conclusion}{20}
 
@@ -705,7 +720,7 @@ C.K. drank a lot of coffee.
 
 \textbf{Competing Interests:} The authors declare no competing interests.
 
-%========================================================================================
+\bibliographystyle{apsrev4-1}
 \bibliography{qilp}
 \ghissue{References}{24}
 %========================================================================================

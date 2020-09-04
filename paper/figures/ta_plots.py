@@ -222,33 +222,51 @@ def get_spin_config():
     return scount
 
 def get_tdse_data():
-    if True:
-        y = {'Binary': [0.924225, 0.91058, 0.8979, 0.885185, 0.86872, 0.85569, 0.84235, 0.82933, 0.82865, 0.837885, 0.859975]}
+    if False:
+        #y = {'Binary': [0.924225, 0.91058, 0.8979, 0.885185, 0.86872, 0.85569, 0.84235, 0.82933, 0.82865, 0.837885, 0.859975]}
+        y = {'Single_Sided_Binary': [0.9502, 0.9338, 0.93684, 0.91888, 0.9148, 0.90436, 0.90272, 0.88004, 0.86952, 0.85524, 0.8304]}
     else:
+        #data = {
+        #    offx: {
+        #        minx: data_Data.objects.filter(
+        #            experiment__graph__tag=f"NN(2)",
+        #            experiment__tag=f"FixEmbedding_{offx}_{minx}_{2*abs(minx)}_z0",
+        #            experiment__settings__annealing_time=1,
+        #            experiment__settings__num_spin_reversal_transforms=0,
+        #        ).to_dataframe()
+        #        for minx in [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
+        #    }
+        #    for offx in ["_Binary"]
+        #}
         data = {
             offx: {
                 minx: data_Data.objects.filter(
                     experiment__graph__tag=f"NN(2)",
-                    experiment__tag=f"FixEmbedding_{offx}_{minx}_{2*abs(minx)}_v5",
+                    experiment__tag=f"FixEmbedding_{offx}_{minx}_z1",
                     experiment__settings__annealing_time=1,
-                    experiment__settings__num_spin_reversal_transforms=5,
+                    experiment__settings__num_spin_reversal_transforms=0,
                 ).to_dataframe()
                 for minx in [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
             }
-            for offx in ["Binary"]
+            for offx in ["Single_Sided_Binary"]
         }
         y = dict()
         for offset in data.keys():
             X = list(data[offset].keys())
             y[offset] = []
             for key in X:
-                mds = 3.25
+                print(key)
+                print(data[offset][key].groupby("energy").count()["id"].sort_index())
+                # mds = 3.25
+                #mds = 3.625
+                mds = 2.909090909090909
                 try:
                     energy_count = (
-                        data[offset][key].groupby("energy").count()["id"].loc[mds]
+                        data[offset][key].groupby("energy").count()["id"].sort_index().iloc[0]
                     )
                 except:
                     energy_count = 0
+                print(energy_count)
                 total_count = data[offset][key].count()["id"]
                 y[offset].append(energy_count / total_count)
                 print(key, total_count)
@@ -419,14 +437,17 @@ def plot_tdse(data):
     fig = plt.figure("tdse", figsize=(7,4))
     ax = plt.axes([0.15, 0.15, 0.8, 0.8])
     X = [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
-    y = data["Binary"]
+    y = data["Single_Sided_Binary"]
+    #X = [-0.1, -0.09, -0.08, -0.07, -0.06, -0.05, -0.04, -0.03, -0.02, -0.01, 0.0]
+    #y = data["Single_Sided_Binary"]
     ax.errorbar(x=X, y=y, ls="none", marker='o', color='k')
-    ax.set_xticks([-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05])
-    ax.set_xticklabels(["-10%", "-8%", "-6%", "-4%", "-2%", "0%", "2%", "4%", "6%", "8%", "10%"])
+    ax.set_xticks(X)
+    #ax.set_xticklabels(["-10%", "-8%", "-6%", "-4%", "-2%", "0%", "2%", "4%", "6%", "8%", "10%"])
+    ax.set_xticklabels([f"{Xi*100}%" for Xi in X])
     ax.set_xlabel("offset range")
     ax.set_ylabel("MDS probability")
     plt.draw()
-    plt.savefig("./dwave1us.pdf", transparent=True)
+    plt.savefig("./dwave1us_single_sided.pdf", transparent=True)
     plt.show()
 
 def plot_dwave_mi(scount,opt):
@@ -480,7 +501,9 @@ def plot_dwave_mi(scount,opt):
     return pr
 
 def get_tdse_densitymatrix():
-    from tdse_plots import aggregate
+    #from tdse_plots import aggregate
+    from tdse_plots import aggregate_nodeco as aggregate
+
     tdata = aggregate()
     finalstate = {"Binary": {}}
     for key in tdata.keys():
@@ -488,13 +511,89 @@ def get_tdse_densitymatrix():
         finalstate["Binary"][key] = np.diag(temp[:,-1].reshape(32, 32))
     return finalstate
 
-def plot_final_state(dwpr, simpr, offset=0.0):
+def plot_final_state(dwpr=None, simpr=None, offset=0.0):
     fig = plt.figure("final state pr", figsize=(7,4))
     ax = plt.axes([0.15, 0.15, 0.7, 0.7])
-    ax.errorbar(x=range(len(dwpr[offset])), y = dwpr[offset], color=blue)
-    ax.errorbar(x=range(len(simpr[offset])), y = simpr[offset], color=red)
+    if dwpr:
+        ax.errorbar(x=range(len(dwpr[offset])), y = dwpr[offset], color=blue)
+    if simpr:
+        ax.errorbar(x=range(len(simpr[offset])), y = simpr[offset], color=red)
     plt.draw()
     plt.show()
+
+def plot_final_state_vs_at(prdict, offset=0.0):
+    fig = plt.figure("final state pr", figsize=(7,4))
+    ax = plt.axes([0.15, 0.15, 0.7, 0.7])
+    anneal_time =  [1, 10, 100, 1000] #[1,2,3,4,5,6,7,8,9,10,20,30,40,50,60,70,80,90,100,200,300,400,500,600,700,800,900,1000]
+    for at in anneal_time:
+        ax.errorbar(x=range(len(prdict[at][offset])), y = prdict[at][offset])
+    plt.draw()
+    plt.show()
+
+def getallspinconfig():
+    import pickle
+    vrange = [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
+    anneal_time = [1,2,3,4,5,6,7,8,9,10,20,30,40,50,60,70,80,90,100,200,300,400,500,600,700,800,900,1000]
+    try:
+        y =dict()
+        for at in anneal_time:
+            y[at] = dict()
+            for v in vrange:
+                with open(f"./temp/Binary_{v}_{at}.pickle", "rb") as file:
+                    y[at][v] = pickle.load(file)
+    except:
+        data = {
+            at: {
+                v: data_Data.objects.filter(
+                    experiment__graph__tag=f"NN(2)",
+                    experiment__tag=f"FixEmbedding_Binary_{v}_{2*abs(v)}_v5",
+                    experiment__settings__annealing_time=at,
+                    experiment__settings__num_spin_reversal_transforms=5,
+                ).to_dataframe()
+                for v in vrange
+            }
+            for at in anneal_time
+        }
+        y = dict()
+        for at in data.keys():
+            y[at] = dict()
+            X = list(data[at].keys())
+            for v in X:
+                spin = data[at][v]["spin_config"]
+                with open(f"./temp/Binary_{v}_{at}.pickle", "wb") as file:
+                    pickle.dump(spin, file)
+                y[at][v] = spin
+    # remap y
+    remap = [1, 2, 3, 0, 1]
+    for at in y.keys():
+        X = list(y[at].keys())
+        for v in X:
+            temp = []
+            for yi in y[at][v]:
+                temp.append([yi[idx] for idx in remap])
+            y[at][v] = np.array(temp)
+    basis = [(i, j, k, l, m) for i in [0, 1] for j in [0, 1] for k in [0, 1] for l in [0, 1] for m in [0, 1]]
+    scount = dict()
+    for at in y.keys():
+        X = list(y[at].keys())
+        scount[at] = dict()
+        for v in X:
+            scount[at][v] = {b: 0 for b in basis}
+            for yi in y[at][v]:
+                scount[at][v][tuple(yi)] += 1
+    # get prob vs computational basis
+    n=5
+    prdict = dict()
+    for at in anneal_time:
+        prdict[at] = dict()
+        for v in vrange:
+            pr = np.zeros(2 ** n)
+            for I in range(2 ** n):
+                dwstate = np.array([int(i) for i in '{0:05b}'.format(I)])
+                pr[I] = scount[at][v][(tuple(dwstate))]
+            pr = pr / np.sum(pr)
+            prdict[at][v] = pr
+    return prdict
 
 if __name__ == "__main__":
     # plot scaling with anneal_time
@@ -529,17 +628,25 @@ if __name__ == "__main__":
     #plot_compare_all(data02, data04, data06, data08, data10)
 
     # plot tdse comparison plots
-    #tdsedata = get_tdse_data()
-    #plot_tdse(tdsedata)
+    tdsedata = get_tdse_data()
+    plot_tdse(tdsedata)
 
-    # dwave MI
-    scount = get_spin_config()
-    dwpr = plot_dwave_mi(scount,'dwave')
+    ## dwave MI
+    #scount = get_spin_config()
+    #dwpr = plot_dwave_mi(scount,'dwave')
 
-    # tdse MI
-    scount = get_tdse_densitymatrix()
-    simpr = plot_dwave_mi(scount,'simulate')
+    ## tdse MI
+    #scount = get_tdse_densitymatrix()
+    #simpr = plot_dwave_mi(scount,'simulate')
 
-    # final state distribution
-    plot_final_state(dwpr, simpr)
+    ## final state distribution
+    #plot_final_state(dwpr, simpr, offset=-0.01)
+    #plot_final_state(dwpr, simpr, offset=0.02)
+    #plot_final_state(dwpr, simpr, offset=0.03)
+    #plot_final_state(dwpr, simpr, offset=0.04)
+
+    # DWave full spin config
+    #prdict = getallspinconfig()
+    #plot_final_state_vs_at(prdict, offset=-0.05)
+
 

@@ -10,7 +10,7 @@ from pandas import read_excel
 
 from matplotlib.pyplot import subplots, draw, show, savefig
 
-from qlp.mds.mds_qlpdb import AnnealOffset
+from qlp.mds.mds_qlpdb import AnnealOffset, find_offset
 
 
 class s_to_offset:
@@ -64,13 +64,35 @@ class s_to_offset:
                 "A(s) (GHz)": self.maxB / (1.0 + exp(10.0 * (s - 0.5))),
                 "B(s) (GHz)": self.maxB / (1.0 + exp(-10.0 * (s - 0.5))),
             }
+        elif anneal_curve == "constantA":
+            # DWave approx 10 GHz
+            self.anneal_schedule = {
+                "s": [0, 1],
+                "C (normalized)": [0, 1],
+                "A(s) (GHz)": [self.maxB, self.maxB],
+                "B(s) (GHz)": [0, 0],
+            }
+        elif anneal_curve == "constantB":
+            # DWave approx 10 GHz
+            self.anneal_schedule = {
+                "s": [0, 1],
+                "C (normalized)": [0, 1],
+                "A(s) (GHz)": [0, 0],
+                "B(s) (GHz)": [self.maxB, self.maxB],
+            }
         elif anneal_curve == "dwave":
+            #io = "./09-1212A-B_DW_2000Q_5_anneal_schedule.xlsx"
+            io = "./09-1216A-A_DW_2000Q_6_annealing_schedule.xlsx"
+            print(f"anneal schedule from {io}")
             anneal_schedule = read_excel(
-                io="./09-1212A-B_DW_2000Q_5_anneal_schedule.xlsx", sheet_name=1
+                io=io, sheet_name=1
             )
             self.anneal_schedule = {
                 key: anneal_schedule[key].values for key in anneal_schedule.columns
             }
+            #for key in self.anneal_schedule:
+            #    if key in ["A(s) (GHz)", "B(s) (GHz)"]:
+            #        self.anneal_schedule[key] = [round(i, 3) for i in self.anneal_schedule[key]]
         else:
             raise KeyError(f"Anneal curve {anneal_curve} not reckognized")
 
@@ -158,6 +180,7 @@ class AnnealSchedule:
         self,
         offset,
         hi_for_offset,
+        embedding,
         offset_min,
         offset_range,
         fill_value: str = "extrapolate",
@@ -175,6 +198,9 @@ class AnnealSchedule:
         self.offset_list, self.offset_tag = AO.fcn(
             hi_for_offset, offset_min, offset_range
         )
+        #_, self.offset_tag, self.offset_list = find_offset(hi_for_offset, AO.fcn, embedding, offset_min, offset_range)
+        print("From find offset")
+        print(self.offset_list)
         self.s2o = s_to_offset(fill_value, anneal_curve)
 
     def C(self, s: float) -> ndarray:
