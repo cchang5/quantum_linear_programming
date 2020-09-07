@@ -494,8 +494,10 @@ def gettdse(offset=0.0):
     return prob
 
 
-def gettdsetheory(offset=0.0, normalized_time = "[0, 1]"):
+def gettdsetheory(offset=0.0, normalized_time = "[0, 1]", gamma_local = None):
     sim = Sim()
+    if gamma_local is not None:
+        sim.params["wave"]["gamma_local"] = gamma_local
     query, sol, tdse = sim.get_data(offset, normalized_time)
     H = tdse._constructIsingH(np.array(tdse.ising["Jij"]), np.array(tdse.ising["hi"])).todense().tolist()
     eval, evec = eigh(H)
@@ -532,17 +534,22 @@ def plot_tdse_extended():
     """simulation result
     """
     offset = list(0.01 * (np.arange(11) - 5))
-    prob = [gettdsetheory(os, normalized_time = [-0.1, 1.1]) for os in offset]
-    ax.errorbar(x=offset, y=prob, ls="-", marker="o", color="k", alpha=0.5)
 
-    #prob = [gettdsetheory(os, normalized_time = [0.0, 1.0]) for os in offset]
-    #ax.errorbar(x=offset, y=prob, ls="--", marker="o", color=os_color["sim"], label="truncated")
+    prob = [gettdsetheory(os, normalized_time = [0.0, 1.0]) for os in offset]
+    ax.errorbar(x=offset, y=prob, ls="--", marker="o", color="k", alpha=0.5, label="default")
+
+    prob = [gettdsetheory(os, normalized_time = [-0.1, 1.1]) for os in offset]
+    ax.errorbar(x=offset, y=prob, ls="-", marker="o", color=red, alpha=0.5, label="extended")
+
+    prob = [gettdsetheory(os, normalized_time = [-0.1, 1.1], gamma_local=0) for os in offset]
+    ax.errorbar(x=offset, y=prob, ls="-", marker="o", color=blue, alpha=0.5, label="extended f.c. only")
+
     """labels
     """
     ax.set_xlabel("offset", p["textargs"])
     ax.set_ylabel("probability", p["textargs"])
 
-    #plt.legend()
+    plt.legend()
     plt.savefig("../new_figures/NN2_offset_scaling_extended.pdf", transparent=True)
 
 """
