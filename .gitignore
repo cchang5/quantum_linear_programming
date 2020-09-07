@@ -14,3 +14,8 @@ paper/main.synctex.gz
 *.synctex.gz
 __pycache__/
 qlpdb/media/
+notebooks/~$09-1216A-A_DW_2000Q_6_annealing_schedule.xlsx
+.DS_Store
+.idea/
+paper/.DS_Store
+paper/new_figures/.DS_Store

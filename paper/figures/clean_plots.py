@@ -59,30 +59,30 @@ class Sim:
         # offset params
         offset_params = dict()
         offset_params["annealing_time"] = 1
+        offset_params["normalized_time"] = "[0, 1]"
         offset_params["offset"] = "single_sided_binary"
         offset_params["offset_min"] = 0
-        offset_params["fill_value"] = "extrapolate"
         offset_params["anneal_curve"] = "dwave"
-
+        print(offset_params)
         # wave params
         wave_params = dict()
         wave_params["type"] = "mixed"
         """==============================="""
-        #wave_params["temp"] = 0.015
-        #wave_params["gamma"] = 1 / 1
-        #wave_params["gamma_local"] = 1 / 10
+        # wave_params["temp"] = 0.015
+        # wave_params["gamma"] = 1 / 1
+        # wave_params["gamma_local"] = 1 / 10
         """==============================="""
-        #wave_params["temp"] = 0.03
-        #wave_params["gamma"] = 1 / 1
-        #wave_params["gamma_local"] = 1 / 30
+        # wave_params["temp"] = 0.03
+        # wave_params["gamma"] = 1 / 1
+        # wave_params["gamma_local"] = 1 / 30
         """==============================="""
         wave_params["temp"] = 0.0225
         wave_params["gamma"] = 1 / 1
-        wave_params["gamma_local"] = 1 / 15 # 1/15 or 1/20
+        wave_params["gamma_local"] = 1 / 15  # 1/15 or 1/20
         """==============================="""
-        #wave_params["temp"] = 0.04
-        #wave_params["gamma"] = 1 / 10
-        #wave_params["gamma_local"] = 1 / 10 # 1/15 or 1/20
+        # wave_params["temp"] = 0.04
+        # wave_params["gamma"] = 1 / 10
+        # wave_params["gamma_local"] = 1 / 10 # 1/15 or 1/20
         """==============================="""
         wave_params["initial_wavefunction"] = "transverse"
 
@@ -106,8 +106,9 @@ class Sim:
         }
         return params
 
-    def get_data(self, offset):
+    def get_data(self, offset, normalized_time = [0.0, 1.0]):
         self.params["offset"]["offset_min"] = offset
+        self.params["offset"]["normalized_time"] = normalized_time
         print(self.params["graph"]["tag"])
         print(convert_params(self.params["offset"]))
         print(self.params["solver"])
@@ -118,6 +119,8 @@ class Sim:
             solver__contains=self.params["solver"],
             wave__contains=self.params["wave"],
         ).first()
+        from django.db import connection
+        print(connection.queries)
         with open(f"{settings.MEDIA_ROOT}/{query.solution}", "rb") as file:
             sol = pickle.load(file)
         with open(f"{settings.MEDIA_ROOT}/{query.instance}", "rb") as file:
@@ -401,15 +404,16 @@ def getall(offset=-0.05, graphsize=2):
     return prob
 
 
-def plot_all():
-    def degenfcn(n):
-        if n % 3 == 2:
-            return n // 3 + 2
-        if n % 3 == 1:
-            return 2 * (n // 3 + 1)
-        if n % 3 == 0:
-            return 1
+def degenfcn(n):
+    if n % 3 == 2:
+        return n // 3 + 2
+    if n % 3 == 1:
+        return 2 * (n // 3 + 1)
+    if n % 3 == 0:
+        return 1
 
+
+def plot_all():
     plt.figure(figsize=p["figsize"])
     ax = plt.axes(p["aspect_ratio"])
     """dwave result
@@ -439,6 +443,25 @@ def plot_all():
     print(prob)
 
     plt.savefig("../new_figures/DWave_scaling.pdf", transparent=True)
+
+
+def plot_random_ratio():
+    plt.figure(figsize=p["figsize"])
+    ax = plt.axes(p["aspect_ratio"])
+    graphsize = list(np.arange(2, 13))
+    degeneracy = np.array([degenfcn(x) for x in graphsize])
+    rprob = np.array([1 / 2 ** xi for xi in graphsize]) * degeneracy
+    for offset in [0.0, 0.05]:
+        if offset == 0.0:
+            color = "k"
+        else:
+            color = yellow
+        prob = np.array([getall(offset, gs) for gs in graphsize])
+        ratio = prob / rprob
+        ax.errorbar(x=graphsize, y=ratio, ls="-", marker="o", color=color, alpha=os_alpha[0.0], label=offset)
+    ax.set_xlabel("graph size", p["textargs"])
+    ax.set_ylabel("P(DWave) / P(random)")
+    plt.savefig(f"../new_figures/random_ratio_compare.pdf", transparent=True)
 
 
 """
@@ -471,9 +494,9 @@ def gettdse(offset=0.0):
     return prob
 
 
-def gettdsetheory(offset=0.0):
+def gettdsetheory(offset=0.0, normalized_time = "[0, 1]"):
     sim = Sim()
-    query, sol, tdse = sim.get_data(offset)
+    query, sol, tdse = sim.get_data(offset, normalized_time)
     H = tdse._constructIsingH(np.array(tdse.ising["Jij"]), np.array(tdse.ising["hi"])).todense().tolist()
     eval, evec = eigh(H)
     project = sum([np.kron(evec[:, idx], np.conj(evec[:, idx])) for idx in [0, 1]])
@@ -503,6 +526,24 @@ def plot_tdse():
     plt.legend()
     plt.savefig("../new_figures/NN2_offset_scaling.pdf", transparent=True)
 
+def plot_tdse_extended():
+    plt.figure(figsize=p["figsize"])
+    ax = plt.axes(p["aspect_ratio"])
+    """simulation result
+    """
+    offset = list(0.01 * (np.arange(11) - 5))
+    prob = [gettdsetheory(os, normalized_time = [-0.1, 1.1]) for os in offset]
+    ax.errorbar(x=offset, y=prob, ls="-", marker="o", color="k", alpha=0.5)
+
+    #prob = [gettdsetheory(os, normalized_time = [0.0, 1.0]) for os in offset]
+    #ax.errorbar(x=offset, y=prob, ls="--", marker="o", color=os_color["sim"], label="truncated")
+    """labels
+    """
+    ax.set_xlabel("offset", p["textargs"])
+    ax.set_ylabel("probability", p["textargs"])
+
+    #plt.legend()
+    plt.savefig("../new_figures/NN2_offset_scaling_extended.pdf", transparent=True)
 
 """
 ##################################
@@ -511,9 +552,9 @@ def plot_tdse():
 """
 
 
-def getannealcurve(offset=0.05):
+def getannealcurve(offset=0.05, normalized_time=[0.0, 1.0]):
     sim = Sim()
-    query, sol, tdse = sim.get_data(offset)
+    query, sol, tdse = sim.get_data(offset, normalized_time)
     X = np.linspace(*query.offset["normalized_time"])
     yA = np.array([tdse.AS.A(Xi) for Xi in X])[:, 0]
     yB = np.array([tdse.AS.B(Xi) for Xi in X])[:, 0]
@@ -521,7 +562,7 @@ def getannealcurve(offset=0.05):
 
 
 def plot_annealcurve():
-    offset = list(np.arange(6) / 100)
+    offset = [0.0, 0.05] #list(np.arange(6) / 100)
     plt.figure(figsize=p["figsize"])
     ax = plt.axes(p["aspect_ratio"])
     for os in offset:
@@ -535,7 +576,7 @@ def plot_annealcurve():
             colorA = blue
             colorB = blue
             alpha = os_alpha[os]
-        s, yA, yB = getannealcurve(os)
+        s, yA, yB = getannealcurve(os, normalized_time=[-0.1, 1.1])
         ax.errorbar(x=s, y=yA, color=colorA, alpha=alpha, marker="None", ls="-", label=label)
         ax.errorbar(x=s, y=yB, color=colorB, alpha=alpha, marker="None", ls="-")
     """labels
@@ -544,7 +585,7 @@ def plot_annealcurve():
     ax.set_ylabel("$A(s)$ and $B(s)$ (GHz)", p["textargs"])
 
     plt.legend(title="offset", loc=4)
-    plt.savefig("../new_figures/anneal_schedule.pdf", transparent=True)
+    plt.savefig("../new_figures/anneal_schedule_extended.pdf", transparent=True)
 
 
 """
@@ -591,17 +632,16 @@ def plot_timedepprob():
     plt.savefig("../new_figures/time_dependent_probability.pdf", transparent=True)
 
 
-
 def gettimedependentsz(offset=0.05):
     sim = Sim()
     query, sol, tdse = sim.get_data(offset)
-    #H = tdse._constructIsingH(np.array(tdse.ising["Jij"]), np.array(tdse.ising["hi"])).todense().tolist()
-    #eval, evec = eigh(H)
-    #project = sum([np.kron(evec[:, idx], np.conj(evec[:, idx])) for idx in [0, 1]])
+    # H = tdse._constructIsingH(np.array(tdse.ising["Jij"]), np.array(tdse.ising["hi"])).todense().tolist()
+    # eval, evec = eigh(H)
+    # project = sum([np.kron(evec[:, idx], np.conj(evec[:, idx])) for idx in [0, 1]])
     from functools import reduce
-    totalsz=reduce(lambda a,b:a+b, tdse.FockZ)
-    fockn=tdse.Focksize #totalsz.shape[0]
-    sz = np.asarray([ (np.trace( totalsz @ sol.y[:, i].reshape(fockn,fockn))).real   for i in range(sol.t.size)])
+    totalsz = reduce(lambda a, b: a + b, tdse.FockZ)
+    fockn = tdse.Focksize  # totalsz.shape[0]
+    sz = np.asarray([(np.trace(totalsz @ sol.y[:, i].reshape(fockn, fockn))).real for i in range(sol.t.size)])
     X = query.time
     return X, sz
 
@@ -630,6 +670,7 @@ def plot_timedepsz():
 
     plt.legend(title="offset")
     plt.savefig("../new_figures/time_dependent_sz.pdf", transparent=True)
+
 
 """
 ###########################
@@ -669,25 +710,28 @@ def plot_hybridization():
     # plt.yscale("log")
     plt.savefig("../new_figures/hybridization.pdf", transparent=True)
 
+
 """
 ###########################
 #####  level spacing  #####
 ###########################
 """
 
+
 def getlevelspacing(offset=0.05):
     sim = Sim()
     query, sol, tdse = sim.get_data(offset)
     ngrid = 1000
-    fockn= tdse.Focksize
+    fockn = tdse.Focksize
     timegrid = np.linspace(0, 1, ngrid)
     r = np.zeros(ngrid)
     for i in range(ngrid):
         H = tdse.annealingH(timegrid[i]).todense()
         val, evec = eigh(H)
-        spacing = val[1:fockn]-val[0:fockn-1]
-        temp=np.asarray([min((spacing[n],spacing[n+1]))/max((spacing[n],spacing[n+1])) for n in range(fockn-2)])
-        r[i]=np.sum(temp)/(fockn-2)
+        spacing = val[1:fockn] - val[0:fockn - 1]
+        temp = np.asarray(
+            [min((spacing[n], spacing[n + 1])) / max((spacing[n], spacing[n + 1])) for n in range(fockn - 2)])
+        r[i] = np.sum(temp) / (fockn - 2)
     return timegrid, r
 
 
@@ -699,10 +743,11 @@ def plot_levelspacing():
         all_levels.append(r)
     print(np.shape(all_levels))
     sns.heatmap(all_levels, yticklabels=offset)
-    #ax.legend()
-    #plt.yscale("log")
-    #plt.savefig("../new_figures/levelspacing.pdf", transparent=True)
+    # ax.legend()
+    # plt.yscale("log")
+    # plt.savefig("../new_figures/levelspacing.pdf", transparent=True)
     plt.show()
+
 
 """
 ############################################
@@ -710,11 +755,12 @@ def plot_levelspacing():
 ############################################
 """
 
+
 def getspectrum(offset=0.05):
     sim = Sim()
     query, sol, tdse = sim.get_data(offset)
     ngrid = 100
-    es= 3
+    es = 7
     timegrid = np.linspace(0, 1, ngrid)
     r = {idx: [] for idx in range(es)}
     gap = {0: [], 1: []}
@@ -722,29 +768,33 @@ def getspectrum(offset=0.05):
     for i in range(ngrid):
         H = tdse.annealingH(timegrid[i]).todense()
         val, evec = eigh(H)
+        if i == 0:
+            norm = abs(val[1] - val[0])
+            shift = val[0] / norm - 1
         for idx in range(es):
-            r[idx].append(val[idx])
-        gap[1].append(val[2]-val[1])
-        gap[0].append(val[2]-val[0])
-        gap_density.append((val[2]+val[1]-2*val[0])/2)
+            r[idx].append(val[idx]/norm - shift)
+        gap[1].append(val[2] - val[1])
+        gap[0].append(val[2] - val[0])
+        gap_density.append((val[2] + val[1] - 2 * val[0]) / 2)
     return timegrid, r, gap, gap_density
 
+
 def plot_spectrum():
-    offset = [-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
+    offset = [0.0] #[-0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
     plt.figure("spectrum", figsize=p["figsize"])
     ax = plt.axes(p["aspect_ratio"])
-    color = [red, "k", blue]
+    color = ["k"] #[red, "k", blue]
     for idx, os in enumerate(offset):
         timegrid, r, gap, gap_density = getspectrum(os)
-        #for es in r:
-        #    ax.errorbar(x=timegrid, y=r[es], marker="None", ls="-", color=color[idx])
-        for es in [0]: #gap:
-            ax.errorbar(x=timegrid, y=gap[es], marker="None", ls="-")
-        #ax.errorbar(x=timegrid, y=gap_density, marker="None", ls="-")
-    #ax.legend()
-    #plt.yscale("log")
-    #plt.savefig("../new_figures/levelspacing.pdf", transparent=True)
-    plt.show()
+        for es in r:
+            ax.errorbar(x=timegrid, y=r[es], marker="None", ls="-", color=color[idx])
+        #for es in [0]:  # gap:
+        #    ax.errorbar(x=timegrid, y=gap[es], marker="None", ls="-")
+        # ax.errorbar(x=timegrid, y=gap_density, marker="None", ls="-")
+        ax.set_xlabel("annealing time $s$ ($\mu s$)", **p["textargs"])
+        ax.set_ylabel("dimensionless energy", **p["textargs"])
+        plt.savefig(f"../new_figures/spectrum_{os}.pdf", transparent=True)
+
 
 """
 ################################
@@ -797,19 +847,19 @@ def getmi(offset=0.05, type="quantum"):
     nB = 1
     indicesA = "abcdeafghi->bcdefghi"
     indicesB = "abcdefbcde->af"
-    #indicesA = "abdfhcbegi->adfhcegi"
-    #indicesB = "acdefabdef->cb"
-    #indicesA = "abcdefgchi->abdefghi"
-    #indicesB = "abcdeabfde->cf"
-    #indicesA = "abcdefghdi->abcefghi"
-    #indicesB = "abcdeabcfe->df"
-    #indicesA = "abcdefghie->abcdfghi"
-    #indicesB = "abcdeabcdf->ef"
+    # indicesA = "abdfhcbegi->adfhcegi"
+    # indicesB = "acdefabdef->cb"
+    # indicesA = "abcdefgchi->abdefghi"
+    # indicesB = "abcdeabfde->cf"
+    # indicesA = "abcdefghdi->abcefghi"
+    # indicesB = "abcdeabcfe->df"
+    # indicesA = "abcdefghie->abcdfghi"
+    # indicesB = "abcdeabcdf->ef"
 
-    #nA = 2
-    #indicesA = "abdfhabdgi->fhgi"
-    #nB = 3
-    #indicesB = "abcghdefgh->abcdef"
+    # nA = 2
+    # indicesA = "abdfhabdgi->fhgi"
+    # nB = 3
+    # indicesB = "abcghdefgh->abcdef"
 
     reg = 1E-6
     s = query.time
@@ -873,6 +923,7 @@ def calculate_dwave_mi(offset=-0.05):
     print(mi)
     return mi
 
+
 def plot_dwave_mi():
     offset = list(0.01 * (np.arange(11) - 5))[::-1]
     plt.figure(figsize=p["figsize"])
@@ -885,6 +936,7 @@ def plot_dwave_mi():
         ax.errorbar(x=os, y=mi[-1], marker="o", color=red)
     plt.savefig("../new_figures/dwave_mutual_information.pdf", transparent=True)
 
+
 """
 ##################
 #####  main  #####
@@ -896,16 +948,18 @@ if __name__ == "__main__":
     """
     # plot_anneal_time() # this is not current, maybe drop this
     # plot_all()
-    plot_dwave_mi()
+    #plot_random_ratio()
+    # plot_dwave_mi()
     """
     For TDSE simulation
     """
-    plot_tdse()
-    plot_distribution()
-    # plot_annealcurve()
-    plot_timedepprob()
-    plot_hybridization()
-    plot_mi()
-    plot_timedepsz()
-    plot_levelspacing()
-    plot_spectrum()
+    #plot_tdse()
+    plot_tdse_extended()
+    # plot_distribution()
+    #plot_annealcurve()
+    # plot_timedepprob()
+    # plot_hybridization()
+    # plot_mi()
+    # plot_timedepsz()
+    # plot_levelspacing()
+    #plot_spectrum()
