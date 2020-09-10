@@ -306,7 +306,7 @@ def plot_distribution():
     ax.set_xticks(X)
     ax.set_xticklabels(Xlabel, rotation="0")
 
-    plt.legend()
+    plt.legend(fancybox=True, framealpha=0.5)
 
     plt.savefig("../new_figures/final_state_distribution.pdf", transparent=True)
 
@@ -439,7 +439,7 @@ def plot_all():
     ax.set_xlabel("graph size", p["textargs"])
     ax.set_ylabel("probability", p["textargs"])
 
-    plt.legend()
+    plt.legend(fancybox=True, framealpha=0.5)
     print(prob)
 
     plt.savefig("../new_figures/DWave_scaling.pdf", transparent=True)
@@ -518,14 +518,14 @@ def plot_tdse():
     """simulation result
     """
     offset = list(0.01 * (np.arange(11) - 5))
-    prob = [gettdsetheory(os) for os in offset]
+    prob = [gettdsetheory(os, normalized_time=[0.0, 1.0]) for os in offset]
     ax.errorbar(x=offset, y=prob, ls="--", marker="o", color=os_color["sim"], label="theory")
     """labels
     """
     ax.set_xlabel("offset", p["textargs"])
     ax.set_ylabel("probability", p["textargs"])
 
-    plt.legend()
+    plt.legend(fancybox=True, framealpha=0.5)
     plt.savefig("../new_figures/NN2_offset_scaling.pdf", transparent=True)
 
 def plot_tdse_extended():
@@ -535,21 +535,21 @@ def plot_tdse_extended():
     """
     offset = list(0.01 * (np.arange(11) - 5))
 
-    prob = [gettdsetheory(os, normalized_time = [0.0, 1.0]) for os in offset]
-    ax.errorbar(x=offset, y=prob, ls="--", marker="o", color="k", alpha=0.5, label="default")
+    prob = [gettdsetheory(os, normalized_time = [-0.1, 1.1], gamma_local=0) for os in offset]
+    ax.errorbar(x=offset, y=prob, ls="-", marker="o", color=blue, alpha=0.5, label="extended f.c. only")
 
     prob = [gettdsetheory(os, normalized_time = [-0.1, 1.1]) for os in offset]
     ax.errorbar(x=offset, y=prob, ls="-", marker="o", color=red, alpha=0.5, label="extended")
 
-    prob = [gettdsetheory(os, normalized_time = [-0.1, 1.1], gamma_local=0) for os in offset]
-    ax.errorbar(x=offset, y=prob, ls="-", marker="o", color=blue, alpha=0.5, label="extended f.c. only")
+    prob = [gettdsetheory(os, normalized_time = [0.0, 1.0]) for os in offset]
+    ax.errorbar(x=offset, y=prob, ls="--", marker="o", color="k", alpha=0.5, label="default")
 
     """labels
     """
     ax.set_xlabel("offset", p["textargs"])
     ax.set_ylabel("probability", p["textargs"])
 
-    plt.legend()
+    plt.legend(fancybox=True, framealpha=0.5)
     plt.savefig("../new_figures/NN2_offset_scaling_extended.pdf", transparent=True)
 
 """
@@ -954,17 +954,17 @@ if __name__ == "__main__":
     For DWave only
     """
     # plot_anneal_time() # this is not current, maybe drop this
-    # plot_all()
+    plot_all()
     #plot_random_ratio()
     # plot_dwave_mi()
     """
     For TDSE simulation
     """
-    #plot_tdse()
+    plot_tdse()
     plot_tdse_extended()
-    # plot_distribution()
-    #plot_annealcurve()
-    # plot_timedepprob()
+    plot_distribution()
+    plot_annealcurve()
+    plot_timedepprob()
     # plot_hybridization()
     # plot_mi()
     # plot_timedepsz()
