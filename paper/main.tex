@@ -298,7 +298,7 @@ The results in yellow (green) delays the annealing of qubits subject to stronger
 %----------------------------------------------------------------------------------------
 \label{sec:results:simulation}
 In order to understand the effects of annealing offsets, we simulate the annealing process for the $G(2)$ graph embedded in chimera topography.
-In order to shorten the simulation time, we resample the DWave with a total annealing time of 1 $\mu s$.
+In order to shorten the simulation time, we repeat the same anneal process with a total annealing time of 1 $\mu s$ and count the number of correct ground state occurances.
 The resulting ground state probability as a function of offset measured over 100,000 observations is shown in Fig.~\ref{fig:dwave1us}.
 
 \begin{figure}
@@ -331,13 +331,14 @@ An additional study where an extended annealing schedule is employed in the simu
 	\label{fig:final_state_distribution}
 \end{figure}
 
+\ghissue{Decoherance study}{31}
+
 
 %========================================================================================
 \section{CONCLUSION}
 \label{sec:conclusion}
 %========================================================================================
 
-\ghissue{Finalize results}{19}
 
 \subsection{Final remarks}
 \label{sec:results:final}
@@ -429,7 +430,7 @@ In this case the $Q_{xx}$ component of the Qubo, eq.~\eqref{eq:qubo:components} 
 \label{sec:methods:mds-qubo}
 %----------------------------------------------------------------------------------------
 
-The solution to the minimum independent set can be expressed as an integer optimization problem given by,
+The solution to the Minimum Dominating Set problem can be expressed as an integer optimization problem given by,
 \begin{align}
  f(\vec x) = & \min\left(\sum_{v \in V} x_v\right),                    \\
 \end{align}
@@ -464,7 +465,7 @@ The algorithm uses
     N_q = \overline{\overline{V}} + \sum_{v \in V} \log_2 \mathcal{N}(v)
 \end{equation}
 qubits to encode the vertices and to embed the slack variables.
-Therefore, the embedding at worse scales with $n_V \log_2 n_V$ qubits for fully connected graphs.
+Therefore, the (logical) qubit vector $\vec \Psi$ at worst scales with $n_V \log_2 n_V$ qubits for fully connected graphs.
 
 The target QUBO in the notation of eq.~\eqref{eq:matrix_form} reads
  {\small
@@ -650,9 +651,6 @@ We emphasize however, that the simulation suggests that the ground state is reco
 Finally, we comment that in order for the simulation to obtain the final state distribution shown in Fig.~\ref{fig:final_state_distribution}, effects of full-counting statistics are required.
 Absent some dynamical thermalization effect, the $G(2)$ problem is too small such that at a total annealing time of 1$\mu s$, the annealing offsets lift the ground state degeneracy by an amount such that diabatic transitions are absent, and the simulation is populated predominantly by the unique ground state.
 The final state distribution gives us a very sensitive observable to tune the simulation temperature, and agrees well with the experimental operating temperature.
-
-
-\ghissue{Simulation details}{18}
 
 
 
