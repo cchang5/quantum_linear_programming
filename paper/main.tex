@@ -83,7 +83,7 @@
 \label{sec:introduction}
 %========================================================================================
 
-Integer linear programming (ILP) is an integer optimization problem subject to inequality constraints
+Integer Linear Programming (ILP) is an integer optimization problem subject to inequality constraints
 \begin{align}
  \label{eq:initial-ip-def}
  \vec x_0 = \mathrm{arg} & \min\limits_{x}(\sum_i c_i x_i)
@@ -97,22 +97,22 @@ subject to
 where $i=1, \cdots,  N$ is the number of dependent variables and $a=1, \cdots, M$ the number of constraint equations.
 
 ILP is a commonly tackled problem applicable to situations such as x~\cite{}, y~\cite{}, and the Minimum Dominating Set Problem (MDS)~\cite{}.
-In general, however, ILP is classically NP-complete, and as a result, heuristic methods are employed~\cite{}.
+In general, ILP is classically NP-complete, and as a result, heuristic methods are employed~\cite{}.
 Standard classical heuristic algorithms employ a greedy scheme which iteratively approximates optimal solutions--starting from a random initial guess, these algorithms apply locally optimal choices at each step.
 The NP-hardness of ILP can be understood by realizing that while the solution to an $n$-dimensional linear problem can be obtained in polynomial time, the optimal integer solution in general must be found in the $2^n$ integer solutions which surround the real number solution.
 While greedy algorithms do not guarantee optimal global solutions, they find approximate solutions in polynomial time, which can be utilized in further computations.
 
-An important ILP is the Minimum Dominating Set problem which is represantivly {\color{red} this is a typo, but i can't guess what word you're trying to use also...} considered in this work.
+An important ILP is the Minimum Dominating Set problem, which is representatively considered in this work.
 For a given a graph $G(E,V)$, defined by the set of $V$ vertices and $E$ edges, a dominating set $D$ is a specific subset of vertices $D \subseteq V$.
-In particular $D$ is a dominating set if all vertices in $V$ but not in $D$ are adjacent to at least one vertex in $D$.
+In particular, $D$ is a dominating set if all vertices in $V$ but not in $D$ are adjacent to at least one vertex in $D$.
 This is equivalent to requiring the set of nearest-neighbor vertices of $D$ (exclusive) and $D$ cover all vertices $N(D) \cup D = V$ (an example is given by Fig.~\ref{fig:dominating_sets}a).
 The set $D$ is a minimal dominating set if there is no proper subset of $D$ that is a dominating set, {\it{i.e.}}, the removal of any vertex in $D$ results in $N(D) \cup D  \neq V$.
 An example is given by Fig.~\ref{fig:dominating_sets}b.
 The domination number of $D$ is given by the cardinality of $|D| \equiv \overline{\overline{D}}$.
-The minimum dominating set (MDS) is defined by $D$ with the smallest domination number.
+The Minimum Dominating Set (MDS) is defined by $D$ with the smallest domination number.
 Fig.~\ref{fig:dominating_sets}c shows an example of the minimum dominating set of $G(V, E)$ and is different from the minimal dominating set.
 We emphasize that while the maximum independent set is always a minimal dominating set as exemplified by Fig.~\ref{fig:dominating_sets}b, the minimum dominating set, in general, can have a smaller domination number.
-As a result, the solution to the dominating set problem can not be obtained by solving for the maximum independent set, a problem that is well studied for quantum annealers~\cite{}.
+As a result, the solution to the dominating set problem can not be obtained by solving for the maximum independent set, a well-studied problem for quantum annealers~\cite{}.
 
 \begin{figure*}
 	\centering
@@ -129,13 +129,35 @@ As a result, the solution to the dominating set problem can not be obtained by s
 \end{figure*}
 
 For general graphs, existing algorithms on classical computers find MDS solutions in exponential time $\sim O( 1.5^n)$ \cite{Fomin2009, vanRooij2009} or approximate solutions in polynomial time. For example, greedy algorithms locally optimize decisions about which nodes to add to the dominating set.
-Thus one is guaranteed to find a dominating set but not necessarily a MDS.
+Thus one is guaranteed to find a dominating set but not necessarily an MDS.
 
-Due to the importance and difficulty, in this work, we present a method to obtain the optimal solution to ILP by employing methods of quantum annealing.
+Due to the importance and difficulty in this work, we present a method to obtain optimal solutions to ILP by employing quantum annealing methods.
 
 Quantum annealing solves a general quadratic binary optimization problem (QUBO) by slowly varying a time-dependent Hamiltonian~\cite{}.
 Through the adiabatic theorem of quantum mechanics, the annealer is initially prepared in a trivial ground state while the final Hamiltonian encodes the solution to the ILP.
 Due to the explosion in research efforts towards hardware implementations of quantum annealers and future improvements to the annealing schedule~\cite{}, mapping ILP to QUBO provides a path forward towards obtaining optimal solutions to the class of integer optimization problems~\cite{2018Glover}.
+
+A quantum annealer evolves the ground state of an initial Hamiltonian into the problems Hamiltonian's ground state by adiabatically changing the hardware that implements Hamiltonian.
+Thus, the implemented Hamiltonian is explicitly time dependent
+\begin{equation}
+ H(t) = A(t) H^{\textrm{init}} + B(t) H^{\textrm{problem}}, \label{eq:tdhamiltonian}
+\end{equation}
+and $H^\textrm{init}=\sum_i\sigma^x_i$ on the DWave, while $H^\textrm{problem}$ encodes the problem to be solved.
+The Ising representation of the the problem Hamiltonian has the form
+\begin{equation}
+ H^{\textrm{Ising}} = \sum_{ij} J_{ij} \sigma^z_i \sigma^z_j + \sum_i h_i \sigma^z_i \, .
+\end{equation}
+Intuitively, to find a final state that globally minimizes the energy, the annealer needs to explore the entire state.
+If the annealer does not reach thermal equilibrium, the annealing process's final solution might not encode the final Hamiltonian's ground state.
+Thus the annealing process should be sufficiently slow not to introduce potential barriers that freeze in intermediate spin configurations.
+On the other hand, decoherence in the hardware leads to the loss of quantum information.
+It is, therefore, desirable to minimize the effect of relaxation and shorten the annealing process.
+
+While such spin-freezing effects may be related to systematic hardware constraints, they are hypothetically related to quantum localization phenomena.
+Recognizing that a general QUBO exhibits a spin-glass model's properties--if the were $h_i$ coefficients are randomly drawn from a Bernoulli distribution--one may expect spin-localization behavior influencing the outcome of the anneal.
+In the case of quantum annealing, when an algorithm is mapped to its QUBO representation, the values of $h_i$ will frequently take on various values, mimicking spin-glass like behavior.
+Explicitly, the spin-glass model enters its glassy state when more disorder is introduced ($|h_i|$ becomes large), and as a consequence, the wavefunction experiences Many-Body Localization effects, the many-body analog of Anderson Localization (MBL)~{\color{red} cite some AL papers here}.
+
 
 In this paper, we propose a new algorithm that maps ILP problems to QUBOs.
 This is achieved by the introduction of slack variables $s$ which turn the inequalities eq.~\eqref{eq:ilp-constraints} to equalities
@@ -147,48 +169,13 @@ This is achieved by the introduction of slack variables $s$ which turn the inequ
 While the coefficients of the inequality constraints are not required to be integer valued, the inequalities can be trivially rescaled such that $s_i \in \mathbbm{Z}$ given fixed precision coefficients $A_{ij}$ and $b_i$.
 Furthermore, this formalism can be generalized to constrained quadratic optimizations \ref{sec:methods:ilp:quadratic}.
 
-
-\ghissue{Decoherence \& Localization}{14}
-
-
-A quantum annealer evolves the ground state of an initial Hamiltonian into the ground state of the problem Hamiltonian by adiabatically changing the hardware which implements Hamiltonian.
-Thus, the implemented Hamiltonian is explicitly time dependent
-\begin{equation}
- H(t) = A(t) H^{\textrm{init}} + B(t) H^{\textrm{problem}}, \label{eq:tdhamiltonian}
-\end{equation}
-and $H^\textrm{init}=\sum_i\sigma^x_i$ on the DWave, while $H^\textrm{problem}$ encodes the problem to be solved.
-
-{\color{red} If the annealer does not reach thermal equilibrium, for example, strong external magnetic fields freeze in individual qubits, the final solution of the annealing process might not encode the ground state of the final Hamiltonian.
-It is thus essential to prepare the system such that Many-Body Localizations are absent, and thus one must define a measure for MBL. }
-
-{\color{blue} These two paragraphs need to be changed (softened). The mutual information does not paint the story we need. Or more specifically, the MI we plot is not useful yet because we have no finite size scaling. In general, we do not have a good observable for MBL without finite size scaling. This is future work. The problem size is too small also to really see this effect. The best we can say is that we have this MBL hypothesis, and we set offsets with respect to that. So I think the paragraph above, and below should be changed to a short summary of Anderson Localization, and how our system is like a spin-glass, so we follow the AL logic. We then observe that the simulation agrees with DWave, and in the absense of unknown hardware effects like qubits freezing due to hardware limitations (this is a hardware problem actually, not a QM problem), that this scaling holds. So DWave claims offset is good to cure ``freezing'' problems cuz of hardware issues. We can claim this is more than hardware, but rooted in QM. This is the strongest statement we can make without getting skewered.}
-{\color{red}
-We note that this measure depends on the choice of partitions, which is, in principle, arbitrary.
-To define a measure for MBL, the choice for partitions should encode the likelihood of frozen qubits.
-Thus a natural choice for partitions are regions of different external magnetic fields.
-For this choice, at the beginning of the anneal, the mutual information will be zero as all spins start orthogonal to the external field, and, in the end, the mutual information will be constant once a final solution is obtained.
-Intermediate values for the mutual information encode the communication probability of different spin alignments.
-
-Intuitively, to find a final state which globally minimizes the energy, we want the system to explore the entire state space.
+We further improve the quantum annealer's performance by utilizing annealing offsets, which effectively delays the annealing schedule on a per-qubit basis.
+The improvement strategy is motivated by the MBL hypothesis.
 That is, we want the system to have ergodicity in order to avoid Many-Body Localizations.
-Thus the annealing process should be sufficiently slow to not introduce potential barriers which freeze in intermediate spin configurations.
-On the other hand, decoherence in the hardware leads to the loss of quantum information.
-It is, therefore, desirable to minimize the effect of relaxation and shorten the annealing process.
-The interplay between these two competing effects can be observed by looking at the non-monotonous time dependency of the probability for reaching the global ground state.
-}
-{\color{green} We further improve the performance of the quantum annealer by utilizing annealing offsets which effectively delays the annealing schedule on a per-qubit basis. The improvement strategy is motivated by recognizing that a general QUBO exhibits properties of a spin-glass model.
-Explicilty, the Ising representation of the the problem Hamiltonian has the form
-\begin{equation}
- H^{\textrm{Ising}} = \sum_{ij} J_{ij} \sigma^z_i \sigma^z_j + \sum_i h_i \sigma^z_i,
-\end{equation}
-where in the case that $h_i$ is randomly drawn from a Bernoulli distribution, we recover the spin-glass model.
-The spin-glass model enters its glassy state when more disorder is introduced ($|h_i|$ becomes large), and as a consequence, the wavefunction experiences many-body localization effects, the many-body analogue of Anderson Localization (MBL)~{\color{red} cite some AL papers here}.
-In the case of quantum annealing, when an algorithm is mapped to its QUBO representation, the values of $h_i$ will often times take on various values, mimicking spin-glass like behavior. As a result, the system of qubits can be interpreted to posses more disordered over time, and guides our choice of annealing offsets.
-}
-\ghissue{Simulations}{15}
+We prepare the system such that Many-Body Localizations are minimized by partitioning the Hamiltonian into regions of relatively weak and strong external magnetic fields.
 
-To understand which quantum phenomena are relevant for describing the scaling behavior of the proposed offset study, we simulate the anneal for a small MDS problem.
-This requires solving the von Neumann equations of the time dependent problem.
+To understand which phenomena are relevant for describing the proposed offset study's scaling behavior, whether they are rooted in the quantum nature or related to hardware constraints, we simulate the anneal for a small MDS problem.
+This simulation requires solving the von Neumann equations of the time-dependent problem.
 To solve for time evolution dynamics of quantum annealing including thermal and the decoherence effects, we solve for the master equation in Lindblad form
 \begin{align}
  \partial_t \rho (t) =  \frac{-i}{\hbar} [H(t) , \rho(t)] + \mathcal{L}(\rho(t), H(t))
@@ -199,13 +186,15 @@ The full counting statistics term models the global decoherence to all the qubit
 The local damping term models the decoherence of each qubit independently.
 
 
-We first present the QUBO mapping for ILP (\ref{sec:results:qa1}), and demonstrate the methodology on an example implementation in case of the Minimal Dominating Set problem (\ref{sec:results:qa}) on the DWave quantum annealer. Results from quantum annealing are compared and discussed in contrast to simulations (\ref{sec:results:simulation}). All algorithms used and data obtained are publicly available (\ref{sec:open-source}).
+
 
 
 %========================================================================================
 \section{RESULTS}
 \label{sec:results}
 %========================================================================================
+
+We first present the QUBO mapping for ILP (\ref{sec:results:qa1}), and demonstrate the methodology on an example implementation in case of the Minimal Dominating Set problem (\ref{sec:results:qa}) on the DWave quantum annealer. Results from quantum annealing are compared and discussed in contrast to simulations (\ref{sec:results:simulation}). All algorithms used and data obtained are publicly available (\ref{sec:open-source}).
 
 %----------------------------------------------------------------------------------------
 \subsection{ILP QUBO}
@@ -346,6 +335,10 @@ An additional study where an extended annealing schedule is employed in the simu
 \end{figure}
 
 
+%========================================================================================
+\section{CONCLUSION}
+\label{sec:conclusion}
+%========================================================================================
 
 \ghissue{Finalize results}{19}
 
@@ -375,14 +368,7 @@ However, the intersection of time-dependent quantum mechanics and emergent pheno
 \label{sec:methods:bit-basis}
 %----------------------------------------------------------------------------------------
 
-We map integer variables $\vec z = \vec x, \vec s$ to qubits under the following transformation~\cite{Chang:2018uoc}
-\begin{align}
- z_i = & \sum_{r=0}^{R_i-1} 2^r \psi_{ri}
- \label{eq:int_to_bin}
-\end{align}
-where $\psi_{ri} \in \{0, 1\}$.
-The number of qubits used to represent the $i$-th integer variable is allowed to vary with $R_i$.
-This transformation can be expressed as a rectangular matrix.
+The integer-vector qubit transformation, eq.~\eqref{eq}, can be expressed as a rectangular matrix.
 For example, a vector of two integer variables $z_0$ and $z_1$ represented by one and two qubits respectively is given as
 \begin{align}
  \begin{pmatrix}
@@ -412,6 +398,34 @@ If all variables are represented by the same number of qubits--$R_i$ is a consta
  |\mathds{1}| = & |\mathcal{Z}|,                 \\
  T^z =          & \mathds{1}\otimes \mathcal{R}.
 \end{align}
+
+
+%----------------------------------------------------------------------------------------
+\subsubsection{Comment on ILP QUBO penalty term}
+\label{sec:methods:ilp-qubo-comments}
+%----------------------------------------------------------------------------------------
+
+The minimal energy solution to eq.~\eqref{eq:initial-ip-def} and eq.~\eqref{eq:qubo-min} are exactly the same if the penalty term is larger than the energy gap of the first excited solution: $p > E_1 - E_0$.
+Thus some knowledge of the problem is required.
+In principle, it is possible to set the penalty term arbitrarily large, at the cost of problem resolution: large $p$-values increase the highest available energy of the system by multiples of $p$.
+After normalization of the QUBO, this corresponds to decreasing the energy gap between the ground state and the first excited state.
+Thus, if solvers have finite precision, one must estimate reasonable values for $p$: for large $p$ more solutions fulfill the constraints, while for small $p$, more solutions minimize the objective function.
+
+%----------------------------------------------------------------------------------------
+\subsubsection{Integer quadratic optimization}
+\label{sec:methods:ilp:quadratic}
+%----------------------------------------------------------------------------------------
+
+Because quantum annealing is capable of solving quadratic problems, we extend the proposed algorithm to solve integer quadratic optimization problems as well such that
+\begin{align}
+ \vec x_0 = \mathrm{arg}\min\limits_{x}\left(\sum_{ij} x_i d_{ij} x_j + \sum_i c_i x_i\right)
+\end{align}
+without the introduction of auxiliary qubits.
+
+In this case the $Q_{xx}$ component of the Qubo, eq.~\eqref{eq:qubo:components} obtains a new term
+\begin{equation}
+    Q_{xx} \to Q_{xx} + T_x^T d T_x \, .
+\end{equation}
 
 %----------------------------------------------------------------------------------------
 \subsubsection{Minimum Dominating Set Qubo}
@@ -465,32 +479,11 @@ The target QUBO in the notation of eq.~\eqref{eq:matrix_form} reads
   \end{align}}
 where $ |M| \equiv \sum_{\nu} M_{\nu \mu}$.
 
-%----------------------------------------------------------------------------------------
-\subsubsection{Comment on ILP QUBO penalty term}
-\label{sec:methods:ilp-qubo-comments}
-%----------------------------------------------------------------------------------------
-
-The minimal energy solution to eq.~\eqref{eq:initial-ip-def} and eq.~\eqref{eq:qubo-min} are exactly the same if the penalty term is larger than the energy gap of the first excited solution: $p > E_1 - E_0$.
-Thus some knowledge of the problem is required.
-In principle, it is possible to set the penalty term arbitrarily large, at the cost of problem resolution: large $p$-values increase the highest available energy of the system by multiples of $p$.
-After normalization of the QUBO, this corresponds to decreasing the energy gap between the ground state and the first excited state.
-Thus, if solvers have finite precision, one must estimate reasonable values for $p$: for large $p$ more solutions fulfill the constraints, while for small $p$, more solutions minimize the objective function.
 
 %----------------------------------------------------------------------------------------
-\subsubsection{Integer quadratic optimization}
-\label{sec:methods:ilp:quadratic}
+\subsection{Offset study}
+\label{sec:methods:experiment}
 %----------------------------------------------------------------------------------------
-
-Because quantum annealing is capable of solving quadratic problems, we extend the proposed algorithm to solve integer quadratic optimization problems as well such that
-\begin{align}
- \vec x_0 = \mathrm{arg}\min\limits_{x}\left(\sum_{ij} x_i d_{ij} x_j + \sum_i c_i x_i\right)
-\end{align}
-without the introduction of auxiliary qubits.
-
-In this case the $Q_{xx}$ component of the Qubo, eq.~\eqref{eq:qubo:components} obtains a new term
-\begin{equation}
-    Q_{xx} \to Q_{xx} + T_x^T d T_x \, .
-\end{equation}
 
 %----------------------------------------------------------------------------------------
 \subsubsection{Minor Embedding}
@@ -572,14 +565,15 @@ P =  \mbox{Tr} \{  \rho (t) \pi_{\mbox{gnd}} \}  ,
 where the projection operator onto the degenerated ground states subspace is defined as $\pi_{\mbox{gnd}}=\sum_{i\in G} |\mbox{gnd}_i\rangle \langle \mbox{gnd}_i| $.
 Here $\{ | \mbox{gnd}_i \rangle | i \in G \}$ forms an orthonormal basis for the degenerated ground states subspace, i.e., $\langle \mbox{gnd}_j | \mbox{gnd}_i \rangle = \delta_{ij}$.
 
-{\color{green}For the simulation results presented, we set the temperature to 22.5 milliKelvin. The coherence time for local decoherence is set to 15$ns$, and 1$ns$ for full-counting statistics.
-}
+For the simulation results presented, we set the temperature to 22.5 milliKelvin.
+The coherence time for local decoherence is set to 15$ns$, and 1$ns$ for full-counting statistics.
+
 %----------------------------------------------------------------------------------------
 \subsubsection{Annealing schedule and offsets}
 \label{sec:methods:annealing-schedule}
 %----------------------------------------------------------------------------------------
-{\color{red} I moved the details of annealing schedules here. This doesn't belong in the main text. This is way too detailed.}
-In this section, we discuss the details of the annealing schedule with respect to the dimensionless normalized time $s$. On DWave solvers, annealing offsets effectively advance or delay the annealing schedule of individual qubits ($B(s) \to B_i(s)$).
+In this section, we discuss the details of the annealing schedule with respect to the dimensionless normalized time $s$.
+On DWave solvers, annealing offsets effectively advance or delay the annealing schedule of individual qubits ($B(s) \to B_i(s)$).
 In Fig.~\ref{fig:anneal_schedule}, the default DWave annealing schedule is shown in black, in addition to the effects of applying negative offsets (effective time delay) to $A(s)$ and $B(s)$ in blue.
 Details of the DWave annealing schedule use to generate Fig.~\ref{fig:anneal_schedule} and further documentation are provided by DWave in Ref.~\cite{dwave_as, dwave_as_docu}.
 
@@ -664,30 +658,7 @@ The final state distribution gives us a very sensitive observable to tune the si
 \ghissue{Simulation details}{18}
 
 
-{\color{red}
-%----------------------------------------------------------------------------------------
-\subsubsection{Decoherence Time}
-\label{sec:methods:deco}
-%----------------------------------------------------------------------------------------
 
-\ghissue{Decoherence section}{16}
-I think the following two sections can be merged / removed.
-
-I talk about this in the section above.
-
-The AL discussion is a bit too textbooky for a paper I think.
-
-
-FC gives correct distribution. Local the simplest relaxation mode. Maybe run a plot showing we turn of local, and see same scaling. So offset is not directly tackling only this. Can show that in Fig. 7.
-
-%----------------------------------------------------------------------------------------
-\subsubsection{Anderson Localization}
-\label{sec:methods:mbl}
-%----------------------------------------------------------------------------------------
-{\color{green} If we want, we can write a short summary of Anderson Localization. Anderson Hamiltonian -> spin representation. This requires some more reading though I think.}
-%----------------------------------------------------------------------------------------
-
-}
 %========================================================================================
 \section{DATA AVAILABILITY}
 \label{sec:open-source}
