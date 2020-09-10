@@ -58,13 +58,10 @@
  While quantum computing proposes promising solutions to computational problems not accessible with classical approaches, due to current hardware constraints, most quantum algorithms are not yet capable of computing systems of practical relevance, and classical counterparts outperform them.
  To practically benefit from quantum architecture, one has to identify problems and algorithms with favorable scaling and improve on corresponding limitations depending on available hardware.
  For this reason, we developed an algorithm that solves integer linear programming problems (ILP), a classically NP-hard problem, on a quantum annealer (QA), and investigated problem and hardware-specific limitations.
- This work presents the formalism of how to map ILP problems to the annealing architectures.
- It illustrates the effects of decoherence and many-body localization, for the minimum dominating set problem, and compares annealing results against numerical simulations of the quantum architecture.
- We find that the QA ILP algorithm outperforms random guessing but is limited to small problems and that annealing schedules can be adjusted to reduce the effects of decoherence--which is qualitatively confirmed by simulations.
- {\color{red}Furthermore we find evidence for Many-body localization effects ... and find that FC decoherence is more relevant than local decoherence...}
-
- \ghissue{Finalize abstract}{13}
-
+ This work presents the formalism of how to map ILP problems to the annealing architectures, how to systematically improve computations utilizing optmizied anneal schedules and models the anneal process through a simmulation.
+ It illustrates the effects of decoherence and Many-Body Localization, for the Minimum Dominating Set problem, and compares annealing results against numerical simulations of the quantum architecture.
+ We find that the QA ILP algorithm outperforms random guessing but is limited to small problems and that annealing schedules can be adjusted to reduce the effects of decoherence.
+ Simulations qualitatively reproduce the offset study, suggesting the improvements are at least partially caused by quantum effects.
 \end{abstract}
 
 \preprint{RIKEN-iTHEMS-Report-20}
