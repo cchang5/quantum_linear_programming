@@ -427,7 +427,7 @@ subject to
  & x_v + \sum_{j \in \mathcal{N}(v)} x_j \geq 1, \\
  & x_v \in \{0, 1\}
 \end{align}
-where $\mathcal{N}(v)}$ represents the set of all direct neighbors of vertex $v$ and the dimension of the dependent variable $x$ is the number of vertices $n_V \equiv \overline{\overline{V}}$.
+where $\mathcal{N}(v)$ represents the set of all direct neighbors of vertex $v$ and the dimension of the dependent variable $x$ is the number of vertices $n_V \equiv \overline{\overline{V}}$.
 The problem minimizes the number of vertices in $D$ with a binary variable $\vec x = \vec \Psi_x$ encoded by single qubit, subject to the constraint that at least one vertex in $\mathcal{N}(\nu)$ is in $D$.
 For each vertex in $V$ we introduce slack variables
 \begin{equation}
@@ -450,7 +450,7 @@ subject to
 where the nearest-neighbor sum is expressed by $J$ (zero diagonal and symmetric for non-directional graphs), the adjacency matrix for $G$.
 The algorithm uses
 \begin{equation}
-    N_q = \overline{\overline{V}} + \sum_{\nu \in V} \log_2 \mathit(N(\nu))
+    N_q = \overline{\overline{V}} + \sum_{v \in V} \log_2 \mathcal{N}(v)
 \end{equation}
 qubits to encode the vertices and to embed the slack variables.
 Therefore, the embedding at worse scales with $n_V \log_2 n_V$ qubits for fully connected graphs.
