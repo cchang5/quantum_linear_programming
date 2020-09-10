@@ -580,8 +580,6 @@ which has a doubly-degenerate ground state of $(0, 1, 1)$ and $(1, 0, 1)$. An an
 
 We confirm that with different combinations of annealing offsets, the degeneracy is lifted on the DWave results as expected by solving for the modified problem Hamiltonian spectrum, as well as dialing in annealing offset in the simulation of this three qubit test case.
 
-In the simulation, we are also reserve the ability to remove the systematic errors by extending the annealing schedule as shown in Fig.~\ref{fig:anneal_schedule_ext}. With the extended schedule, all qubits start and end with the same values of $A$ and $B$ and faithfully preserves the initial and final Hamiltonians. The dependence on offset for $G(2)$ (Fig.~(\ref{fig:dwave1us})) remains the same under the extended anneal schedule (Fig.~\ref{fig:anneal_schedule_ext}), confirming that the behavior is not a systematic artifact.
-
 \begin{figure}
 	\centering
 	\includegraphics[width=\columnwidth]{./new_figures/anneal_schedule_extended.pdf}
@@ -589,6 +587,12 @@ In the simulation, we are also reserve the ability to remove the systematic erro
 	\caption{{\color{red}I need to add dwave final state distribution here too.}}
 	\label{fig:anneal_schedule_ext}
 \end{figure}
+
+In the simulation, we are also reserve the ability to remove the systematic errors by extending the annealing schedule as shown by the red data points in Fig.~\ref{fig:anneal_schedule_ext}. With the extended schedule, all qubits start and end with the same values of $A$ and $B$ and faithfully preserves the initial and final Hamiltonians. The dependence on offset for $G(2)$ (Fig.~(\ref{fig:dwave1us})) remains the same under the extended anneal schedule (Fig.~\ref{fig:anneal_schedule_ext}), confirming that the behavior is not a systematic artifact.
+
+The quantum system can be further idealized by including only the full-counting statistics model (blue), or local decoherence (green). We observe in both cases that the overall scaling follows the story of the MBL hypothesis. Perhaps more importantly, we observe that a simulation without local decoherence, where the relaxation is dependent on precisely the instantaneous value of $|h_i|$, exhibits the same scaling as experiment. This result suggests that our strategy for setting annealing offsets is improving the algorithm beyond the simple explanation of qubits freezing due to single-particle amplitude damping. In fact, the simulation with only amplitude damping (green) does not fully capture the results of the experiment. We observe hints of a phase transition with respect to offset (which may be thought of as some measure of disorder) when dynamical thermalization effects are removed. This is a tantalizing observation, and also is strong evidence for the inclusion of the full-counting statistics model.
+
+It unfortunately does not make much sense to remove all decoherence models for the $G(2)$ graph for an anneal time of $1\mu s$ since all probabilities go to 1 within machine precision.
 
 %----------------------------------------------------------------------------------------
 \subsubsection{Other Simulation Details}
