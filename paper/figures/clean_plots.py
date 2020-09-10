@@ -494,10 +494,12 @@ def gettdse(offset=0.0):
     return prob
 
 
-def gettdsetheory(offset=0.0, normalized_time = "[0, 1]", gamma_local = None):
+def gettdsetheory(offset=0.0, normalized_time = "[0, 1]", gamma_local = None, gamma=None):
     sim = Sim()
     if gamma_local is not None:
         sim.params["wave"]["gamma_local"] = gamma_local
+    if gamma is not None:
+        sim.params["wave"]["gamma"] = gamma
     query, sol, tdse = sim.get_data(offset, normalized_time)
     H = tdse._constructIsingH(np.array(tdse.ising["Jij"]), np.array(tdse.ising["hi"])).todense().tolist()
     eval, evec = eigh(H)
@@ -543,6 +545,9 @@ def plot_tdse_extended():
 
     prob = [gettdsetheory(os, normalized_time = [0.0, 1.0]) for os in offset]
     ax.errorbar(x=offset, y=prob, ls="--", marker="o", color="k", alpha=0.5, label="default")
+
+    prob = [gettdsetheory(os, normalized_time = [-0.1, 1.1], gamma=0) for os in offset]
+    ax.errorbar(x=offset, y=prob, ls="--", marker="o", color=green, alpha=0.5, label="extended local only")
 
     """labels
     """
@@ -954,17 +959,20 @@ if __name__ == "__main__":
     For DWave only
     """
     # plot_anneal_time() # this is not current, maybe drop this
-    plot_all()
+    #plot_all()
+
     #plot_random_ratio()
     # plot_dwave_mi()
     """
     For TDSE simulation
     """
-    plot_tdse()
+    #plot_tdse()
     plot_tdse_extended()
-    plot_distribution()
-    plot_annealcurve()
-    plot_timedepprob()
+    #plot_distribution()
+    #plot_annealcurve()
+    #plot_timedepprob()
+
+
     # plot_hybridization()
     # plot_mi()
     # plot_timedepsz()
