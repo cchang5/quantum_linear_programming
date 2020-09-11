@@ -1,4 +1,6 @@
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 import seaborn as sns
 from qlpdb.data.models import Data as data_Data
 import pickle
@@ -43,6 +45,12 @@ os_alpha[0.04] = 0.8
 os_alpha[0.05] = 1.0
 os_alpha[0.06] = 0.4
 os_alpha[0.07] = 0.2
+
+OFFSETS = 0.01 * (np.arange(11) - 5)
+OFFSET_COLORS = sns.diverging_palette(250, 30, l=65, center="dark", n=11)
+OFFSET_MAP = dict(zip(OFFSETS, OFFSET_COLORS))
+OFFSET_CMAP = ListedColormap(OFFSET_COLORS)
+sns.palplot(OFFSET_COLORS)
 
 """
 ###################################
@@ -253,24 +261,27 @@ def getallspintheory(offset=0.0):
     prob = {states[idx]: state_prob[idx] for idx in range(2 ** 5)}
     return prob
 
-
-def plot_distribution():
-    offset = 0.01 * (np.arange(11) - 5)
+def plot_distribution(offset=OFFSETS):
     count_energy = {oi: getallspinconfig(offset=oi) for oi in offset}
-    count = {oi: {spin_energy[0]: count_energy[oi][spin_energy] for spin_energy in count_energy[oi]} for oi in
-             count_energy}
-    energy = {oi: {spin_energy[0]: spin_energy[1] for spin_energy in count_energy[oi]} for oi in count_energy}
-    print(count_energy)
+    count = {
+        oi: {
+            spin_energy[0]: count_energy[oi][spin_energy]
+            for spin_energy in count_energy[oi]
+        }
+        for oi in count_energy
+    }
+    energy = {
+        oi: {spin_energy[0]: spin_energy[1] for spin_energy in count_energy[oi]}
+        for oi in count_energy
+    }
     # Xlabel = [tuple([int(q) for q in list(format(i, '05b'))]) for i in range(2 ** 5)]
     # X = np.arange(2 ** 5)
     Xlabel = [(0, 1, 0, 0, 0), (1, 0, 0, 1, 0), (1, 1, 1, 1, 1)]
     X = np.array(range(len(Xlabel)))
 
-    plt.figure(figsize=p["figsize"])
-    ax = plt.axes(p["aspect_ratio"])
+    fig, ax = plt.subplots(figsize=p["figsize"])
     for idx, os in enumerate(offset):
-        """ set X
-        """
+        """set X"""
         xdraw = X - 0.5 + idx / (len(offset) + 1) + 0.5 / (len(offset) + 1)
         width = 1 / (len(offset) + 1)
         """plot dwave result
@@ -287,28 +298,56 @@ def plot_distribution():
             color = yellow
         else:
             color = blue
-        ax.bar(x=xdraw, height=height, width=width, alpha=os_alpha[os], color=color, label=os, align="edge")
+        ax.bar(
+            x=xdraw,
+            height=height,
+            width=width,
+            color=OFFSET_COLORS[idx],
+            label="D-Wave 2000Q" if idx == 6 else None,
+            zorder=1,
+            alpha=0.9,
+            align="edge",
+        )
         """plot simulation result
         """
+
         prob = getallspintheory(os)
-        print(prob)
         height = [prob[Xi] for Xi in Xlabel]
         if idx == len(offset) - 1:
-            label = "theory"
+            label = "Simulation"
         else:
             label = None
-        ax.bar(x=xdraw, height=height, width=width, linewidth=1, color="none", edgecolor="k", align="edge", label=label)
+        ax.bar(
+            x=xdraw,
+            height=height,
+            width=width,
+            linewidth=1,
+            color="none",
+            edgecolor="k",
+            align="edge",
+            label=label,
+            zorder=2,
+        )
 
     """labels
     """
-    ax.set_xlabel("final state distribution (others are $\simeq 0$)", p["textargs"])
-    ax.set_ylabel("probability", p["textargs"])
+    ax.set_xlabel("Final State Distribution", p["textargs"])
+    ax.set_ylabel("Ground State Probability", p["textargs"])
     ax.set_xticks(X)
     ax.set_xticklabels(Xlabel, rotation="0")
+    ax.legend(bbox_to_anchor=(0.65, 0.98), fancybox=True, shadow=False, frameon=True)
 
-    plt.legend(fancybox=True, framealpha=0.5)
+    cax = fig.add_axes([0.645, 0.7, 0.21, 0.02])
+    cbar = mpl.colorbar.ColorbarBase(
+        cax,
+        cmap=OFFSET_CMAP,
+        norm=mpl.colors.Normalize(vmin=-0.05, vmax=0.05),
+        orientation="horizontal",
+        label="Offset",
+    )
+    cax.set_xticklabels(["-0.05w", "0.0", "-0.05s"])
 
-    plt.savefig("../new_figures/final_state_distribution.pdf", transparent=True)
+    fig.savefig("../new_figures/final_state_distribution.pdf", transparent=True, bbox_inches="tight")
 
 
 """
@@ -967,8 +1006,8 @@ if __name__ == "__main__":
     For TDSE simulation
     """
     #plot_tdse()
-    plot_tdse_extended()
-    #plot_distribution()
+    #plot_tdse_extended()
+    plot_distribution()
     #plot_annealcurve()
     #plot_timedepprob()
 
