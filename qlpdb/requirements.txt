@@ -3,3 +3,4 @@ django-bootstrap4
 django-widget-tweaks
 espressodb
 plotly
+dwave-ocean-sdk
