@@ -153,7 +153,7 @@ This is achieved by the introduction of slack variables $s$ which turn the inequ
 While the coefficients of the inequality constraints are not required to be integer valued, the inequalities can be trivially rescaled such that $s_i \in \mathbbm{Z}$ given fixed precision coefficients $A_{ij}$ and $b_i$.
 Furthermore, this formalism can be generalized to constrained quadratic optimizations \ref{sec:methods:ilp:quadratic}.
 
-We further improve the quantum annealer's performance by utilizing annealing offsets, which effectively delays the annealing schedule on a per-qubit basis.
+We further improve the quantum annealer's performance by utilizing annealing offsets, which effectively delays the annealing schedule on a per-qubit basis. \cite{PhysRevA.96.042322,hsu2018quantum,10.1007/978-3-030-14082-3_14}
 Converting to the Ising representation of the the problem Hamiltonian,
 \begin{equation}
     \label{eq:HIsing}
@@ -161,12 +161,13 @@ Converting to the Ising representation of the the problem Hamiltonian,
 \end{equation}
 we can recognize that Eq.~(\ref{eq:HIsing}) exhibits spin-glass properties. More specifically, if the $h_i$ coefficients are randomly drawn from a Bernoulli distribution, one expects spin-localization behavior to influence the outcome of the anneal.
 In the case of quantum annealing, when an algorithm is mapped to its Ising representation, the values of $h_i$ will frequently take on various values, mimicking spin-glass like behavior.
-More explicitly, the spin-glass enters a glassy state when more disorder is introduced ($|h_i|$ becomes large), and as a consequence, the wavefunction experiences Many-Body Localization (MBL) effects, the many-body analog of Anderson Localization~{\color{red} cite some AL papers here}.
+More explicitly, the spin-glass enters a glassy state when more disorder is introduced ($|h_i|$ becomes large), and as a consequence, the wavefunction experiences Many-Body Localization (MBL) effects, the many-body analog of Anderson Localization~{\color{red} cite some AL papers here} \cite{doi:10.1146/annurev-conmatphys-031214-014726,PhysRevE.90.022103,RevModPhys.91.021001}.
 dd
 
 Our improvement strategy is motivated by the MBL hypothesis.
 That is, we want the system to be ergodic and avoid the MBL phase.
-As a result, we employ a modified annealing schedule which relies on partitioning the Hamiltonian into regions of relatively weak and strong external magnetic fields.
+As a result, we employ a modified annealing schedule which relies on partitioning the Hamiltonian into regions of relatively weak and strong external magnetic fields.\cite{doi:10.7566/JPSJ.89.044001}
+
 
 To understand which phenomena are relevant for describing the proposed offset study's scaling behavior, whether they are rooted in the quantum nature or related to hardware constraints, we simulate the anneal for a small MDS problem. This simulation solves the von Neumann equations accounting for different models of quantum decoherence, and explores whether algorithmic improvements on hardware are present in idealizes systems.
 
@@ -506,7 +507,7 @@ $[,]$ denotes the Lie bracket.
 $L_j$ are the Lindblad operators for decoherence.
 $\{, \}$ denotes the anti-commutator.
 
-We consider two types of decoherence models: full counting statistics and local damping.
+We consider two types of decoherence models: full counting statistics \cite{PhysRevE.90.022103} and local damping.
 The full counting statistics term models the global decoherence to all the qubits due to the classical reservoir.
 The local damping term models the decoherence of each qubit independently.
 For full counting statistics, the Lindblad operator is
