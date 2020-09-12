@@ -66,7 +66,7 @@ sns.palplot(OFFSET_COLORS)
 
 """
 ###################################
-#####  Simulation Data Class  #####
+#####  simulation Data Class  #####
 ###################################
 """
 
@@ -310,7 +310,7 @@ def plot_distribution(offset=OFFSETS):
             height=height,
             width=width,
             color=OFFSET_COLORS[idx],
-            label="Experiment" if idx == 6 else None,
+            label="experiment" if idx == 6 else None,
             zorder=1,
             alpha=0.9,
             align="edge",
@@ -321,7 +321,7 @@ def plot_distribution(offset=OFFSETS):
         prob = getallspintheory(os)
         height = [prob[Xi] for Xi in Xlabel]
         if idx == len(offset) - 1:
-            label = "Simulation"
+            label = "simulation"
         else:
             label = None
         ax.bar(
@@ -338,8 +338,8 @@ def plot_distribution(offset=OFFSETS):
 
     """labels
     """
-    ax.set_xlabel("Final State Distribution", p["textargs"])
-    ax.set_ylabel("Ground State Probability", p["textargs"])
+    ax.set_xlabel("final state distribution", p["textargs"])
+    ax.set_ylabel("ground state probability", p["textargs"])
     ax.set_xticks(X)
     ax.set_xticklabels(Xlabel, rotation="0")
 
@@ -349,7 +349,7 @@ def plot_distribution(offset=OFFSETS):
         cmap=OFFSET_CMAP,
         norm=mpl.colors.Normalize(vmin=-0.05, vmax=0.05),
         orientation="horizontal",
-        label="Offset",
+        label="offset",
     )
     cax.set_xticklabels(colorbar_label)
     ax.legend(bbox_to_anchor=(0.9, 0.98, 0.045, 0.01), fancybox=True, shadow=False, frameon=True, framealpha=0.3)
@@ -470,14 +470,14 @@ def plot_all():
     for os in offset:
         color = OFFSET_MAP[os]
         if os == 0.0:
-            ax.errorbar(x=graphsize, y=prob[os], ls="-", marker="o", color=color, alpha=os_alpha[os], label="Experiment")
+            ax.errorbar(x=graphsize, y=prob[os], ls="-", marker="o", color=color, alpha=os_alpha[os], label="experiment")
         else:
             ax.errorbar(x=graphsize, y=prob[os], ls="-", marker="o", color=color, alpha=os_alpha[os])
     """random guessing
     """
     degeneracy = np.array([degenfcn(Xi) for Xi in graphsize])
     rguess = np.array([1 / 2 ** xi for xi in graphsize]) * degeneracy
-    ax.errorbar(x=graphsize, y=rguess, ls="--", marker="o", color=OFFSET_MAP2[0.05], label="Random")
+    ax.errorbar(x=graphsize, y=rguess, ls="--", marker="o", color=OFFSET_MAP2[0.05], label="random")
     """labels
     """
     ax.set_xlabel("graph size", p["textargs"])
@@ -489,7 +489,7 @@ def plot_all():
         cmap=OFFSET_CMAP,
         norm=mpl.colors.Normalize(vmin=-0.05, vmax=0.05),
         orientation="horizontal",
-        label="Offset",
+        label="offset",
     )
     cax.set_xticklabels(colorbar_label)
     ax.legend(bbox_to_anchor=(0.9, 0.98, 0.045, 0.01), fancybox=True, shadow=False, frameon=True, framealpha=0.3)
@@ -567,12 +567,12 @@ def plot_tdse():
     # offset = list(0.01 * (np.arange(15) - 7))
     offset = list(0.01 * (np.arange(11) - 5))
     prob = [gettdse(os) for os in offset]
-    ax.errorbar(x=offset, y=prob, ls="-", marker="o", color=OFFSET_MAP2[0.0], label="Experiment")
+    ax.errorbar(x=offset, y=prob, ls="-", marker="o", color=OFFSET_MAP2[0.0], label="experiment")
     """simulation result
     """
     offset = list(0.01 * (np.arange(11) - 5))
     prob = [gettdsetheory(os, normalized_time=[0.0, 1.0]) for os in offset]
-    ax.errorbar(x=offset, y=prob, ls="--", marker="o", color=OFFSET_MAP2[-0.05], label="Simulation")
+    ax.errorbar(x=offset, y=prob, ls="--", marker="o", color=OFFSET_MAP2[-0.05], label="simulation")
     """labels
     """
     ax.set_xlabel("offset", p["textargs"])
@@ -648,7 +648,7 @@ def plot_annealcurve():
             ax.errorbar(x=s, y=yB, color=colorB, marker="None", ls="-")
     """labels
        """
-    ax.set_xlabel("annealing time $s$ ($\mu s$)", p["textargs"])
+    ax.set_xlabel("annealing time $s$ [$\mu s$]", p["textargs"])
     ax.set_ylabel("coefficient strength [GHz]", p["textargs"])
 
     ax.legend(fancybox=True, shadow=False, frameon=True, framealpha=0.3, bbox_to_anchor=(0.8, 0.1, 0.045, 0.01))
@@ -658,7 +658,7 @@ def plot_annealcurve():
     #    cmap=OFFSET_CMAP,
     #    norm=mpl.colors.Normalize(vmin=-0.05, vmax=0.05),
     #    orientation="horizontal",
-    #    label="Offset",
+    #    label="offset",
     #)
     #cax.set_xticklabels([-0.05, 0.0])
 
@@ -684,8 +684,8 @@ def plot_annealcurve_extended():
             ax.errorbar(x=s, y=yB, color=colorB, marker="None", ls="-")
     """labels
        """
-    ax.set_xlabel("annealing time $s$ ($\mu s$)", p["textargs"])
-    ax.set_ylabel("coefficient strength [GHz]n", p["textargs"])
+    ax.set_xlabel("annealing time $s$ [$\mu s$]", p["textargs"])
+    ax.set_ylabel("coefficient strength [GHz]", p["textargs"])
 
     ax.legend(fancybox=True, shadow=False, frameon=True, framealpha=0.3, bbox_to_anchor=(0.8, 0.1, 0.045, 0.01))
     #cax = fig.add_axes([0.7, 0.77, 0.21, 0.02])
@@ -694,7 +694,7 @@ def plot_annealcurve_extended():
     #    cmap=OFFSET_CMAP,
     #    norm=mpl.colors.Normalize(vmin=-0.05, vmax=0.05),
     #    orientation="horizontal",
-    #    label="Offset",
+    #    label="offset",
     #)
     #cax.set_xticklabels([-0.05, 0.0])
 
@@ -727,7 +727,7 @@ def plot_timedepprob():
         ax.errorbar(x=s, y=prob, color=OFFSET_MAP[os], marker="None", ls="-")
     """labels
     """
-    ax.set_xlabel("annealing time $s$ ($\mu s$)", p["textargs"])
+    ax.set_xlabel("annealing time $s$ [$\mu s$]", p["textargs"])
     ax.set_ylabel("probability", p["textargs"])
 
     #plt.legend(title="offset")
@@ -737,7 +737,7 @@ def plot_timedepprob():
         cmap=OFFSET_CMAP,
         norm=mpl.colors.Normalize(vmin=-0.05, vmax=0.05),
         orientation="horizontal",
-        label="Offset",
+        label="offset",
     )
     cax.set_xticklabels(colorbar_label)
     fig.savefig("../new_figures/time_dependent_probability.pdf", transparent=True)
@@ -776,7 +776,7 @@ def plot_timedepsz():
         ax.errorbar(x=s, y=sz, color=color, alpha=os_alpha[os], marker="None", ls="-", label=os)
     """labels
     """
-    ax.set_xlabel("annealing time $s$ ($\mu s$)", p["textargs"])
+    ax.set_xlabel("annealing time $s$ [$\mu s$]", p["textargs"])
     ax.set_ylabel("sz", p["textargs"])
 
     plt.legend(title="offset")
@@ -902,7 +902,7 @@ def plot_spectrum():
         #for es in [0]:  # gap:
         #    ax.errorbar(x=timegrid, y=gap[es], marker="None", ls="-")
         # ax.errorbar(x=timegrid, y=gap_density, marker="None", ls="-")
-        ax.set_xlabel("annealing time $s$ ($\mu s$)", **p["textargs"])
+        ax.set_xlabel("annealing time $s$ [$\mu s$]", **p["textargs"])
         ax.set_ylabel("dimensionless energy", **p["textargs"])
         plt.savefig(f"../new_figures/spectrum_{os}.pdf", transparent=True)
 
