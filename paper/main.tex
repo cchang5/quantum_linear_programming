@@ -32,7 +32,7 @@
 \affiliation{RIKEN Interdisciplinary Theoretical and Mathematical Sciences (iTHEMS), Wako, Saitama 351-0198, Japan}
 \affiliation{Department of Physics, University of California, Berkeley, California 94720, USA}
 \affiliation{Nuclear Science Division, Lawrence Berkeley National Laboratory, Berkeley, California 94720, USA}
-	\author{Chih-Chieh~Chen (\begin{CJK*}{UTF8}{bsmi}\mbox{陳志傑}\end{CJK*})}
+	\author{Chih-Chieh~Chen }
 \affiliation{R\&D Group, Grid Inc., Tokyo 107-0061, Japan}
 \author{Christopher K\"orber}
 \affiliation{Department of Physics, University of California, Berkeley, California 94720, USA}
@@ -602,14 +602,14 @@ To check the correctness of simulator and unit conversion, we tested a simple an
 The initial state is pure zero state $\rho=|00...0\rangle \langle 00...0|$.
 In this case the analytical solution can be obtained for the wave function oscillation.
 The time-dependent probability is $P_{0}=\cos^{2n}(s)=\cos^{2n}(t/T)$ where $n$ is the number of qubits and $T$ is the annealing time.
-For annealing time $T=1/A(0)$, we expect to see perfect one-period oscillation. The energy spectrum for this system can be analytically obtained, so we also checked the Boltzmann distribution in the initial density matrix construction.
-{\color{red} Are you suppose to reference Fig. 7 here?}
+For annealing time $T=1/A(0)$, we expect to see perfect one-period oscillation. The energy spectrum for this system can be analytically obtained, so we also checked the Boltzmann distribution in the initial density matrix construction. The oscillation is depicted in Figure \ref{figcheck}, where the simulation matches the expected theoretical behavior.
+
 
 \begin{figure}
 	\centering
 	\includegraphics[width=\columnwidth]{./figures/check.png}
 	\caption{check}
-	\label{fig:check}
+	\label{figcheck}
 \end{figure}
 
 Next, the simulator is applied to the $G(2)$ problem and the result is summarized in Fig.~\ref{fig:td_prob} where the time-dependent overlap with the exact Ising ground state is shown. We observe for all cases that the system undergoes what is analogous to a magnetic phase transition around $s\sim 0.4$.
