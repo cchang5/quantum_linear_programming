@@ -161,7 +161,7 @@ Converting to the Ising representation of the the problem Hamiltonian,
 \end{equation}
 we can recognize that Eq.~(\ref{eq:HIsing}) exhibits spin-glass properties. More specifically, if the $h_i$ coefficients are randomly drawn from a Bernoulli distribution, one expects spin-localization behavior to influence the outcome of the anneal.
 In the case of quantum annealing, when an algorithm is mapped to its Ising representation, the values of $h_i$ will frequently take on various values, mimicking spin-glass like behavior.
-More explicitly, the spin-glass enters a glassy state when more disorder is introduced ($|h_i|$ becomes large), and as a consequence, the wavefunction experiences Many-Body Localization (MBL) effects, the many-body analog of Anderson Localization~\cite{doi:10.1146/annurev-conmatphys-031214-014726,PhysRevE.90.022103,RevModPhys.91.021001}.
+More explicitly, the spin-glass enters a glassy state when more disorder is introduced ($|h_i|$ becomes large), and as a consequence, the wavefunction experiences Many-Body Localization (MBL) effects, the many-body analog of Anderson Localization~\cite{doi:10.1146/annurev-conmatphys-031214-014726,PhysRevE.90.022103,RevModPhys.91.021001,ALET2018498,PhysRevB.82.174411,PhysRevLett.109.017202}.
 
 Our improvement strategy is motivated by the MBL hypothesis.
 That is, we want the system to be ergodic and avoid the MBL phase.
@@ -328,7 +328,7 @@ To solve for time evolution dynamics of quantum annealing including thermal and 
  \partial_t \rho (t) =  \frac{-i}{\hbar} [H(t) , \rho(t)] + \mathcal{L}(\rho(t), H(t))
 \end{align}
 where $\rho (t)$ is the density matrix at time $t$, $H(t)$ is the time-dependent Hamiltonian and $\mathcal{L}$ is the Linblad operator implementing the decoherence models.
-In this work, we consider two types of decoherence models: full counting statistics and local damping.
+In this work, we consider two types of decoherence models: full counting statistics and local damping. \cite{10.5555/1972505}
 The full counting statistics term models the global decoherence to all the qubits due to the classical reservoir.
 The local damping term models the decoherence of each qubit independently.
 Details of the master equation are given in Sec.~\ref{sec:methods:lindblad}.
