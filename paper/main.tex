@@ -132,7 +132,7 @@ Thus one is guaranteed to find a dominating set but not necessarily an MDS.
 
 Due to the importance and difficulty in this work, we present a method to obtain optimal solutions to ILP by employing quantum annealing methods.
 
-Quantum annealing solves a general quadratic binary optimization problem (QUBO) by slowly varying a time-dependent Hamiltonian~\cite{1998PhRvE..58.5355K, 2000quant.ph..1106F}.
+Quantum annealing solves a general quadratic binary optimization problem (QUBO) by slowly varying a time-dependent Hamiltonian~\cite{1998PhRvE..58.5355K, 2000quant.ph..1106F, RevModPhys.80.1061}.
 Through the adiabatic theorem of quantum mechanics, the annealer is initially prepared in a trivial ground state while the final Hamiltonian encodes the solution to the ILP.
 Due to the explosion in research efforts towards hardware implementations of quantum annealers and future improvements to the annealing schedule~\cite{doi:10.7566/JPSJ.89.044001}, mapping ILP to QUBO provides a path forward towards obtaining optimal solutions to the class of integer optimization problems~\cite{2018Glover}.
 
@@ -338,8 +338,9 @@ This degeneracy is reflected in the experimental result and provides a non-trivi
 Fig.~\ref{fig:final_state_distribution} show the final state distribution of the three lowest lying state.
 The states $(0, 1, 0, 0, 0)$ and $(1, 0, 0, 1, 0)$ are the two degenerate ground states of the embedded Hamiltonian, while $(1, 1, 1, 1, 1)$ is the first excited state which yields an incorrect solution.
 All other states receive negligible probability at the end of annealing.
-The simulation (black) captures main features of the experimental result: 1) significant probability to populate both ground states (rather than populating only one), 2) asymmetry in ground state population due to systematic effects of offset lifting the final state degeneracy spanning approximately the correct range, 3) population of first excited state with systematically lower probability when the strong field is delayed.
-The asymmetry in the ground state distribution is a result of annealing offsets lifting the ground state degeneracy. Within the broken symmetry, the non-degenerate ground state switches between the two states depending on which qubit group is delayed.
+The simulation (black) captures main features of the experimental result: 1) significant probability to populate both ground states (rather than populating only one), 2) asymmetry in ground state population due to systematic effects of offset lifting the final state degeneracy spanning approximately the correct range, 3) population of first excited state with systematically lower probability when the strong field is delayed. The asymmetry in the ground state distribution at non-zero offset is a result of annealing offsets lifting the ground state degeneracy.
+Within the broken symmetry, the non-degenerate ground state switches between the two states depending on which qubit group is delayed. At zero offset, a slight asymmetry exists, and may be due to sampling bias~\cite{}.
+
 This result can be obtained by tuning three free parameters: the simulation temperature to the order of 10 milliKelvin, and the two coefficients of the two decoherence models at the order of 1 to 10 $ns$.
 Additional insights of the simulation are given in Sec.~\ref{sec:methods:simulation_details}.
 
@@ -465,7 +466,7 @@ Thus, if solvers have finite precision, one must estimate reasonable values for 
 \label{sec:methods:minor_embedding}
 %----------------------------------------------------------------------------------------
 Our proposed offset strategy is motivated by the structure of the Hamiltonian being evaluated by the annealer.
-As a result, details of the embedding are important. We obtain an embedding for $G(n)$ with the \texttt{embed\_qubo} function provided by the DWave Oceans Python package~\cite{dwave_oceans} under the \texttt{dwave.embedding} module.
+As a result, details of the embedding are important. We obtain an embedding for $G(n)$ with the \texttt{embed\_qubo} function provided by the DWave Oceans Python package~\cite{dwave_oceans} under the \texttt{dwave.embedding} module~\cite{2008arXiv0804.4884C}.
 The same embedding is used for all DWave solves of the same graph (independent of offset), and consequently the simulation solves the resulting embedded Hamiltonian for $G(2)$.
 Additionally, solving the same graph as a function of offset on the exact same qubits removes (or at least keeps consistent) the systematic effects due to solving a problem on different physical qubits.
 We note that comparisons between different graphs in Fig.~\ref{fig:baseline} are subject to this uncontrolled systematic.
