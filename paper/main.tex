@@ -121,9 +121,9 @@ As a result, the solution to the dominating set problem can not be obtained by s
 	\includegraphics[width=0.2\textwidth]{./new_figures/MDS_mds1.pdf}
 &&
 	\includegraphics[width=0.2\textwidth]{./new_figures/MDS_mds2.pdf}\\
-	\centering\bf{a} && \centering\bf{b} && \centering\bf{c}
+	\centering\textbf{a} && \centering\textbf{b} && \centering\textbf{c}
 	\end{tabular}
-	\caption{Example of different dominating sets for $G(V, E)$. Vertices in the dominating set $D$ are highlighted in blue. {\bf{a)}} A dominating set of $G$ with domination number $\overline{\overline{D}} = 2$. {\bf{b)}} A minimal dominating set of $G$ with domination number of $\overline{\overline{D}} = 2$. {\bf{c)}} The minimum dominating set of $G$ with domination number of $\overline{\overline{D}} = 1$.}
+	\caption{Example of different dominating sets for $G(V, E)$. Vertices in the dominating set $D$ are highlighted in blue. {\textbf{a)}} A dominating set of $G$ with domination number $\overline{\overline{D}} = 2$. {\textbf{b)}} A minimal dominating set of $G$ with domination number of $\overline{\overline{D}} = 2$. {\textbf{c)}} The minimum dominating set of $G$ with domination number of $\overline{\overline{D}} = 1$.}
 	\label{fig:dominating_sets}
 \end{figure*}
 
@@ -144,7 +144,7 @@ Thus, the implemented Hamiltonian is explicitly time dependent
 and $H^\textrm{init}=\sum_i\sigma^x_i$ on the DWave, while $H^\textrm{problem}$ encodes the problem to be solved.
 
 In this paper, we propose an algorithm that maps ILP problems to QUBO.
-This is achieved by the introduction of slack variables $s$ which turn the inequalities eq.~\eqref{eq:ilp-constraints} to equalities
+This is achieved by the introduction of slack variables $s$ which turn the inequalities Eq.~\eqref{eq:ilp-constraints} to equalities
 \begin{align}
   \label{eq:ilp:slack}
   & \sum_i A_{a i}x_i + s_a + b_a = 0, \\
@@ -153,7 +153,7 @@ This is achieved by the introduction of slack variables $s$ which turn the inequ
 While the coefficients of the inequality constraints are not required to be integer valued, the inequalities can be trivially rescaled such that $s_i \in \mathbbm{Z}$ given fixed precision coefficients $A_{ij}$ and $b_i$.
 Furthermore, this formalism can be generalized to constrained quadratic optimizations \ref{sec:methods:ilp:quadratic}.
 
-We further improve the quantum annealer's performance by utilizing annealing offsets, which effectively delays the annealing schedule on a per-qubit basis. \cite{PhysRevA.96.042322,hsu2018quantum,10.1007/978-3-030-14082-3_14}
+We further improve the quantum annealer's performance by utilizing annealing offsets, which effectively delays the annealing schedule on a per-qubit basis~\cite{PhysRevA.96.042322,hsu2018quantum,10.1007/978-3-030-14082-3_14}.
 Converting to the Ising representation of the the problem Hamiltonian,
 \begin{equation}
     \label{eq:HIsing}
@@ -162,7 +162,6 @@ Converting to the Ising representation of the the problem Hamiltonian,
 we can recognize that Eq.~(\ref{eq:HIsing}) exhibits spin-glass properties. More specifically, if the $h_i$ coefficients are randomly drawn from a Bernoulli distribution, one expects spin-localization behavior to influence the outcome of the anneal.
 In the case of quantum annealing, when an algorithm is mapped to its Ising representation, the values of $h_i$ will frequently take on various values, mimicking spin-glass like behavior.
 More explicitly, the spin-glass enters a glassy state when more disorder is introduced ($|h_i|$ becomes large), and as a consequence, the wavefunction experiences Many-Body Localization (MBL) effects, the many-body analog of Anderson Localization~\cite{doi:10.1146/annurev-conmatphys-031214-014726,PhysRevE.90.022103,RevModPhys.91.021001}.
-dd
 
 Our improvement strategy is motivated by the MBL hypothesis.
 That is, we want the system to be ergodic and avoid the MBL phase.
@@ -183,7 +182,7 @@ We first present the QUBO mapping for ILP (\ref{sec:results:qa1}), and demonstra
 \subsection{ILP QUBO}
 \label{sec:results:qa1}
 %----------------------------------------------------------------------------------------
-Following Eq.~(\ref{eq:ilp:slack}), the ILP problems simplifies to solving a system of linear equations on integer valued variables. We map the integer variables $\vec z = \vec x, \vec s$ appearing in eq.~\eqref{eq:ilp:slack} to qubits under the following transformation~\cite{Chang:2018uoc}
+Following Eq.~(\ref{eq:ilp:slack}), the ILP problems simplifies to solving a system of linear equations on integer valued variables. We map the integer variables $\vec z = \vec x, \vec s$ appearing in Eq.~\eqref{eq:ilp:slack} to qubits under the following transformation~\cite{Chang:2018uoc}
 \begin{align}
  z_i = & \sum_{r=0}^{R_i-1} 2^r \psi_{ri}
  \label{eq:int_to_bin}
@@ -300,7 +299,7 @@ For the following studies, we perform experiments on the \texttt{DW\_2000Q\_6} s
 \begin{figure}
 	\centering
 	\includegraphics[width=\columnwidth]{./new_figures/DWave_scaling.pdf}
-	\caption{Baseline result of DWave (black) compared to random guessing (blue). The jagged nature of random guessing reflects the degeneracy of the ground state. The legend labels the values of annealing offsets employed. A positive offsets (yellow) indicates that qubits with large values of $|h_i|$ are annealing with a delayed schedule, while negative offsets (green) delay the schedule of qubits with small values of $h_i$.}
+	\caption{Baseline result of DWave (black) compared to random guessing (dashed green). The jagged nature of random guessing reflects the degeneracy of the ground state. Negative offsets with a `s' tag (blue) are results from delays of large values of $|h_i|$, while negative offsets with the `w' label (red) delay the schedule of qubits with small values of $h_i$.}
 	\label{fig:baseline}
 \end{figure}
 
@@ -316,11 +315,10 @@ In order to understand the effects of annealing offsets, we simulate the anneali
 In order to shorten the simulation time, we repeat the same anneal process with a total annealing time of 1 $\mu s$ and count the number of correct ground state occurances.
 The resulting ground state probability as a function of offset measured over 100,000 observations is shown in Fig.~\ref{fig:dwave1us}.
 
-\begin{figure}
+\begin{figure}[b]
 	\centering
 	\includegraphics[width=\columnwidth]{./new_figures/NN2_offset_scaling.pdf}
-	\caption{The probability of finding the MDS for $G(2)$ from DWave (orange) and results from simulation with both decoherence terms (blue).
-     The machine parameters are identical to Sec.~\ref{sec:discussion:qa} with the exception of shortening the total annealing time to 1 $\mu s$ to accommodate reasonable simulation times.}
+	\caption{The probability of finding the MDS for $G(2)$ from DWave (black) and simulation (dashed yellow) at annealing times of 1 $\mu s$.}
 	\label{fig:dwave1us}
 \end{figure}
 
@@ -352,7 +350,7 @@ An additional study where an extended annealing schedule is employed in the simu
 \begin{figure}
 	\centering
 	\includegraphics[width=\columnwidth]{./new_figures/final_state_distribution.pdf}
-	\caption{{\color{red}I need to add dwave final state distribution here too.}}
+	\caption{Final state distribution from DWave (solid bars) and simulation (black outline). The colors label the type of offset  The $(0, 1, 0, 0, 0)$ state is the first solution where vertex 1 is in the dominating set. The $(1, 0, 0, 1, 0)$ state is the second solution where vertex 0 is in the dominating set. The first excited state is the $(1, 1, 1, 1, 1)$ state where both vertices are in the dominating set.}
 	\label{fig:final_state_distribution}
 \end{figure}
 
@@ -379,7 +377,7 @@ However, the intersection of time-dependent quantum mechanics and emergent pheno
 \label{sec:methods:ILP-to-QUBO}
 %----------------------------------------------------------------------------------------
 %----------------------------------------------------------------------------------------
-\subsubsection{Minimum Dominating Set Qubo}
+\subsubsection{Minimum Dominating Set QUBO}
 \label{sec:methods:mds-qubo}
 %----------------------------------------------------------------------------------------
 
@@ -420,7 +418,7 @@ The algorithm uses
 qubits to encode the vertices and to embed the slack variables.
 Therefore, the (logical) qubit vector $\vec \Psi$ at worst scales with $n_V \log_2 n_V$ qubits for fully connected graphs.
 
-The target QUBO in the notation of eq.~\eqref{eq:matrix_form} reads
+The target QUBO in the notation of Eq.~\eqref{eq:matrix_form} reads
  {\small
   \begin{align}
    Q_{xx} & = \mathbbm{1} + p\left[J^T J + J^T + J - 2 \mathrm{diag}(|J|) - \mathbbm{1} \right] \,, \\
@@ -441,7 +439,7 @@ Because quantum annealing is capable of solving quadratic problems, we extend th
 \end{align}
 without the introduction of auxiliary qubits.
 
-In this case the $Q_{xx}$ component of the Qubo, eq.~\eqref{eq:qubo:components} obtains a new term
+In this case the $Q_{xx}$ component of the QUBO, Eq.~\eqref{eq:qubo:components} obtains a new term
 \begin{equation}
     Q_{xx} \to Q_{xx} + T_x^T d T_x \, .
 \end{equation}
@@ -456,9 +454,9 @@ In this case the $Q_{xx}$ component of the Qubo, eq.~\eqref{eq:qubo:components} 
 \label{sec:methods:ilp-qubo-comments}
 %----------------------------------------------------------------------------------------
 
-The minimal energy solution to eq.~\eqref{eq:initial-ip-def} and eq.~\eqref{eq:qubo-min} {\color{red}@chris what equation is this?} are exactly the same if the penalty term is larger than the energy gap of the first excited solution: $p > E_1 - E_0$.
+The minimal energy solution to Eq.~\eqref{eq:initial-ip-def} and Eq.~\eqref{eq:qubo-min} {\color{red}@chris what equation is this?} are exactly the same if the penalty term is larger than the energy gap of the first excited solution: $p > E_1 - E_0$.
 Thus some knowledge of the problem is required.
-In principle, it is possible to set the penalty term arbitrarily large, at the cost of problem resolution: large $p$-values increase the highest available energy of the system by multiples of $p$.
+In principle, it is possible to set the penalty term arbitrarily large, at the cost of problem resolution: large values of For$p$ increase the highest available energy of the system by multiples of $p$.
 After normalization of the QUBO, this corresponds to decreasing the energy gap between the ground state and the first excited state.
 Thus, if solvers have finite precision, one must estimate reasonable values for $p$: for large $p$ more solutions fulfill the constraints, while for small $p$, more solutions minimize the objective function.
 
@@ -491,16 +489,17 @@ This imbalance in the two groups may perhaps explain the reason why effects of d
 \label{sec:methods:lindblad}
 %----------------------------------------------------------------------------------------
 
-To solve for time evolution dynamics of quantum annealing including thermal and the decoherence effects, we solve for the master equation in Lindblad form
+To solve for time evolution dynamics of quantum annealing including thermal and the decoherence effects, we evaluate the master equation in Lindblad form
 \begin{align}
- \partial_t \rho (t) =  \frac{-i}{\hbar} [H(t) , \rho(t)] + \sum_j (2L_j \rho(t) L_j^\dagger - \{ L^\dagger_j L_j, \rho(t) \}) ,
+ \partial_t \rho (t) = &  \frac{-i}{\hbar} \left[H(t) , \rho(t)\right] \nonumber \\
+ & + \sum_j \left(2L_j \rho(t) L_j^\dagger - \{ L^\dagger_j L_j, \rho(t) \}\right) ,
 \end{align}
 where $\rho (t)$ is the density matrix at time $t$.
 $H(t)$ is the time-dependent Hamiltonian
 \begin{align}
  \label{eq:annealH}
- H_{anneal}(t) & =  - \sum_i  A_i(t)\sigma^x_i                                                                      & \notag \\
- +             & \sum_{i>j} \sqrt{B_{i}(t)B_{j}(t)} J_{ij} \sigma^z_i \sigma^z_j +\sum_i B_{i}(t) h_i \sigma^z_i  , &
+ H_{anneal}(t)  = & - \sum_i  A_i(t)\sigma^x_i +\sum_i B_{i}(t) h_i \sigma^z_i \notag \\
+ & + \sum_{i>j} \sqrt{B_{i}(t)B_{j}(t)} J_{ij} \sigma^z_i \sigma^z_j  ,
 \end{align}
 where $A_i(t)$ and $B_{i}(t)$ are site-dependent annealing schedule functions.
 The site dependency takes into account of the annealing offset.
@@ -513,8 +512,8 @@ The full counting statistics term models the global decoherence to all the qubit
 The local damping term models the decoherence of each qubit independently.
 For full counting statistics, the Lindblad operator is
 \begin{align}
-\mathcal{L}[\rho (t)] &=& \Gamma_{fc} \sum_j   (2 S_j \rho(t) S_j^\dagger - \{ S^\dagger_j S_j, \rho(t) \}) \notag \\
-&& + e^{-\beta \Delta E_j} (2 S_j^\dagger \rho(t) S_j - \{ S_j S^\dagger_j, \rho(t) \} )
+\mathcal{L}[\rho (t)] = & \Gamma_{\textrm{fc}} \sum_j   \left(2 S_j \rho(t) S_j^\dagger - \{ S^\dagger_j S_j, \rho(t) \}\right) \notag \\
+& + e^{-\beta \Delta E_j} \left(2 S_j^\dagger \rho(t) S_j - \{ S_j S^\dagger_j, \rho(t) \} \right)
 \end{align}
 where $j$ is the index for the inter-level spacing $\Delta E_j=E_\mu-E_\nu>0$. $S_j=|E_\nu \rangle \langle E_\mu|$ denotes the many-body lowering operator.
 $\{, \}$ denotes the anti-commutator. $\Gamma = 1/T_c$ is the decoherence rate for coherence time $T_c$.
@@ -523,8 +522,8 @@ The probability of the inverse process is given by a Boltzmann factor.
 To model the local decoherence of each qubits in the non-interacting limit, we also consider the amplitude damping for non-interacting qubits.
 The Lindblad operator is
 \begin{align}
-\mathcal{L}[\rho (t)] &=&  \Gamma_{loc} \sum_j (2L_j \rho(t) L_j^\dagger - \{ L^\dagger_j L_j, \rho(t) \} \notag \\
-&& + e^{-\beta 2|h_j| }  (2L_j^\dagger \rho(t) L_j - \{ L_j L_j^\dagger, \rho(t) \}) ),
+\mathcal{L}[\rho (t)] = &  \Gamma_{\textrm{loc}} \sum_j \left(2L_j \rho(t) L_j^\dagger - \{ L^\dagger_j L_j, \rho(t) \} \right)\notag \\
+& + e^{- 2 \beta |h_j| }  \left(2L_j^\dagger \rho(t) L_j - \{ L_j L_j^\dagger, \rho(t) \} \right) ,
 \end{align}
 where $j$ is the index for qubit.
 $L_j= \sigma^{+}_j=|1\rangle \langle 0|$ for $h_j>0$ and $L_j= \sigma^{-}_j=|0\rangle \langle 1|$ for $h_j<0$.
@@ -532,12 +531,12 @@ That is, each qubit is damped toward its local ground state if we ignore all the
 
 The initial condition is the Gibbs canonical ensemble
 \begin{equation}
-\rho (0) =  \frac{e^{-\beta H(0)}}{\mbox{Tr}[e^{-\beta H(0)}]} ,
+\rho (0) =  \frac{e^{-\beta H(0)}}{\mbox{Tr}\left(e^{-\beta H(0)}\right)} ,
 \end{equation}
 where $\beta$ is the inverse temperature.
 The probability to get the ground state at measurement is
 \begin{align}
-P =  \mbox{Tr} \{  \rho (t) \pi_{\mbox{gnd}} \}  ,
+P =  \mbox{Tr} \left( \rho (t) \pi_{\mbox{gnd}} \right)  ,
 \end{align}
 where the projection operator onto the degenerated ground states subspace is defined as $\pi_{\mbox{gnd}}=\sum_{i\in G} |\mbox{gnd}_i\rangle \langle \mbox{gnd}_i| $.
 Here $\{ | \mbox{gnd}_i \rangle | i \in G \}$ forms an orthonormal basis for the degenerated ground states subspace, i.e., $\langle \mbox{gnd}_j | \mbox{gnd}_i \rangle = \delta_{ij}$.
@@ -558,8 +557,9 @@ Further documentation is provided by DWave in Ref.~\cite{dwave_as, dwave_as_docu
  \centering
   \includegraphics[width=\columnwidth]{./new_figures/anneal_schedule.pdf}
   \caption{
-  Anneal schedules for amplitudes of initial Hamiltonian (top left to bottom right) and final Hamiltonian (bottom left to top right) are displayed for a complete anneal schedule.
-  Different colors represent different offesets: delayed (light to dark), default (black).
+  Anneal schedules for amplitudes of initial Hamiltonian (dashed) and final Hamiltonian (solid).
+  Offset 0.0 (black) and -0.05 (purple) are displayed.
+  Intermediate values lie between and are suppressed for clarity.
  }
  \label{fig:anneal_schedule}
 \end{figure}
@@ -584,19 +584,25 @@ which has a doubly-degenerate ground state of $(0, 1, 1)$ and $(1, 0, 1)$. An an
 
 We confirm that with different combinations of annealing offsets, the degeneracy is lifted on the DWave results as expected by solving for the modified problem Hamiltonian spectrum, as well as dialing in annealing offset in the simulation of this three qubit test case.
 
-\begin{figure}
+\begin{figure*}
+    \centering
+	\begin{tabular}{p{0.5\textwidth}p{0.5\textwidth}}
+	\includegraphics[width=0.5\textwidth]{./new_figures/anneal_schedule_extended.pdf}
+    &
+	\includegraphics[width=0.5\textwidth]{./new_figures/NN2_offset_scaling_extended.pdf}\\
+	\centering \textbf{a} & \centering \textbf{b}
+	\end{tabular}
 	\centering
-	\includegraphics[width=\columnwidth]{./new_figures/anneal_schedule_extended.pdf}
-	\includegraphics[width=\columnwidth]{./new_figures/NN2_offset_scaling_extended.pdf}
-	\caption{{\color{red}I need to add dwave final state distribution here too.}}
+	\caption{Extended annealing schedule and simulation result. \textbf{a)} The annealing time is increased by 10\% at both the start and end, and the initial values of $A(s)$ and $B(s)$ at non-zero offset are also not extrapolated in comparison to Fig.~\ref{fig:anneal_schedule}. Therefore, the initial and final Hamiltonian are no longer suffer systematic error at non-zero offset. \textbf{b)} The default (dashed yellow) result is one presented in Fig.~\ref{fig:dwave1us}. Results from extended schedules are presented shown with solid lines with full-counting statistics and amplitude damping (red), only full counting-statistics (blue), and only amplitude damping (green).
+    }
 	\label{fig:anneal_schedule_ext}
-\end{figure}
+\end{figure*}
 
 In the simulation, we also reserve the ability to remove the systematic errors by extending the annealing schedule as shown by the red data points in Fig.~\ref{fig:anneal_schedule_ext}. With the extended schedule, all qubits start and end with the same values of $A$ and $B$ and faithfully preserves the initial and final Hamiltonians. The dependence on offset for $G(2)$ (Fig.~(\ref{fig:dwave1us})) remains the same under the extended anneal schedule (Fig.~\ref{fig:anneal_schedule_ext}), confirming that the behavior is not a systematic artifact.
 
 The quantum system can be further idealized by including only the full-counting statistics model (blue), or local decoherence (green). We observe in both cases that the overall scaling follows the story of the MBL hypothesis. Perhaps more importantly, we observe that a simulation without local decoherence, where the relaxation is dependent on precisely the instantaneous value of $|h_i|$, exhibits the same scaling as experiment. This result suggests that our strategy for setting annealing offsets is improving the algorithm beyond the simple explanation of qubits freezing due to single-particle amplitude damping. In fact, the simulation with only amplitude damping (green) does not fully capture the results of the experiment. We observe hints of a phase transition with respect to offset (which may be thought of as some measure of disorder) when dynamical thermalization effects are removed. This is a tantalizing observation, and also is strong evidence for the inclusion of the full-counting statistics model.
 
-It unfortunately does not make much sense to remove all decoherence models for the $G(2)$ graph for an anneal time of $1\mu s$ since all probabilities go to 1 within machine precision.
+It unfortunately does not make much sense to remove all decoherence models for the $G(2)$ graph for an anneal time of $1\mu s$ since all probabilities go to unity.
 
 %----------------------------------------------------------------------------------------
 \subsubsection{Other Simulation Details}
@@ -606,7 +612,7 @@ To check the correctness of simulator and unit conversion, we tested a simple an
 The initial state is pure zero state $\rho=|00...0\rangle \langle 00...0|$.
 In this case the analytical solution can be obtained for the wave function oscillation.
 The time-dependent probability is $P_{0}=\cos^{2n}(s)=\cos^{2n}(t/T)$ where $n$ is the number of qubits and $T$ is the annealing time.
-For annealing time $T=1/A(0)$, we expect to see perfect one-period oscillation. The energy spectrum for this system can be analytically obtained, so we also checked the Boltzmann distribution in the initial density matrix construction. The oscillation is depicted in Figure \ref{figcheck}, where the simulation matches the expected theoretical behavior.
+For annealing time $T=1/A(0)$, we expect to see perfect one-period oscillation. The energy spectrum for this system can be analytically obtained, so we also checked the Boltzmann distribution in the initial density matrix construction. The oscillation is depicted in Fig.~\ref{figcheck}, where the simulation matches the expected theoretical behavior.
 
 
 \begin{figure}
@@ -627,7 +633,7 @@ We emphasize however, that the simulation suggests that the ground state is reco
 \begin{figure}
 	\centering
 	\includegraphics[width=\columnwidth]{./new_figures/time_dependent_probability.pdf}
-	\caption{(Left) The time-dependent probability of resolving the ground state and (Right) the corresponding mutual information. (Top) Simulation with decoherence included and (Bottom) without decoherence.}
+	\caption{Time-dependent probability for resolving the ground state for simulation results presented in Sec.~\ref{sec:results:simulation}. Different offsets are labeled in the same way as Fig.~\ref{fig:baseline}.}
 	\label{fig:td_prob}
 \end{figure}
 

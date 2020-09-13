@@ -629,7 +629,7 @@ def getannealcurve(offset=0.05, normalized_time=[0.0, 1.0]):
     return X, yA, yB
 
 def plot_annealcurve():
-    offset = [0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
+    offset = [0.0, 0.05]
     fig = plt.figure(figsize=p["figsize"])
     ax = plt.axes(p["aspect_ratio"])
     for os in offset:
@@ -637,14 +637,14 @@ def plot_annealcurve():
             colorA = OFFSET_MAP3[0.0]
             colorB = OFFSET_MAP3[0.0]
         else:
-            colorA = OFFSET_MAP3[os]
-            colorB = OFFSET_MAP3[-os]
+            colorA = purple #OFFSET_MAP3[os]
+            colorB = purple #OFFSET_MAP3[-os]
         s, yA, yB = getannealcurve(os, normalized_time=[0, 1])
         if os == 0.05:
-            ax.errorbar(x=s, y=yA, color=colorA, marker="None", ls="-", label="$A(s)$")
+            ax.errorbar(x=s, y=yA, color=colorA, marker="None", ls="--", label="$A(s)$")
             ax.errorbar(x=s, y=yB, color=colorB, marker="None", ls="-", label=("$B(s)$"))
         else:
-            ax.errorbar(x=s, y=yA, color=colorA, marker="None", ls="-")
+            ax.errorbar(x=s, y=yA, color=colorA, marker="None", ls="--")
             ax.errorbar(x=s, y=yB, color=colorB, marker="None", ls="-")
     """labels
        """
@@ -665,7 +665,7 @@ def plot_annealcurve():
     fig.savefig("../new_figures/anneal_schedule.pdf", transparent=True)
 
 def plot_annealcurve_extended():
-    offset = [0.0, 0.01, 0.02, 0.03, 0.04, 0.05]
+    offset = [0.0, 0.05]
     fig = plt.figure(figsize=p["figsize"])
     ax = plt.axes(p["aspect_ratio"])
     for os in offset:
@@ -673,14 +673,14 @@ def plot_annealcurve_extended():
             colorA = OFFSET_MAP3[0.0]
             colorB = OFFSET_MAP3[0.0]
         else:
-            colorA = OFFSET_MAP3[os]
-            colorB = OFFSET_MAP3[-os]
+            colorA = purple #OFFSET_MAP3[os]
+            colorB = purple #OFFSET_MAP3[-os]
         s, yA, yB = getannealcurve(os, normalized_time=[-0.1, 1.1])
         if os == 0.05:
-            ax.errorbar(x=s, y=yA, color=colorA, marker="None", ls="-", label="$A(s)$")
+            ax.errorbar(x=s, y=yA, color=colorA, marker="None", ls="--", label="$A(s)$")
             ax.errorbar(x=s, y=yB, color=colorB, marker="None", ls="-", label=("$B(s)$"))
         else:
-            ax.errorbar(x=s, y=yA, color=colorA, marker="None", ls="-")
+            ax.errorbar(x=s, y=yA, color=colorA, marker="None", ls="--")
             ax.errorbar(x=s, y=yB, color=colorB, marker="None", ls="-")
     """labels
        """
