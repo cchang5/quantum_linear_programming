@@ -26,7 +26,7 @@
 
 
 \begin{document}
-\title{Solutions to Integer Programming from Quantum Annealing}
+\title{Integer Programming on Ising Spin-Glass}
 
 \author{Chia~Cheng~Chang}
 \affiliation{RIKEN iTHEMS, Wako, Saitama 351-0198, Japan}
@@ -59,10 +59,10 @@
 \begin{abstract}
  While quantum computing proposes promising solutions to computational problems not accessible with classical approaches, due to current hardware constraints, most quantum algorithms are not yet capable of computing systems of practical relevance, and classical counterparts outperform them.
  To practically benefit from quantum architecture, one has to identify problems and algorithms with favorable scaling and improve on corresponding limitations depending on available hardware.
- For this reason, we developed an algorithm that solves integer linear programming problems (ILP), a classically NP-hard problem, on a quantum annealer (QA), and investigated problem and hardware-specific limitations.
- This work presents the formalism of how to map ILP problems to the annealing architectures, how to systematically improve computations utilizing optmizied anneal schedules and models the anneal process through a simmulation.
+ For this reason, we developed an algorithm that solves integer linear programming problems, a classically NP-hard problem, on a quantum annealer, and investigated problem and hardware-specific limitations.
+ This work presents the formalism of how to map ILP problems to the annealing architectures, how to systematically improve computations utilizing optimized anneal schedules and models the anneal process through a simulation.
  It illustrates the effects of decoherence and Many-Body Localization, for the Minimum Dominating Set problem, and compares annealing results against numerical simulations of the quantum architecture.
- We find that the QA ILP algorithm outperforms random guessing but is limited to small problems and that annealing schedules can be adjusted to reduce the effects of decoherence.
+ We find that the algorithm outperforms random guessing but is limited to small problems and that annealing schedules can be adjusted to reduce the effects of decoherence.
  Simulations qualitatively reproduce algorithmic improvements of the modified annealing schedule, suggesting the improvements have origins from quantum effects.
 \end{abstract}
 
@@ -179,7 +179,7 @@ To understand which phenomena are relevant for describing the proposed offset st
 We first present the QUBO mapping for ILP (\ref{sec:results:qa1}), and demonstrate the methodology on an example implementation in case of the Minimal Dominating Set problem (\ref{sec:results:qa}) on the DWave quantum annealer. Results from quantum annealing are compared and discussed in contrast to simulations (\ref{sec:results:simulation}).
 
 %----------------------------------------------------------------------------------------
-\subsection{ILP QUBO}
+\subsection{QUBO Formulation of ILP}
 \label{sec:results:qa1}
 %----------------------------------------------------------------------------------------
 Following Eq.~(\ref{eq:ilp:slack}), the ILP problems simplifies to solving a system of linear equations on integer valued variables. We map the integer variables $\vec z = \vec x, \vec s$ appearing in Eq.~\eqref{eq:ilp:slack} to qubits under the following transformation~\cite{Chang:2018uoc}
@@ -271,7 +271,7 @@ The integer solution to the original ILP is computed by $\vec x^{(0)} = T_x \vec
 The slack components of this vector $\vec \Psi_s$ can be utilized to check if the contraints are indeed fulfilled.
 
 %----------------------------------------------------------------------------------------
-\subsection{Dominating Set scaling \& offset study}
+\subsection{Application to the Dominating Set}
 \label{sec:results:qa}
 %----------------------------------------------------------------------------------------
 \begin{figure}[b]
@@ -357,7 +357,7 @@ An additional study where an extended annealing schedule is employed in the simu
 
 \ghissue{Decoherance study}{31}
 
-\subsection{Final remarks}
+\subsection{Final Remarks}
 \label{sec:results:final}
 We would like to emphasize that while the annealing offsets are motivated by the MBL hypothesis, and the results also follow those expectations, we do not have definitive proof that MBL plays a crucial role.
 The reason is because observations of MBL inevitably require the study of finite-size scaling~\cite{2015PhRvB..91h1103L}, and our current simulation while being extremely thorough and explicit, is exponentially slow to evaluate making evaluations of even $G(3)$ untenable.
