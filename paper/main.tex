@@ -328,8 +328,8 @@ To solve for time evolution dynamics of quantum annealing including thermal and 
  \partial_t \rho (t) =  \frac{-i}{\hbar} [H(t) , \rho(t)] + \mathcal{L}(\rho(t), H(t))
 \end{align}
 where $\rho (t)$ is the density matrix at time $t$, $H(t)$ is the time-dependent Hamiltonian and $\mathcal{L}$ is the Linblad operator implementing the decoherence models.
-In this work, we consider two types of decoherence models: full counting statistics and local damping. \cite{10.5555/1972505}
-The full counting statistics term models the global decoherence to all the qubits due to the classical reservoir.
+In this work, we consider two types of decoherence models: full-counting statistics~\cite{PhysRevE.90.022103} and single-qubit amplitude damping (local damping)~\cite{10.5555/1972505}.
+The full-counting statistics term models the global decoherence to all the qubits due to the classical reservoir.
 The local damping term models the decoherence of each qubit independently.
 Details of the master equation are given in Sec.~\ref{sec:methods:lindblad}.
 
@@ -339,7 +339,7 @@ Fig.~\ref{fig:final_state_distribution} show the final state distribution of the
 The states $(0, 1, 0, 0, 0)$ and $(1, 0, 0, 1, 0)$ are the two degenerate ground states of the embedded Hamiltonian, while $(1, 1, 1, 1, 1)$ is the first excited state which yields an incorrect solution.
 All other states receive negligible probability at the end of annealing.
 The simulation (black) captures main features of the experimental result: 1) significant probability to populate both ground states (rather than populating only one), 2) asymmetry in ground state population due to systematic effects of offset lifting the final state degeneracy spanning approximately the correct range, 3) population of first excited state with systematically lower probability when the strong field is delayed. The asymmetry in the ground state distribution at non-zero offset is a result of annealing offsets lifting the ground state degeneracy.
-Within the broken symmetry, the non-degenerate ground state switches between the two states depending on which qubit group is delayed. At zero offset, a slight asymmetry exists, and may be due to sampling bias~\cite{}.
+Within the broken symmetry, the non-degenerate ground state switches between the two states depending on which qubit group is delayed. At zero offset, a slight asymmetry exists, and may be due to sampling bias~\cite{2016PhRvA..93e2320K, 2017PhRvL.118g0502M}.
 
 This result can be obtained by tuning three free parameters: the simulation temperature to the order of 10 milliKelvin, and the two coefficients of the two decoherence models at the order of 1 to 10 $ns$.
 Additional insights of the simulation are given in Sec.~\ref{sec:methods:simulation_details}.
@@ -508,10 +508,7 @@ $[,]$ denotes the Lie bracket.
 $L_j$ are the Lindblad operators for decoherence.
 $\{, \}$ denotes the anti-commutator.
 
-We consider two types of decoherence models: full counting statistics \cite{PhysRevE.90.022103} and local damping.
-The full counting statistics term models the global decoherence to all the qubits due to the classical reservoir.
-The local damping term models the decoherence of each qubit independently.
-For full counting statistics, the Lindblad operator is
+For full-counting statistics, the Lindblad operator is
 \begin{align}
 \mathcal{L}[\rho (t)] = & \Gamma_{\textrm{fc}} \sum_j   \left(2 S_j \rho(t) S_j^\dagger - \{ S^\dagger_j S_j, \rho(t) \}\right) \notag \\
 & + e^{-\beta \Delta E_j} \left(2 S_j^\dagger \rho(t) S_j - \{ S_j S^\dagger_j, \rho(t) \} \right)
@@ -594,7 +591,7 @@ We confirm that with different combinations of annealing offsets, the degeneracy
 	\centering \textbf{a} & \centering \textbf{b}
 	\end{tabular}
 	\centering
-	\caption{Extended annealing schedule and simulation result. \textbf{a)} The annealing time is increased by 10\% at both the start and end, and the initial values of $A(s)$ and $B(s)$ at non-zero offset are also not extrapolated in comparison to Fig.~\ref{fig:anneal_schedule}. Therefore, the initial and final Hamiltonian are no longer suffer systematic error at non-zero offset. \textbf{b)} The default (dashed yellow) result is one presented in Fig.~\ref{fig:dwave1us}. Results from extended schedules are presented shown with solid lines with full-counting statistics and amplitude damping (red), only full counting-statistics (blue), and only amplitude damping (green).
+	\caption{Extended annealing schedule and simulation result. \textbf{a)} The annealing time is increased by 10\% at both the start and end, and the initial values of $A(s)$ and $B(s)$ at non-zero offset are also not extrapolated in comparison to Fig.~\ref{fig:anneal_schedule}. Therefore, the initial and final Hamiltonian are no longer suffer systematic error at non-zero offset. \textbf{b)} The default (dashed yellow) result is one presented in Fig.~\ref{fig:dwave1us}. Results from extended schedules are presented shown with solid lines with full-counting statistics and amplitude damping (red), only full-counting-statistics (blue), and only amplitude damping (green).
     }
 	\label{fig:anneal_schedule_ext}
 \end{figure*}
