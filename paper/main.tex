@@ -95,8 +95,8 @@ subject to
 \end{align}
 where $i=1, \cdots,  N$ is the number of dependent variables and $a=1, \cdots, M$ the number of constraint equations.
 
-ILP is a commonly tackled problem applicable to situations such as x~\cite{}, y~\cite{}, and the Minimum Dominating Set Problem (MDS)~\cite{}.
-In general, ILP is classically NP-complete, and as a result, heuristic methods are employed~\cite{}.
+ILP is a commonly tackled problem applicable to situations such as {\color{red} x~\cite{}, y~\cite{}, and the Minimum Dominating Set Problem (MDS)~\cite{}}.
+In general, ILP is classically NP-complete, and as a result, heuristic methods are employed~{\color{red}\cite{}}.
 Standard classical heuristic algorithms employ a greedy scheme which iteratively approximates optimal solutions--starting from a random initial guess, these algorithms apply locally optimal choices at each step.
 The NP-hardness of ILP can be understood by realizing that while the solution to an $n$-dimensional linear problem can be obtained in polynomial time, the optimal integer solution in general must be found in the $2^n$ integer solutions which surround the real number solution.
 While greedy algorithms do not guarantee optimal global solutions, they find approximate solutions in polynomial time, which can be utilized in further computations.
@@ -111,7 +111,7 @@ The domination number of $D$ is given by the cardinality of $|D| \equiv \overlin
 The Minimum Dominating Set (MDS) is defined by $D$ with the smallest domination number.
 Fig.~\ref{fig:dominating_sets}c shows an example of the minimum dominating set of $G(V, E)$ and is different from the minimal dominating set.
 We emphasize that while the maximum independent set is always a minimal dominating set as exemplified by Fig.~\ref{fig:dominating_sets}b, the minimum dominating set, in general, can have a smaller domination number.
-As a result, the solution to the dominating set problem can not be obtained by solving for the maximum independent set, a well-studied problem for quantum annealers~\cite{}.
+As a result, the solution to the dominating set problem can not be obtained by solving for the maximum independent set, a well-studied problem for quantum annealers~{\color{red}\cite{}}.
 
 \begin{figure*}
 	\centering
@@ -132,9 +132,9 @@ Thus one is guaranteed to find a dominating set but not necessarily an MDS.
 
 Due to the importance and difficulty in this work, we present a method to obtain optimal solutions to ILP by employing quantum annealing methods.
 
-Quantum annealing solves a general quadratic binary optimization problem (QUBO) by slowly varying a time-dependent Hamiltonian~\cite{}.
+Quantum annealing solves a general quadratic binary optimization problem (QUBO) by slowly varying a time-dependent Hamiltonian~\cite{1998PhRvE..58.5355K, 2000quant.ph..1106F}.
 Through the adiabatic theorem of quantum mechanics, the annealer is initially prepared in a trivial ground state while the final Hamiltonian encodes the solution to the ILP.
-Due to the explosion in research efforts towards hardware implementations of quantum annealers and future improvements to the annealing schedule~\cite{}, mapping ILP to QUBO provides a path forward towards obtaining optimal solutions to the class of integer optimization problems~\cite{2018Glover}.
+Due to the explosion in research efforts towards hardware implementations of quantum annealers and future improvements to the annealing schedule~\cite{doi:10.7566/JPSJ.89.044001}, mapping ILP to QUBO provides a path forward towards obtaining optimal solutions to the class of integer optimization problems~\cite{2018Glover}.
 
 A quantum annealer evolves the ground state of an initial Hamiltonian into the problems Hamiltonian's ground state by adiabatically changing the hardware that implements Hamiltonian.
 Thus, the implemented Hamiltonian is explicitly time dependent
@@ -165,7 +165,7 @@ More explicitly, the spin-glass enters a glassy state when more disorder is intr
 
 Our improvement strategy is motivated by the MBL hypothesis.
 That is, we want the system to be ergodic and avoid the MBL phase.
-As a result, we employ a modified annealing schedule which relies on partitioning the Hamiltonian into regions of relatively weak and strong external magnetic fields~\cite{doi:10.7566/JPSJ.89.044001}.
+As a result, we employ a modified annealing schedule which relies on partitioning the Hamiltonian into regions of relatively weak and strong external magnetic fields.
 
 
 To understand which phenomena are relevant for describing the proposed offset study's scaling behavior, whether they are rooted in the quantum nature or related to hardware constraints, we simulate the anneal for a small MDS problem. This simulation solves the von Neumann equations accounting for different models of quantum decoherence, and explores whether algorithmic improvements on hardware are present in idealizes systems.
@@ -359,7 +359,7 @@ An additional study where an extended annealing schedule is employed in the simu
 \subsection{Final remarks}
 \label{sec:results:final}
 We would like to emphasize that while the annealing offsets are motivated by the MBL hypothesis, and the results also follow those expectations, we do not have definitive proof that MBL plays a crucial role.
-The reason is because observations of MBL inevitably require the study of finite-size scaling, and our current simulation while being extremely thorough and explicit, is exponentially slow to evaluate making evaluations of even $G(3)$ untenable.
+The reason is because observations of MBL inevitably require the study of finite-size scaling~\cite{2015PhRvB..91h1103L}, and our current simulation while being extremely thorough and explicit, is exponentially slow to evaluate making evaluations of even $G(3)$ untenable.
 However, the intersection of time-dependent quantum mechanics and emergent phenomena such at MBL is an exciting direction that is pertinent to adiabatic quantum computing.
 
 
