@@ -239,6 +239,7 @@ As a result, the $\vec x$ and $\vec s$ map to the binary vector $\vec \Psi$ unde
 
 The integer linear optimization problem is then solved through the minimization of the quadratic objective function
 \begin{align}
+ \label{eq:ilp-slack-bit-energy}
  \chi^2(\vec \Psi)
  &=
  \vec c^T T_x \vec \Psi_x + p \left\| A T_s \vec \Psi_x + T_s \vec \Psi_s + \vec b \right\|^2
@@ -456,9 +457,9 @@ In this case the $Q_{xx}$ component of the QUBO, Eq.~\eqref{eq:qubo:components} 
 \label{sec:methods:ilp-qubo-comments}
 %----------------------------------------------------------------------------------------
 
-The minimal energy solution to Eq.~\eqref{eq:initial-ip-def} and Eq.~\eqref{eq:qubo-min} {\color{red}@chris what equation is this?} are exactly the same if the penalty term is larger than the energy gap of the first excited solution: $p > E_1 - E_0$.
+The minimal energy solution to Eq.~\eqref{eq:initial-ip-def} and Eq.~\eqref{eq:ilp-slack-bit-energy} are exactly the same if the penalty term is larger than the energy gap of the first excited solution: $p > E_1 - E_0$.
 Thus some knowledge of the problem is required.
-In principle, it is possible to set the penalty term arbitrarily large, at the cost of problem resolution: large values of For$p$ increase the highest available energy of the system by multiples of $p$.
+In principle, it is possible to set the penalty term arbitrarily large, at the cost of problem resolution: large values of For $p$ increase the highest available energy of the system by multiples of $p$.
 After normalization of the QUBO, this corresponds to decreasing the energy gap between the ground state and the first excited state.
 Thus, if solvers have finite precision, one must estimate reasonable values for $p$: for large $p$ more solutions fulfill the constraints, while for small $p$, more solutions minimize the objective function.
 
