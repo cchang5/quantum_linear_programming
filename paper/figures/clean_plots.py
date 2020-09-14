@@ -1,4 +1,6 @@
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 import seaborn as sns
 from qlpdb.data.models import Data as data_Data
 import pickle
@@ -16,6 +18,10 @@ p = dict()
 p["figsize"] = (7, 4)
 p["aspect_ratio"] = [0.15, 0.15, 0.8, 0.8]
 p["textargs"] = {"fontsize": 10}
+
+colorbar_label_all = ["-0.05w", "-0.04w", "-0.02w", "0.0", "-0.02s", "-0.04s"]
+colorbar_label = ["-0.05w", "0.0", "-0.05s"]
+
 
 red = "#E8606A"
 green = "#61C552"
@@ -44,9 +50,23 @@ os_alpha[0.05] = 1.0
 os_alpha[0.06] = 0.4
 os_alpha[0.07] = 0.2
 
+os_alpha = {key: 1.0 for key in [-0.07, -0.06, -0.05, -0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07]}
+
+OFFSETS = 0.01 * (np.arange(11) - 5)
+OFFSET_COLORS = sns.diverging_palette(0, 255, l=50, center="dark", n=11)
+OFFSET_COLORS2 = sns.diverging_palette(51, 204, l=50, center="dark", n=11)
+OFFSET_COLORS3 = sns.diverging_palette(102, 153, l=50, center="dark", n=11)
+
+OFFSET_MAP = dict(zip(OFFSETS, OFFSET_COLORS))
+OFFSET_MAP2 = dict(zip(OFFSETS, OFFSET_COLORS2))
+OFFSET_MAP3 = dict(zip(OFFSETS, OFFSET_COLORS3))
+
+OFFSET_CMAP = ListedColormap(OFFSET_COLORS)
+sns.palplot(OFFSET_COLORS)
+
 """
 ###################################
-#####  Simulation Data Class  #####
+#####  simulation Data Class  #####
 ###################################
 """
 
@@ -253,24 +273,28 @@ def getallspintheory(offset=0.0):
     prob = {states[idx]: state_prob[idx] for idx in range(2 ** 5)}
     return prob
 
-
-def plot_distribution():
-    offset = 0.01 * (np.arange(11) - 5)
+def plot_distribution(offset=OFFSETS):
     count_energy = {oi: getallspinconfig(offset=oi) for oi in offset}
-    count = {oi: {spin_energy[0]: count_energy[oi][spin_energy] for spin_energy in count_energy[oi]} for oi in
-             count_energy}
-    energy = {oi: {spin_energy[0]: spin_energy[1] for spin_energy in count_energy[oi]} for oi in count_energy}
-    print(count_energy)
+    count = {
+        oi: {
+            spin_energy[0]: count_energy[oi][spin_energy]
+            for spin_energy in count_energy[oi]
+        }
+        for oi in count_energy
+    }
+    energy = {
+        oi: {spin_energy[0]: spin_energy[1] for spin_energy in count_energy[oi]}
+        for oi in count_energy
+    }
     # Xlabel = [tuple([int(q) for q in list(format(i, '05b'))]) for i in range(2 ** 5)]
     # X = np.arange(2 ** 5)
     Xlabel = [(0, 1, 0, 0, 0), (1, 0, 0, 1, 0), (1, 1, 1, 1, 1)]
     X = np.array(range(len(Xlabel)))
 
-    plt.figure(figsize=p["figsize"])
+    fig = plt.figure(figsize=p["figsize"])
     ax = plt.axes(p["aspect_ratio"])
     for idx, os in enumerate(offset):
-        """ set X
-        """
+        """set X"""
         xdraw = X - 0.5 + idx / (len(offset) + 1) + 0.5 / (len(offset) + 1)
         width = 1 / (len(offset) + 1)
         """plot dwave result
@@ -281,34 +305,56 @@ def plot_distribution():
                 height.append(count[os][Xi])
             else:
                 height.append(0)
-        if os < 0:
-            color = green
-        elif os > 0:
-            color = yellow
-        else:
-            color = blue
-        ax.bar(x=xdraw, height=height, width=width, alpha=os_alpha[os], color=color, label=os, align="edge")
+        ax.bar(
+            x=xdraw,
+            height=height,
+            width=width,
+            color=OFFSET_COLORS[idx],
+            label="experiment" if idx == 6 else None,
+            zorder=1,
+            alpha=0.9,
+            align="edge",
+        )
         """plot simulation result
         """
+
         prob = getallspintheory(os)
-        print(prob)
         height = [prob[Xi] for Xi in Xlabel]
         if idx == len(offset) - 1:
-            label = "theory"
+            label = "simulation"
         else:
             label = None
-        ax.bar(x=xdraw, height=height, width=width, linewidth=1, color="none", edgecolor="k", align="edge", label=label)
+        ax.bar(
+            x=xdraw,
+            height=height,
+            width=width,
+            linewidth=1,
+            color="none",
+            edgecolor="k",
+            align="edge",
+            label=label,
+            zorder=2,
+        )
 
     """labels
     """
-    ax.set_xlabel("final state distribution (others are $\simeq 0$)", p["textargs"])
-    ax.set_ylabel("probability", p["textargs"])
+    ax.set_xlabel("final state distribution", p["textargs"])
+    ax.set_ylabel("ground state probability", p["textargs"])
     ax.set_xticks(X)
     ax.set_xticklabels(Xlabel, rotation="0")
 
-    plt.legend()
+    cax = fig.add_axes([0.7, 0.77, 0.21, 0.02])
+    cbar = mpl.colorbar.ColorbarBase(
+        cax,
+        cmap=OFFSET_CMAP,
+        norm=mpl.colors.Normalize(vmin=-0.05, vmax=0.05),
+        orientation="horizontal",
+        label="offset",
+    )
+    cax.set_xticklabels(colorbar_label)
+    ax.legend(bbox_to_anchor=(0.9, 0.98, 0.045, 0.01), fancybox=True, shadow=False, frameon=True, framealpha=0.3)
 
-    plt.savefig("../new_figures/final_state_distribution.pdf", transparent=True)
+    fig.savefig("../new_figures/final_state_distribution.pdf", transparent=True, )
 
 
 """
@@ -414,7 +460,7 @@ def degenfcn(n):
 
 
 def plot_all():
-    plt.figure(figsize=p["figsize"])
+    fig = plt.figure(figsize=p["figsize"])
     ax = plt.axes(p["aspect_ratio"])
     """dwave result
     """
@@ -422,28 +468,33 @@ def plot_all():
     graphsize = list(np.arange(2, 13))
     prob = {os: [getall(os, gs) for gs in graphsize] for os in offset}
     for os in offset:
-        if os < 0:
-            color = green
-        elif os > 0:
-            color = yellow
+        color = OFFSET_MAP[os]
+        if os == 0.0:
+            ax.errorbar(x=graphsize, y=prob[os], ls="-", marker="o", color=color, alpha=os_alpha[os], label="experiment")
         else:
-            color = 'k'
-        ax.errorbar(x=graphsize, y=prob[os], ls="-", marker="o", color=color, alpha=os_alpha[os], label=os)
+            ax.errorbar(x=graphsize, y=prob[os], ls="-", marker="o", color=color, alpha=os_alpha[os])
     """random guessing
     """
     degeneracy = np.array([degenfcn(Xi) for Xi in graphsize])
     rguess = np.array([1 / 2 ** xi for xi in graphsize]) * degeneracy
-    ax.errorbar(x=graphsize, y=rguess, ls="--", marker="o", color=blue, label="random")
+    ax.errorbar(x=graphsize, y=rguess, ls="--", marker="o", color=OFFSET_MAP2[0.05], label="random")
     """labels
     """
     ax.set_xlabel("graph size", p["textargs"])
     ax.set_ylabel("probability", p["textargs"])
 
-    plt.legend()
-    print(prob)
+    cax = fig.add_axes([0.7, 0.77, 0.21, 0.02])
+    cbar = mpl.colorbar.ColorbarBase(
+        cax,
+        cmap=OFFSET_CMAP,
+        norm=mpl.colors.Normalize(vmin=-0.05, vmax=0.05),
+        orientation="horizontal",
+        label="offset",
+    )
+    cax.set_xticklabels(colorbar_label)
+    ax.legend(bbox_to_anchor=(0.9, 0.98, 0.045, 0.01), fancybox=True, shadow=False, frameon=True, framealpha=0.3)
 
-    plt.savefig("../new_figures/DWave_scaling.pdf", transparent=True)
-
+    fig.savefig("../new_figures/DWave_scaling.pdf", transparent=True, )
 
 def plot_random_ratio():
     plt.figure(figsize=p["figsize"])
@@ -494,10 +545,12 @@ def gettdse(offset=0.0):
     return prob
 
 
-def gettdsetheory(offset=0.0, normalized_time = "[0, 1]", gamma_local = None):
+def gettdsetheory(offset=0.0, normalized_time = "[0, 1]", gamma_local = None, gamma=None):
     sim = Sim()
     if gamma_local is not None:
         sim.params["wave"]["gamma_local"] = gamma_local
+    if gamma is not None:
+        sim.params["wave"]["gamma"] = gamma
     query, sol, tdse = sim.get_data(offset, normalized_time)
     H = tdse._constructIsingH(np.array(tdse.ising["Jij"]), np.array(tdse.ising["hi"])).todense().tolist()
     eval, evec = eigh(H)
@@ -507,50 +560,58 @@ def gettdsetheory(offset=0.0, normalized_time = "[0, 1]", gamma_local = None):
 
 
 def plot_tdse():
-    plt.figure(figsize=p["figsize"])
+    fig = plt.figure(figsize=p["figsize"])
     ax = plt.axes(p["aspect_ratio"])
     """dwave result
     """
     # offset = list(0.01 * (np.arange(15) - 7))
     offset = list(0.01 * (np.arange(11) - 5))
     prob = [gettdse(os) for os in offset]
-    ax.errorbar(x=offset, y=prob, ls="--", marker="o", color=os_color["dwave"], label="DWave")
+    ax.errorbar(x=offset, y=prob, ls="-", marker="o", color=OFFSET_MAP2[0.0], label="experiment")
     """simulation result
     """
     offset = list(0.01 * (np.arange(11) - 5))
-    prob = [gettdsetheory(os) for os in offset]
-    ax.errorbar(x=offset, y=prob, ls="--", marker="o", color=os_color["sim"], label="theory")
+    prob = [gettdsetheory(os, normalized_time=[0.0, 1.0]) for os in offset]
+    ax.errorbar(x=offset, y=prob, ls="--", marker="o", color=OFFSET_MAP2[-0.05], label="simulation")
     """labels
     """
     ax.set_xlabel("offset", p["textargs"])
     ax.set_ylabel("probability", p["textargs"])
 
-    plt.legend()
-    plt.savefig("../new_figures/NN2_offset_scaling.pdf", transparent=True)
+    ax.set_xticklabels(colorbar_label_all, p["textargs"])
+
+
+    ax.legend(loc="best", fancybox=True, shadow=False, frameon=True, framealpha=0.3)
+    fig.savefig("../new_figures/NN2_offset_scaling.pdf", transparent=True)
 
 def plot_tdse_extended():
-    plt.figure(figsize=p["figsize"])
+    fig = plt.figure(figsize=p["figsize"])
     ax = plt.axes(p["aspect_ratio"])
     """simulation result
     """
     offset = list(0.01 * (np.arange(11) - 5))
 
-    prob = [gettdsetheory(os, normalized_time = [0.0, 1.0]) for os in offset]
-    ax.errorbar(x=offset, y=prob, ls="--", marker="o", color="k", alpha=0.5, label="default")
+    prob = [gettdsetheory(os, normalized_time = [-0.1, 1.1], gamma_local=0) for os in offset]
+    ax.errorbar(x=offset, y=prob, ls="-", marker="o", color=OFFSET_MAP[0.05], label="extended f.c. only")
 
     prob = [gettdsetheory(os, normalized_time = [-0.1, 1.1]) for os in offset]
-    ax.errorbar(x=offset, y=prob, ls="-", marker="o", color=red, alpha=0.5, label="extended")
+    ax.errorbar(x=offset, y=prob, ls="-", marker="o", color=OFFSET_MAP[-0.05], label="extended")
 
-    prob = [gettdsetheory(os, normalized_time = [-0.1, 1.1], gamma_local=0) for os in offset]
-    ax.errorbar(x=offset, y=prob, ls="-", marker="o", color=blue, alpha=0.5, label="extended f.c. only")
+    prob = [gettdsetheory(os, normalized_time = [0.0, 1.0]) for os in offset]
+    ax.errorbar(x=offset, y=prob, ls="--", marker="o", color=OFFSET_MAP2[-0.05], label="default")
+
+    prob = [gettdsetheory(os, normalized_time = [-0.1, 1.1], gamma=0) for os in offset]
+    ax.errorbar(x=offset, y=prob, ls="-", marker="o", color=OFFSET_MAP2[0.05], label="extended local only")
 
     """labels
     """
     ax.set_xlabel("offset", p["textargs"])
     ax.set_ylabel("probability", p["textargs"])
 
-    plt.legend()
-    plt.savefig("../new_figures/NN2_offset_scaling_extended.pdf", transparent=True)
+    ax.set_xticklabels(colorbar_label_all, p["textargs"])
+
+    ax.legend(loc="best", fancybox=True, shadow=False, frameon=True, framealpha=0.3)
+    fig.savefig("../new_figures/NN2_offset_scaling_extended.pdf", transparent=True)
 
 """
 ##################################
@@ -562,38 +623,82 @@ def plot_tdse_extended():
 def getannealcurve(offset=0.05, normalized_time=[0.0, 1.0]):
     sim = Sim()
     query, sol, tdse = sim.get_data(offset, normalized_time)
-    X = np.linspace(*query.offset["normalized_time"])
+    X = np.linspace(*query.offset["normalized_time"], 1000)
     yA = np.array([tdse.AS.A(Xi) for Xi in X])[:, 0]
     yB = np.array([tdse.AS.B(Xi) for Xi in X])[:, 0]
     return X, yA, yB
 
-
 def plot_annealcurve():
-    offset = [0.0, 0.05] #list(np.arange(6) / 100)
-    plt.figure(figsize=p["figsize"])
+    offset = [0.0, 0.05]
+    fig = plt.figure(figsize=p["figsize"])
     ax = plt.axes(p["aspect_ratio"])
     for os in offset:
         if os == 0:
-            label = 0.0
-            colorA = "k"
-            colorB = "k"
-            alpha = 1
+            colorA = OFFSET_MAP3[0.0]
+            colorB = OFFSET_MAP3[0.0]
         else:
-            label = f"$\pm${os}"
-            colorA = blue
-            colorB = blue
-            alpha = os_alpha[os]
-        s, yA, yB = getannealcurve(os, normalized_time=[-0.1, 1.1])
-        ax.errorbar(x=s, y=yA, color=colorA, alpha=alpha, marker="None", ls="-", label=label)
-        ax.errorbar(x=s, y=yB, color=colorB, alpha=alpha, marker="None", ls="-")
+            colorA = purple #OFFSET_MAP3[os]
+            colorB = purple #OFFSET_MAP3[-os]
+        s, yA, yB = getannealcurve(os, normalized_time=[0, 1])
+        if os == 0.05:
+            ax.errorbar(x=s, y=yA, color=colorA, marker="None", ls="--", label="$A(s)$")
+            ax.errorbar(x=s, y=yB, color=colorB, marker="None", ls="-", label=("$B(s)$"))
+        else:
+            ax.errorbar(x=s, y=yA, color=colorA, marker="None", ls="--")
+            ax.errorbar(x=s, y=yB, color=colorB, marker="None", ls="-")
     """labels
        """
-    ax.set_xlabel("annealing time $s$ ($\mu s$)", p["textargs"])
-    ax.set_ylabel("$A(s)$ and $B(s)$ (GHz)", p["textargs"])
+    ax.set_xlabel("annealing time $s$ [$\mu s$]", p["textargs"])
+    ax.set_ylabel("coefficient strength [GHz]", p["textargs"])
 
-    plt.legend(title="offset", loc=4)
-    plt.savefig("../new_figures/anneal_schedule_extended.pdf", transparent=True)
+    ax.legend(fancybox=True, shadow=False, frameon=True, framealpha=0.3, bbox_to_anchor=(0.8, 0.1, 0.045, 0.01))
+    #cax = fig.add_axes([0.7, 0.77, 0.21, 0.02])
+    #cbar = mpl.colorbar.ColorbarBase(
+    #    cax,
+    #    cmap=OFFSET_CMAP,
+    #    norm=mpl.colors.Normalize(vmin=-0.05, vmax=0.05),
+    #    orientation="horizontal",
+    #    label="offset",
+    #)
+    #cax.set_xticklabels([-0.05, 0.0])
 
+    fig.savefig("../new_figures/anneal_schedule.pdf", transparent=True)
+
+def plot_annealcurve_extended():
+    offset = [0.0, 0.05]
+    fig = plt.figure(figsize=p["figsize"])
+    ax = plt.axes(p["aspect_ratio"])
+    for os in offset:
+        if os == 0:
+            colorA = OFFSET_MAP3[0.0]
+            colorB = OFFSET_MAP3[0.0]
+        else:
+            colorA = purple #OFFSET_MAP3[os]
+            colorB = purple #OFFSET_MAP3[-os]
+        s, yA, yB = getannealcurve(os, normalized_time=[-0.1, 1.1])
+        if os == 0.05:
+            ax.errorbar(x=s, y=yA, color=colorA, marker="None", ls="--", label="$A(s)$")
+            ax.errorbar(x=s, y=yB, color=colorB, marker="None", ls="-", label=("$B(s)$"))
+        else:
+            ax.errorbar(x=s, y=yA, color=colorA, marker="None", ls="--")
+            ax.errorbar(x=s, y=yB, color=colorB, marker="None", ls="-")
+    """labels
+       """
+    ax.set_xlabel("annealing time $s$ [$\mu s$]", p["textargs"])
+    ax.set_ylabel("coefficient strength [GHz]", p["textargs"])
+
+    ax.legend(fancybox=True, shadow=False, frameon=True, framealpha=0.3, bbox_to_anchor=(0.8, 0.1, 0.045, 0.01))
+    #cax = fig.add_axes([0.7, 0.77, 0.21, 0.02])
+    #cbar = mpl.colorbar.ColorbarBase(
+    #    cax,
+    #    cmap=OFFSET_CMAP,
+    #    norm=mpl.colors.Normalize(vmin=-0.05, vmax=0.05),
+    #    orientation="horizontal",
+    #    label="offset",
+    #)
+    #cax.set_xticklabels([-0.05, 0.0])
+
+    fig.savefig("../new_figures/anneal_schedule_extended.pdf", transparent=True)
 
 """
 ########################################
@@ -615,28 +720,27 @@ def gettimedependentprobability(offset=0.05):
 
 def plot_timedepprob():
     offset = list(0.01 * (np.arange(11) - 5))[::-1]
-    plt.figure(figsize=p["figsize"])
+    fig = plt.figure(figsize=p["figsize"])
     ax = plt.axes(p["aspect_ratio"])
     for os in offset:
-        if os == 0.05:
-            color = red
-        elif os == -0.05:
-            color = "k"
-        elif os > 0:
-            color = yellow
-        elif os < 0:
-            color = green
-        else:
-            color = blue
         s, prob = gettimedependentprobability(os)
-        ax.errorbar(x=s, y=prob, color=color, alpha=os_alpha[os], marker="None", ls="-", label=os)
+        ax.errorbar(x=s, y=prob, color=OFFSET_MAP[os], marker="None", ls="-")
     """labels
     """
-    ax.set_xlabel("annealing time $s$ ($\mu s$)", p["textargs"])
+    ax.set_xlabel("annealing time $s$ [$\mu s$]", p["textargs"])
     ax.set_ylabel("probability", p["textargs"])
 
-    plt.legend(title="offset")
-    plt.savefig("../new_figures/time_dependent_probability.pdf", transparent=True)
+    #plt.legend(title="offset")
+    cax = fig.add_axes([0.7, 0.3, 0.21, 0.02])
+    cbar = mpl.colorbar.ColorbarBase(
+        cax,
+        cmap=OFFSET_CMAP,
+        norm=mpl.colors.Normalize(vmin=-0.05, vmax=0.05),
+        orientation="horizontal",
+        label="offset",
+    )
+    cax.set_xticklabels(colorbar_label)
+    fig.savefig("../new_figures/time_dependent_probability.pdf", transparent=True)
 
 
 def gettimedependentsz(offset=0.05):
@@ -672,7 +776,7 @@ def plot_timedepsz():
         ax.errorbar(x=s, y=sz, color=color, alpha=os_alpha[os], marker="None", ls="-", label=os)
     """labels
     """
-    ax.set_xlabel("annealing time $s$ ($\mu s$)", p["textargs"])
+    ax.set_xlabel("annealing time $s$ [$\mu s$]", p["textargs"])
     ax.set_ylabel("sz", p["textargs"])
 
     plt.legend(title="offset")
@@ -729,7 +833,7 @@ def getlevelspacing(offset=0.05):
     sim = Sim()
     query, sol, tdse = sim.get_data(offset)
     ngrid = 1000
-    fockn = tdse.Focksize
+    fockn = 3 #tdse.Focksize
     timegrid = np.linspace(0, 1, ngrid)
     r = np.zeros(ngrid)
     for i in range(ngrid):
@@ -752,8 +856,8 @@ def plot_levelspacing():
     sns.heatmap(all_levels, yticklabels=offset)
     # ax.legend()
     # plt.yscale("log")
-    # plt.savefig("../new_figures/levelspacing.pdf", transparent=True)
-    plt.show()
+    plt.savefig("../new_figures/levelspacing.pdf", transparent=True)
+    #plt.show()
 
 
 """
@@ -798,7 +902,7 @@ def plot_spectrum():
         #for es in [0]:  # gap:
         #    ax.errorbar(x=timegrid, y=gap[es], marker="None", ls="-")
         # ax.errorbar(x=timegrid, y=gap_density, marker="None", ls="-")
-        ax.set_xlabel("annealing time $s$ ($\mu s$)", **p["textargs"])
+        ax.set_xlabel("annealing time $s$ [$\mu s$]", **p["textargs"])
         ax.set_ylabel("dimensionless energy", **p["textargs"])
         plt.savefig(f"../new_figures/spectrum_{os}.pdf", transparent=True)
 
@@ -954,19 +1058,23 @@ if __name__ == "__main__":
     For DWave only
     """
     # plot_anneal_time() # this is not current, maybe drop this
-    # plot_all()
+    plot_all()
+
     #plot_random_ratio()
     # plot_dwave_mi()
     """
     For TDSE simulation
     """
-    #plot_tdse()
+    plot_tdse()
     plot_tdse_extended()
-    # plot_distribution()
-    #plot_annealcurve()
-    # plot_timedepprob()
+    plot_distribution()
+    plot_annealcurve()
+    plot_annealcurve_extended()
+    plot_timedepprob()
+
+
     # plot_hybridization()
     # plot_mi()
     # plot_timedepsz()
-    # plot_levelspacing()
+    #plot_levelspacing()
     #plot_spectrum()
