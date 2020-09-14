@@ -306,7 +306,7 @@ For the following studies, we perform experiments on the \texttt{DW\_2000Q\_6} s
 \end{figure}
 
 We explore one avenue towards improving the experiment results by introducing per-qubit annealing offsets into the time evolution.
-The results in yellow (green) delays the annealing of qubits subject to stronger (weaker) external fields. We observe improvement (diminishment) in the experimental results when qubits subject to stronger (weaker) final external fields are delayed in the anneal schedule, in agreement with the MBL hypothesis. The phenomena is observed across different problem sizes and hints at the possibility of a generic improvement strategy.
+The results in yellow (green) delays the annealing of qubits subject to stronger (weaker) external fields. We observe improvement (diminishment) in the experimental results when qubits subject to stronger (weaker) final external fields are delayed in the anneal schedule.
 
 
 %----------------------------------------------------------------------------------------
@@ -348,7 +348,7 @@ Additional insights of the simulation are given in Sec.~\ref{sec:methods:simulat
 
 The resulting probability of recovering the correct solution as a function of annealing offset is given in Fig.~\ref{fig:dwave1us}.
 We confirm that scaling with respect to offset from the simulation matches what is observed from experiment, and provides evidence suggesting that the improvements are related to quantum mechanics.
-An additional study where an extended annealing schedule is employed in the simulation which removes systematic errors introduced by annealing offsets and effects of local damping are presented in Sec.~\ref{sec:methods:annealing-schedule}, and further supports this observation.
+An additional study where an extended annealing schedule is employed in the simulation which removes systematic errors introduced by annealing offsets and effects of local damping are presented in Sec.~\ref{sec:methods:annealing-schedule}.
 
 \begin{figure}
 	\centering
@@ -359,14 +359,40 @@ An additional study where an extended annealing schedule is employed in the simu
 
 \ghissue{Decoherance study}{31}
 
-\subsection{Final Remarks}
-\label{sec:results:final}
-We would like to emphasize that while the annealing offsets are motivated by the MBL hypothesis, and the results also follow those expectations, we do not have definitive proof that MBL plays a crucial role.
-The reason is because observations of MBL inevitably require the study of finite-size scaling~\cite{2015PhRvB..91h1103L}, and our current simulation while being extremely thorough and explicit, is exponentially slow to evaluate making evaluations of even $G(3)$ untenable.
+%========================================================================================
+\section{DISCUSSION}
+\label{sec:discussion}
+%========================================================================================
+
+We have presented a general mapping for ILP problems to QUBO representations used by Quantum Annelears.
+We have tested this mapping's scaling in case of the MDS problem for line graphs $G(v)$.
+While the mapping outperforms random guessing for finding the optimal solution to the problem, the application of this problem in QA, for current hardware, is currently only successful for relatively small graphs.
+The applicability range depends more on the finite precision of matching the QUBO coefficients to hardware constraints and less from the qubit scaling itself.
+
+As this mapping comes with a tunable parameter, such constraints can be lifted in a problem-specific manner to extend the applicability (Sec.~\ref{sec:methods:ILP-on-DWave}).
+Furthermore, the same algorithm can be extended to quadratic constraint optimization problems (Sec.~\ref{sec:methods:ilp:quadratic}).
+
+We have also proposed a new annealing optimization scheme based on the MBL hypothesis--introducing offsets for delaying the anneal schedules of individual qubits based on the external magnetic field--which generally improves the probability of finding correct ground states of the system.
+This phenomenon is observed across different problem sizes and hints at the possibility of a generic improvement strategy.
+
+To further understand the nature of MBL inspired anneal schedule offset approach's origin, we simulate the Annealer for an MDS Problem G(2) graph.
+This simulation utilizes two decoherence models, local dampening and full-counting statistics, with three free parameters.
+We find that Annealing offsets lift the problems degeneracy and non-trivially, resulting in different, offset-based final state distributions.
+The final state distribution gives us a very sensitive observable to tune the simulation temperature, and agrees well with the experimental operating temperature.
+For the simulation to reproduce the experiments final state distribution, effects of full-counting statistics are required.
+For fixed simulation parameters, scaling concerning offset from the simulation matches what is observed from the experiment, which provides evidence suggesting that the improvements are related to quantum mechanics.
+
+Analyzing the effects of both the decoherence model individually (Sec.~\ref{sec:methods:annealing-schedule}), we observe in both cases that the overall scaling follows the story of the MBL hypothesis.
+Perhaps more importantly, we observe that a simulation without local decoherence, where the relaxation is dependent on precisely the instantaneous value of the external magnetic field, exhibits the same scaling as the experiment.
+This result suggests that our strategy for setting annealing offsets is improving the algorithm beyond the simple explanation of qubits freezing due to single-particle amplitude damping.
+The simulation with only amplitude damping does not fully capture the results of the experiment.
+We observe hints of a phase transition concerning offset (which may be considered some measure of disorder) when dynamical thermalization effects are removed.
+This observation is a tantalizing and strong evidence for the inclusion of the full-counting statistics model.
+
+We want to emphasize that while the annealing offsets are motivated by the MBL hypothesis, and the results also follow those expectations, we do not have definitive proof that MBL plays a crucial role.
+The reason is because observations of MBL inevitably require the study of finite-size scaling~\cite{2015PhRvB..91h1103L}, and our current simulation, while being extremely thorough and explicit, is exponentially slow to evaluate, making evaluations of even $G(3)$ untenable.
 However, the intersection of time-dependent quantum mechanics and emergent phenomena~\cite{Goldenfeld:1992qy} is an exciting direction that is pertinent to adiabatic quantum computing.
 
-
-\ghissue{Conclusion}{20}
 
 
 
@@ -451,18 +477,11 @@ In this case the $Q_{xx}$ component of the QUBO, Eq.~\eqref{eq:qubo:components} 
 \subsection{ILP on the DWave}
 \label{sec:methods:ILP-on-DWave}
 %----------------------------------------------------------------------------------------
-
-%----------------------------------------------------------------------------------------
-\subsubsection{Comment on ILP QUBO penalty term}
-\label{sec:methods:ilp-qubo-comments}
-%----------------------------------------------------------------------------------------
-
 The minimal energy solution to Eq.~\eqref{eq:initial-ip-def} and Eq.~\eqref{eq:ilp-slack-bit-energy} are exactly the same if the penalty term is larger than the energy gap of the first excited solution: $p > E_1 - E_0$.
 Thus some knowledge of the problem is required.
 In principle, it is possible to set the penalty term arbitrarily large, at the cost of problem resolution: large values of For $p$ increase the highest available energy of the system by multiples of $p$.
 After normalization of the QUBO, this corresponds to decreasing the energy gap between the ground state and the first excited state.
 Thus, if solvers have finite precision, one must estimate reasonable values for $p$: for large $p$ more solutions fulfill the constraints, while for small $p$, more solutions minimize the objective function.
-
 %----------------------------------------------------------------------------------------
 \subsubsection{Minor Embedding}
 \label{sec:methods:minor_embedding}
