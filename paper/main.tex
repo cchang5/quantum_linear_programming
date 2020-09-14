@@ -38,6 +38,7 @@
 \author{Christopher K\"orber}
 \affiliation{Institut f\"ur Theoretische Physik II, Ruhr-Universit\"at Bochum, D-44780 Bochum, Germany}
 \affiliation{Department of Physics, University of California, Berkeley, California 94720, USA}
+\affiliation{Nuclear Science Division, Lawrence Berkeley National Laboratory, Berkeley, California 94720, USA}
 \author{Travis~Humble}
 \affiliation{Quantum Computing Institute, Oak Ridge National Laboratory, Oak Ridge, Tennessee 37831, USA}
 \affiliation{Computational Sciences and Engineering, Oak Ridge National Laboratory, Oak Ridge, Tennessee, 37831, USA}
@@ -645,8 +646,15 @@ The final state distribution gives us a very sensitive observable to tune the si
 \section{DATA AVAILABILITY}
 \label{sec:open-source}
 %========================================================================================
+We provide access to all the software utilized and data presented in this publication in the associated GitHub repository \cite{github:cchang5/quantum_linear_programming}.
+The utilized software is contained in two installable Python modules:
+\begin{itemize}
+    \item[\texttt{qlp}] for mapping MDS problems to QUBOs and perfoming simulations,
+    \item[\texttt{qlpdb}] for interfacing and documenting simulation and experiment data through EspressoDB \cite{Chang:2019khk}.
+\end{itemize}
+The data itself is stored in a SQLite file and associated repository subdirectories.
+We provide further documentation in the repository readme file.
 
-\ghissue{Data availability}{21}
 
 %========================================================================================
 \section{ACKNOWLEDGEMENTS}
