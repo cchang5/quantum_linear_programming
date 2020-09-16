@@ -9,6 +9,7 @@
 \usepackage{bm,bbm}
 \usepackage{graphicx}
 \usepackage{xcolor}
+\usepackage{enumitem}
 
 \usepackage{hyperref}
 \hypersetup{
@@ -26,7 +27,7 @@
 
 
 \begin{document}
-\title{Integer Programming on Ising Spin-Glass}
+\title{Integer Programming from Quantum Annealing and Open Quantum Systems}
 
 \author{Chia~Cheng~Chang}
 \affiliation{RIKEN iTHEMS, Wako, Saitama 351-0198, Japan}
@@ -286,7 +287,9 @@ The slack components of this vector $\vec \Psi_s$ can be utilized to check if th
 \label{fig:linear}
 \end{figure}
 
-We demonstrate the proposed algorithm in order to obtain the MDS on a series of linear graphs $G(n)$ as shown in Fig.~\ref{fig:linear}. Details of the mapping of ILP to MDS is given in Sec.~\ref{sec:methods:mds-qubo}. This type of graph is chosen because the small number of nearest-neighbor connections is more efficiently embedded into the chimera graph allowing for scaling plots to be generated when using a DWave quantum annealer. Additionally the MDS solution is known analytically, and contains both unique and degenerate solutions. In particular, the domination number for $G(n)$ is $\lceil n/3 \rceil$ while the number of MDS solutions for $n$ vertices is
+We demonstrate the proposed algorithm in order to obtain the MDS on a series of linear graphs $G(n)$ as shown in Fig.~\ref{fig:linear}. This type of graph is chosen because the small number of nearest-neighbor connections is more efficiently embedded into the chimera graph allowing for scaling plots to be generated when using a DWave quantum annealer. In particular, the number of qubits required to solve MDS scales at worse as $n_V \log_2 n_V$ where $n_V$ is the number of vertices for a generic graph before minor embedding. Details of the mapping of ILP to MDS is given in Sec.~\ref{sec:methods:mds-qubo}.
+
+For the graph $G(n)$ the MDS solution is known analytically, and contains both unique and degenerate solutions. In particular, the domination number for $G(n)$ is $\lceil n/3 \rceil$ while the number of MDS solutions for $n$ vertices is
 \begin{align}
 &1 &&\textrm{if} && n\textrm{ mod }3=0,\nonumber \\
 &2\lfloor n/3 \rfloor + 1 && \textrm{if}&& n\textrm{ mod }3=1,\nonumber \\
@@ -334,6 +337,7 @@ In this work, we consider two types of decoherence models: full-counting statist
 The full-counting statistics term models the global decoherence to all the qubits due to the classical reservoir.
 The local damping term models the decoherence of each qubit independently.
 Details of the master equation are given in Sec.~\ref{sec:methods:lindblad}.
+Implementation of the anneal schedule and annealing offsets for the simulation are discussed in Sec.~\ref{sec:methods:annealing-schedule}.
 
 The graph $G(2)$ has the interesting feature of having a degenerate ground state depending on whether qubit 0 or 1 is chosen to be the MDS solution.
 This degeneracy is reflected in the experimental result and provides a non-trivial benchmark for our simulation.
@@ -344,11 +348,11 @@ The simulation (black) captures main features of the experimental result: 1) sig
 Within the broken symmetry, the non-degenerate ground state switches between the two states depending on which qubit group is delayed. At zero offset, a slight asymmetry exists in the simulation because the Hamiltonian is only degenerate at the last moment, while the DWave is also subject to sampling bias~\cite{2016PhRvA..93e2320K, 2017PhRvL.118g0502M}.
 
 This result can be obtained by tuning three free parameters: the simulation temperature to the order of 10 milliKelvin, and the two coefficients of the two decoherence models at the order of 1 to 10 $ns$. These values are consistent with the reported DWave operating temperature~\cite{dwave_temp} and coherence times for flux qubits~\cite{2003Sci...299.1869C}.
-Additional insights of the simulation are given in Sec.~\ref{sec:methods:simulation_details}.
+Additional insights of the simulation are given in Sec.~\ref{sec:discussion:time_evolution}.
 
 The resulting probability of recovering the correct solution as a function of annealing offset is given in Fig.~\ref{fig:dwave1us}.
 We confirm that scaling with respect to offset from the simulation matches what is observed from experiment, and provides evidence suggesting that the improvements are related to quantum mechanics.
-An additional study where an extended annealing schedule is employed in the simulation which removes systematic errors introduced by annealing offsets and effects of local damping are presented in Sec.~\ref{sec:methods:annealing-schedule}, and further supports this observation.
+An additional study where an extended annealing schedule is employed in the simulation which removes systematic errors introduced by annealing offsets and effects of local damping are presented in Sec.~\ref{sec:discussion:idealqa}, and further supports this observation.
 
 \begin{figure}
 	\centering
@@ -357,18 +361,60 @@ An additional study where an extended annealing schedule is employed in the simu
 	\label{fig:final_state_distribution}
 \end{figure}
 
-\ghissue{Decoherance study}{31}
+
+\section{Discussion}
+
+\subsection{Dynamics of Time Evolution}
+\label{sec:discussion:time_evolution}
+
+ The time-dependent overlap with the exact Ising ground state is shown in Fig.~\ref{fig:td_prob} from applying the simulator to $G(2)$. We observe for all cases that the system undergoes what is analogous to a magnetic phase transition around $s\sim 0.4$.
+After the phase transition, we are able to confirm that the system collapses to effectively a classical state in the sense that the density matrix becomes a diagonal matrix.
+The steady increase in probability after the phase transition is a sensitive balance between the competing effects between full-counting statistics and local damping.
+In our example, full-counting statistics is tuned to be slightly stronger, resulting in what amounts to a final thermal annealing step.
+If local damping is relatively stronger, then the probability after the phase transition will slowly decrease as the system decoheres into its local ground state.
+While we believe both effects are important in DWave, the experimental results are not precise enough for us to conclude which is the dominant effect.
+We emphasize however, that the simulation suggests that the ground state is recovered predominantly due to the quantum phase transition.
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\columnwidth]{./new_figures/time_dependent_probability.pdf}
+	\caption{Time-dependent probability for resolving the ground state for simulation results presented in Sec.~\ref{sec:results:simulation}. Different offsets are labeled in the same way as Fig.~\ref{fig:baseline}.}
+	\label{fig:td_prob}
+\end{figure}
+
+Finally, we comment that in order for the simulation to obtain the final state distribution shown in Fig.~\ref{fig:final_state_distribution}, effects of full-counting statistics are required.
+Absent some dynamical thermalization effect, the $G(2)$ problem is too small such that at a total annealing time of 1$\mu s$, the annealing offsets lift the ground state degeneracy by an amount such that diabatic transitions are absent, and the simulation is populated predominantly by the unique ground state.
+The final state distribution gives us a very sensitive observable to tune the simulation temperature, and agrees well with the experimental operating temperature.
+
+
+\subsection{Idealized Quantum Annealing}
+\label{sec:discussion:idealqa}
+
+\begin{figure*}
+    \centering
+	\begin{tabular}{p{0.5\textwidth}p{0.5\textwidth}}
+	\includegraphics[width=0.5\textwidth]{./new_figures/anneal_schedule_extended.pdf}
+    &
+	\includegraphics[width=0.5\textwidth]{./new_figures/NN2_offset_scaling_extended.pdf}\\
+	\centering \textbf{a} & \centering \textbf{b}
+	\end{tabular}
+	\centering
+	\caption{Extended annealing schedule and simulation result. \textbf{a)} The annealing time is increased by 10\% at both the start and end, and the initial values of $A(s)$ and $B(s)$ at non-zero offset are also not extrapolated in comparison to Fig.~\ref{fig:anneal_schedule}. Therefore, the initial and final Hamiltonian are no longer suffer systematic error at non-zero offset. \textbf{b)} The default (dashed yellow) result is one presented in Fig.~\ref{fig:dwave1us}. Results from extended schedules are presented shown with solid lines with full-counting statistics and amplitude damping (red), only full-counting-statistics (blue), and only amplitude damping (green).
+    }
+	\label{fig:anneal_schedule_ext}
+\end{figure*}
+
+In the simulation, we also reserve the ability to remove the systematic errors by extending the annealing schedule as shown by the red data points in Fig.~\ref{fig:anneal_schedule_ext}. With the extended schedule, all qubits start and end with the same values of $A$ and $B$ and faithfully preserves the initial and final Hamiltonians. The dependence on offset for $G(2)$ (Fig.~\ref{fig:dwave1us}) remains the same under the extended anneal schedule (Fig.~\ref{fig:anneal_schedule_ext}), confirming that the behavior is not a systematic artifact.
+
+The quantum system can be further idealized by including only the full-counting statistics model (blue), or local decoherence (green). We observe in both cases that the overall scaling follows the story of the MBL hypothesis. Perhaps more importantly, we observe that a simulation without local decoherence, where the relaxation is dependent on precisely the instantaneous value of $|h_i|$, exhibits the same scaling as experiment. This result suggests that our strategy for setting annealing offsets is improving the algorithm beyond the simple explanation of qubits freezing due to single-particle amplitude damping. In fact, the simulation with only amplitude damping (green) does not fully capture the results of the experiment. We observe hints of a phase transition with respect to offset (which may be thought of as some measure of disorder) when dynamical thermalization effects are removed. This is a tantalizing observation, and also is strong evidence for the inclusion of the full-counting statistics model.
+
+It unfortunately does not make much sense to remove all decoherence models for the $G(2)$ graph for an anneal time of $1\mu s$ since all probabilities go to unity.
 
 \subsection{Final Remarks}
 \label{sec:results:final}
 We would like to emphasize that while the annealing offsets are motivated by the MBL hypothesis, and the results also follow those expectations, we do not have definitive proof that MBL plays a crucial role.
 The reason is because observations of MBL inevitably require the study of finite-size scaling~\cite{2015PhRvB..91h1103L}, and our current simulation while being extremely thorough and explicit, is exponentially slow to evaluate making evaluations of even $G(3)$ untenable.
 However, the intersection of time-dependent quantum mechanics and emergent phenomena~\cite{Goldenfeld:1992qy} is an exciting direction that is pertinent to adiabatic quantum computing.
-
-
-\ghissue{Conclusion}{20}
-
-
 
 
 %========================================================================================
@@ -584,28 +630,9 @@ which has a doubly-degenerate ground state of $(0, 1, 1)$ and $(1, 0, 1)$. An an
 
 We confirm that with different combinations of annealing offsets, the degeneracy is lifted on the DWave results as expected by solving for the modified problem Hamiltonian spectrum, as well as dialing in annealing offset in the simulation of this three qubit test case.
 
-\begin{figure*}
-    \centering
-	\begin{tabular}{p{0.5\textwidth}p{0.5\textwidth}}
-	\includegraphics[width=0.5\textwidth]{./new_figures/anneal_schedule_extended.pdf}
-    &
-	\includegraphics[width=0.5\textwidth]{./new_figures/NN2_offset_scaling_extended.pdf}\\
-	\centering \textbf{a} & \centering \textbf{b}
-	\end{tabular}
-	\centering
-	\caption{Extended annealing schedule and simulation result. \textbf{a)} The annealing time is increased by 10\% at both the start and end, and the initial values of $A(s)$ and $B(s)$ at non-zero offset are also not extrapolated in comparison to Fig.~\ref{fig:anneal_schedule}. Therefore, the initial and final Hamiltonian are no longer suffer systematic error at non-zero offset. \textbf{b)} The default (dashed yellow) result is one presented in Fig.~\ref{fig:dwave1us}. Results from extended schedules are presented shown with solid lines with full-counting statistics and amplitude damping (red), only full-counting-statistics (blue), and only amplitude damping (green).
-    }
-	\label{fig:anneal_schedule_ext}
-\end{figure*}
-
-In the simulation, we also reserve the ability to remove the systematic errors by extending the annealing schedule as shown by the red data points in Fig.~\ref{fig:anneal_schedule_ext}. With the extended schedule, all qubits start and end with the same values of $A$ and $B$ and faithfully preserves the initial and final Hamiltonians. The dependence on offset for $G(2)$ (Fig.~(\ref{fig:dwave1us})) remains the same under the extended anneal schedule (Fig.~\ref{fig:anneal_schedule_ext}), confirming that the behavior is not a systematic artifact.
-
-The quantum system can be further idealized by including only the full-counting statistics model (blue), or local decoherence (green). We observe in both cases that the overall scaling follows the story of the MBL hypothesis. Perhaps more importantly, we observe that a simulation without local decoherence, where the relaxation is dependent on precisely the instantaneous value of $|h_i|$, exhibits the same scaling as experiment. This result suggests that our strategy for setting annealing offsets is improving the algorithm beyond the simple explanation of qubits freezing due to single-particle amplitude damping. In fact, the simulation with only amplitude damping (green) does not fully capture the results of the experiment. We observe hints of a phase transition with respect to offset (which may be thought of as some measure of disorder) when dynamical thermalization effects are removed. This is a tantalizing observation, and also is strong evidence for the inclusion of the full-counting statistics model.
-
-It unfortunately does not make much sense to remove all decoherence models for the $G(2)$ graph for an anneal time of $1\mu s$ since all probabilities go to unity.
 
 %----------------------------------------------------------------------------------------
-\subsubsection{Other Simulation Details}
+\subsubsection{Pure Transverse Field Simulation}
 \label{sec:methods:simulation_details}
 %----------------------------------------------------------------------------------------
 To check the correctness of simulator and unit conversion, we tested a simple annealing schedule for pure transverse field, i.e. $A(s)=A(0)$ and $B(s)=0$.
@@ -622,60 +649,46 @@ For annealing time $T=1/A(0)$, we expect to see perfect one-period oscillation. 
 	\label{figcheck}
 \end{figure}
 
-Next, the simulator is applied to the $G(2)$ problem and the result is summarized in Fig.~\ref{fig:td_prob} where the time-dependent overlap with the exact Ising ground state is shown. We observe for all cases that the system undergoes what is analogous to a magnetic phase transition around $s\sim 0.4$.
-After the phase transition, we are able to confirm that the system collapses to effectively a classical state in the sense that the density matrix becomes a diagonal matrix.
-The steady increase in probability after the phase transition is a sensitive balance between the competing effects between full-counting statistics and local damping.
-In our example, full-counting statistics is tuned to be slightly stronger, resulting in what amounts to a final thermal annealing step.
-If local damping is relatively stronger, then the probability after the phase transition will slowly decrease as the system decoheres into its local ground state.
-While we believe both effects are important in DWave, the experimental results are not precise enough for us to conclude which is the dominant effect.
-We emphasize however, that the simulation suggests that the ground state is recovered predominantly due to the quantum phase transition.
-
-\begin{figure}
-	\centering
-	\includegraphics[width=\columnwidth]{./new_figures/time_dependent_probability.pdf}
-	\caption{Time-dependent probability for resolving the ground state for simulation results presented in Sec.~\ref{sec:results:simulation}. Different offsets are labeled in the same way as Fig.~\ref{fig:baseline}.}
-	\label{fig:td_prob}
-\end{figure}
-
-Finally, we comment that in order for the simulation to obtain the final state distribution shown in Fig.~\ref{fig:final_state_distribution}, effects of full-counting statistics are required.
-Absent some dynamical thermalization effect, the $G(2)$ problem is too small such that at a total annealing time of 1$\mu s$, the annealing offsets lift the ground state degeneracy by an amount such that diabatic transitions are absent, and the simulation is populated predominantly by the unique ground state.
-The final state distribution gives us a very sensitive observable to tune the simulation temperature, and agrees well with the experimental operating temperature.
-
-
 
 %========================================================================================
 \section{DATA AVAILABILITY}
 \label{sec:open-source}
 %========================================================================================
-We provide access to all the software utilized and data presented in this publication in the associated GitHub repository \cite{github:cchang5/quantum_linear_programming}.
+We provide access to all the software utilized and data presented in this publication in the associated GitHub repository~\cite{github:cchang5/quantum_linear_programming}.
 The utilized software is contained in two installable Python modules:
-\begin{itemize}
-    \item[\texttt{qlp}] for mapping MDS problems to QUBOs and perfoming simulations,
-    \item[\texttt{qlpdb}] for interfacing and documenting simulation and experiment data through EspressoDB \cite{Chang:2019khk}.
+\begin{itemize}[leftmargin=*]
+    \itemsep0em
+    \item[] \texttt{qlp} for mapping MDS problems to QUBOs and performing simulations,
+    \item[] \texttt{qlpdb} for interfacing and documenting simulation and experiment data through EspressoDB~\cite{Chang:2019khk}.
 \end{itemize}
 The data itself is stored in a SQLite file and associated repository subdirectories.
-We provide further documentation in the repository readme file.
+We provide further documentation in the repository \texttt{readme} file.
 
 
 %========================================================================================
 \section{ACKNOWLEDGEMENTS}
 %========================================================================================
 
-\ghissue{Acknowledgements}{22}
-
 We thank Long Gang Pang for initial discussions.
 We thank David Johnson, Vlad Papish and the rest of D-Wave Support for answering detailed questions about the D-Wave annealer.
+
+This material is based upon work supported by the U.S. Department of Energy, Office of Science, Office of Nuclear Physics, Quantum Horizons: QIS Research and Innovation for Nuclear Science under Award Number FWP-NQISCCAWL.
+Lawrence Berkeley National Laboratory (LBNL) is operated by The Regents of the University of California (UC) for the U.S. Department of Energy (DOE) under Federal Prime Agreement DE-AC02-05CH11231.
+This research used resources of the Oak Ridge Leadership Computing Facility at the Oak Ridge National Laboratory, which is supported by the Office of Science of the U.S. Department of Energy under Contract No. DE-AC05-00OR22725.
 C.K. gratefully acknowledges funding through the Alexander von Humboldt Foundation through a Feodor Lynen Research Fellowship.
+
 
 %========================================================================================
 \section{AUTHOR CONTRIBUTIONS}
 %========================================================================================
 
 Initial idea was proposed by Chang.
+Ostrowski guided the ILP problem selection.
 All authors contributed to the design of test cases.
-Ostrowski guided the ILP problem selection and Humble guided D-Wave related efforts.
-Calculations on the D-Wave were performed  by Chang and K\"orber.
-Numerical simulations were performed by Chen, Chang, and K\"orber.
+Calculations and code development for the D-Wave were performed by Chang and K\"orber.
+Code for numerical simulations was developed by Chen and K\"orber, and cross-checked by Chang.
+Simulations were performed by Chang and Chen.
+Chang, Chen, K\"orber, and Humble interpreted the results.
 All authors contributed to writing and editing of the final manuscript.
 
 %========================================================================================
@@ -686,7 +699,6 @@ All authors contributed to writing and editing of the final manuscript.
 
 \bibliographystyle{apsrev4-1}
 \bibliography{qilp}
-\ghissue{References}{24}
 %========================================================================================
 
 \end{document}
