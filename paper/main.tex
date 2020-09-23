@@ -41,7 +41,6 @@
 \affiliation{Department of Physics, University of California, Berkeley, California 94720, USA}
 \affiliation{Nuclear Science Division, Lawrence Berkeley National Laboratory, Berkeley, California 94720, USA}
 \author{Travis~Humble}
-\affiliation{Quantum Computing Institute, Oak Ridge National Laboratory, Oak Ridge, Tennessee 37831, USA}
 \affiliation{Computational Sciences and Engineering, Oak Ridge National Laboratory, Oak Ridge, Tennessee, 37831, USA}
 \author{Jim~Ostrowski}
 \affiliation{Industrial and Systems Engineering, University of Tennessee, Knoxville, Tennessee 37996, USA}
@@ -97,8 +96,8 @@ subject to
 \end{align}
 where $i=1, \cdots,  N$ is the number of dependent variables and $a=1, \cdots, M$ the number of constraint equations.
 
-ILP is a commonly tackled problem applicable to situations such as {\color{red} x~\cite{}, y~\cite{}, and the Minimum Dominating Set Problem (MDS)~\cite{}}.
-In general, ILP is classically NP-complete, and as a result, heuristic methods are employed~{\color{red}\cite{}}.
+ILP is a commonly tackled problem applicable to situations such as scheduling, network optimization, and graph optimization such as the Minimum Dominating Set Problem (MDS).
+In general, ILP is classically NP-complete, and as a result, heuristic methods are employed~\cite{GLOVER1986533, doi:10.1287/ijoc.1.3.190, doi:10.1287/ijoc.2.1.4}.
 Standard classical heuristic algorithms employ a greedy scheme which iteratively approximates optimal solutions--starting from a random initial guess, these algorithms apply locally optimal choices at each step.
 The NP-hardness of ILP can be understood by realizing that while the solution to an $n$-dimensional linear problem can be obtained in polynomial time, the optimal integer solution in general must be found in the $2^n$ integer solutions which surround the real number solution.
 While greedy algorithms do not guarantee optimal global solutions, they find approximate solutions in polynomial time, which can be utilized in further computations.
@@ -113,7 +112,7 @@ The domination number of $D$ is given by the cardinality of $|D| \equiv \overlin
 The Minimum Dominating Set (MDS) is defined by $D$ with the smallest domination number.
 Fig.~\ref{fig:dominating_sets}c shows an example of the minimum dominating set of $G(V, E)$ and is different from the minimal dominating set.
 We emphasize that while the maximum independent set is always a minimal dominating set as exemplified by Fig.~\ref{fig:dominating_sets}b, the minimum dominating set, in general, can have a smaller domination number.
-As a result, the solution to the dominating set problem can not be obtained by solving for the maximum independent set, a well-studied problem for quantum annealers~{\color{red}\cite{}}.
+As a result, the solution to the dominating set problem can not be obtained by solving for the maximum independent set, a well-studied problem for quantum annealers.
 
 \begin{figure*}
 	\centering
@@ -132,21 +131,20 @@ As a result, the solution to the dominating set problem can not be obtained by s
 For general graphs, existing algorithms on classical computers find MDS solutions in exponential time $\sim O( 1.5^n)$ \cite{Fomin2009, vanRooij2009} or approximate solutions in polynomial time. For example, greedy algorithms locally optimize decisions about which nodes to add to the dominating set.
 Thus one is guaranteed to find a dominating set but not necessarily an MDS.
 
-Due to the importance and difficulty in this work, we present a method to obtain optimal solutions to ILP by employing quantum annealing methods.
+We present a method to obtain optimal solutions to ILP by employing quantum annealing methods.
 
-Quantum annealing solves a general quadratic binary optimization problem (QUBO) by slowly varying a time-dependent Hamiltonian~\cite{1998PhRvE..58.5355K, 2000quant.ph..1106F, RevModPhys.80.1061}.
+Current implementations of quantum annealing solves the quadratic binary optimization problem (QUBO) by slowly varying a time-dependent Hamiltonian~\cite{1998PhRvE..58.5355K, 2000quant.ph..1106F, RevModPhys.80.1061}.
 Through the adiabatic theorem of quantum mechanics, the annealer is initially prepared in a trivial ground state while the final Hamiltonian encodes the solution to the ILP.
 Due to the explosion in research efforts towards hardware implementations of quantum annealers and future improvements to the annealing schedule~\cite{doi:10.7566/JPSJ.89.044001}, mapping ILP to QUBO provides a path forward towards obtaining optimal solutions to the class of integer optimization problems~\cite{2018Glover}.
 
-A quantum annealer evolves the ground state of an initial Hamiltonian into the problems Hamiltonian's ground state by adiabatically changing the hardware that implements Hamiltonian.
-Thus, the implemented Hamiltonian is explicitly time dependent
+In the simplest model for quantum annealing, the pure state of a quantum system evolves adiabatically to prepare an eigenstate of the encoded problem Hamiltonian. The time-dependent Hamiltonian is given as
 \begin{equation}
  H(t) = A(t) H^{\textrm{init}} + B(t) H^{\textrm{problem}}, \label{eq:tdhamiltonian}
 \end{equation}
-and $H^\textrm{init}=\sum_i\sigma^x_i$ on the DWave, while $H^\textrm{problem}$ encodes the problem to be solved.
+and $H^\textrm{init}=-\sum_i\sigma^x_i$ on the DWave, while $H^\textrm{problem}$ encodes the problem to be solved. In practice, and as discussed in Sec.~\ref{sec:methods:lindblad}, modeling dynamics that arise during quantum annealing requires a more robust description of the thermally populated mixed quantum states and the open dynamical processes that govern population of the sought-after eigenstate.
 
 In this paper, we propose an algorithm that maps ILP problems to QUBO.
-This is achieved by the introduction of slack variables $s$ which turn the inequalities Eq.~\eqref{eq:ilp-constraints} to equalities
+This is achieved by the introduction of slack variables $s_a$ which turns the inequalities Eq.~\eqref{eq:ilp-constraints} to equalities
 \begin{align}
   \label{eq:ilp:slack}
   & \sum_i A_{a i}x_i + s_a + b_a = 0, \\
@@ -155,18 +153,17 @@ This is achieved by the introduction of slack variables $s$ which turn the inequ
 While the coefficients of the inequality constraints are not required to be integer valued, the inequalities can be trivially rescaled such that $s_i \in \mathbbm{Z}$ given fixed precision coefficients $A_{ij}$ and $b_i$.
 Furthermore, this formalism can be generalized to constrained quadratic optimizations \ref{sec:methods:ilp:quadratic}.
 
-We further improve the quantum annealer's performance by utilizing annealing offsets, which effectively delays the annealing schedule on a per-qubit basis~\cite{PhysRevA.96.042322,hsu2018quantum,10.1007/978-3-030-14082-3_14}.
+We improve the quantum annealer's performance by utilizing annealing offsets, which effectively delays the annealing schedule on a per-qubit basis~\cite{PhysRevA.96.042322,hsu2018quantum,10.1007/978-3-030-14082-3_14}.
 Converting to the Ising representation of the the problem Hamiltonian,
 \begin{equation}
     \label{eq:HIsing}
      H^{\textrm{Ising}} = \sum_{ij} J_{ij} \sigma^z_i \sigma^z_j + \sum_i h_i \sigma^z_i ,
 \end{equation}
-we can recognize that Eq.~(\ref{eq:HIsing}) exhibits spin-glass properties. More specifically, if the $h_i$ coefficients are randomly drawn from a Bernoulli distribution, one expects spin-localization behavior to influence the outcome of the anneal.
+we recognize that Eq.~(\ref{eq:HIsing}) exhibits spin-glass properties. More specifically, if the $h_i$ coefficients are randomly drawn from a Bernoulli distribution, one expects spin-localization behavior to influence the outcome of the anneal.
 In the case of quantum annealing, when an algorithm is mapped to its Ising representation, the values of $h_i$ will frequently take on various values, mimicking spin-glass like behavior.
 More explicitly, the spin-glass enters a glassy state when more disorder is introduced ($|h_i|$ becomes large), and as a consequence, the wavefunction experiences Many-Body Localization (MBL) effects, the many-body analog of Anderson Localization~\cite{doi:10.1146/annurev-conmatphys-031214-014726,PhysRevE.90.022103,RevModPhys.91.021001,ALET2018498,PhysRevB.82.174411,PhysRevLett.109.017202}.
 
 Our improvement strategy is motivated by the MBL hypothesis.
-That is, we want the system to be ergodic and avoid the MBL phase.
 As a result, we employ a modified annealing schedule which relies on partitioning the Hamiltonian into regions of relatively weak and strong external magnetic fields.
 
 
@@ -674,8 +671,10 @@ We thank David Johnson, Vlad Papish and the rest of D-Wave Support for answering
 
 This material is based upon work supported by the U.S. Department of Energy, Office of Science, Office of Nuclear Physics, Quantum Horizons: QIS Research and Innovation for Nuclear Science under Award Number FWP-NQISCCAWL.
 Lawrence Berkeley National Laboratory (LBNL) is operated by The Regents of the University of California (UC) for the U.S. Department of Energy (DOE) under Federal Prime Agreement DE-AC02-05CH11231.
-This research used resources of the Oak Ridge Leadership Computing Facility at the Oak Ridge National Laboratory, which is supported by the Office of Science of the U.S. Department of Energy under Contract No. DE-AC05-00OR22725.
 C.K. gratefully acknowledges funding through the Alexander von Humboldt Foundation through a Feodor Lynen Research Fellowship.
+This work used resources of the Oak Ridge Leadership Computing Facility, which is a DOE Office of Science User Facility supported under Contract DE-AC05-00OR22725.
+This manuscript has been authored by UT-Battelle, LLC under Contract No. DE-AC05-00OR22725 with the U.S. Department of Energy.
+The United States Government retains and the publisher, by accepting the article for publication, acknowledges that the United States Government retains a non-exclusive, paid-up, irrevocable, world-wide license to publish or reproduce the published form of this manuscript, or allow others to do so, for United States Government purposes. The Department of Energy will provide public access to these results of federally sponsored research in accordance with the DOE Public Access Plan. (http://energy.gov/downloads/doe-public-access-plan).
 
 
 %========================================================================================
