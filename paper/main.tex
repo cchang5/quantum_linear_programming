@@ -217,6 +217,7 @@ If all variables are represented by the same number of qubits--$R_i$ is a consta
 
 As a result, the $\vec x$ and $\vec s$ map to the binary vector $\vec \Psi$ under the transformation
 \begin{equation}
+    \label{eq:bit-vector-mapping}
     \begin{pmatrix}
         \vec x \\ \vec s
     \end{pmatrix}
@@ -268,7 +269,7 @@ The integer solution to the original ILP is computed by $\vec x^{(0)} = T_x \vec
 The slack components of this vector $\vec \Psi_s$ can be utilized to check if the constraints are indeed fulfilled.
 
 %----------------------------------------------------------------------------------------
-\subsection{Application to the Dominating Set}
+\subsection{Annealer Results for the Dominating Set}
 \label{sec:results:qa}
 %----------------------------------------------------------------------------------------
 \begin{figure}[b]
@@ -281,7 +282,7 @@ The slack components of this vector $\vec \Psi_s$ can be utilized to check if th
 \label{fig:linear}
 \end{figure}
 
-We demonstrate the proposed algorithm in order to obtain the MDS on a series of linear graphs $G(n)$ as shown in Fig.~\ref{fig:linear}. This type of graph is chosen because the small number of nearest-neighbor connections is more efficiently embedded into the chimera graph allowing for scaling plots to be generated when using a D-Wave quantum annealer. In particular, the number of qubits required to solve MDS scales at worse as $n_V \log_2 n_V$ where $n_V$ is the number of vertices for a generic graph before minor embedding. Details of the mapping of ILP to MDS is given in Sec.~\ref{sec:methods:mds-qubo}.
+We demonstrate the proposed algorithm in order to obtain the MDS on a series of linear graphs $G(n)$, as shown in Fig.~\ref{fig:linear}. This type of graph is chosen because the small number of nearest-neighbor connections is more efficiently embedded into the chimera graph, allowing scaling plots to be generated when using a D-Wave quantum annealer. In particular, the number of qubits required to solve MDS scales at worse as $n_V \log_2 n_V$ where $n_V$ is the number of vertices for a generic graph before minor embedding. Details of the mapping of ILP to MDS is given in Sec.~\ref{sec:methods:mds-qubo}.
 
 For the graph $G(n)$ the MDS solution is known analytically, and contains both unique and degenerate solutions. In particular, the domination number for $G(n)$ is $\lceil n/3 \rceil$ while the number of MDS solutions for $n$ vertices is
 \begin{align}
@@ -291,7 +292,7 @@ For the graph $G(n)$ the MDS solution is known analytically, and contains both u
 \end{align}
 and gives the probability of randomly guessing the MDS of $G(n)$.
 
-For even the smallest graph $G(2)$, the MDS problem is not native to the chimera graph and must be embedded. Following the hypothesis of MBL, we therefore, must look at the values of $h_i$ after embedding. The qubits then split into two groups depending on the value of $h_i$ relative to $(\textrm{max}|\{h\}| + \textrm{min}|\{h\}|) / 2$ given the set of external magnetic fields $\{h\}$ defined by a specific embedding. Further detail is given in Sec.~\ref{sec:methods:minor_embedding}. We study the effects of delaying the anneal schedule of one group of qubits over the other and present the results of this study is shown in Fig.~\ref{fig:baseline}.
+For even the smallest graph $G(2)$, the MDS problem is not native to the chimera graph and must be embedded. Following the hypothesis of MBL, we, therefore, must look at the values of $h_i$ after embedding. The qubits split into two groups depending on the value of $h_i$ relative to $(\textrm{max}|\{h\}| + \textrm{min}|\{h\}|) / 2$ given the set of external magnetic fields $\{h\}$ defined by a specific embedding. Further detail is given in Sec.~\ref{sec:methods:minor_embedding}. We study the effects of delaying the anneal schedule of one group of qubits over the other and present the results of this study is shown in Fig.~\ref{fig:baseline}.
 
 For the following studies, we perform experiments on the \texttt{DW\_2000Q\_6} solver. The annealing time is set to 500$\mu$s after performing a study on various annealing times the $G(6)$ graph. The black line (offset$=0.0$) in Fig.~\ref{fig:baseline} shows results from the baseline experiment, without modification to the D-Wave annealing schedule, and observe improvement over random guessing (dashed green).
 
@@ -303,15 +304,15 @@ For the following studies, we perform experiments on the \texttt{DW\_2000Q\_6} s
 \end{figure}
 
 We explore one avenue towards improving the experiment results by introducing per-qubit annealing offsets into the time evolution.
-The results in yellow (green) delays the annealing of qubits subject to stronger (weaker) external fields. We observe improvement (diminishment) in the experimental results when qubits subject to stronger (weaker) final external fields are delayed in the anneal schedule, in agreement with the MBL hypothesis. The phenomena is observed across different problem sizes and hints at the possibility of a generic improvement strategy.
+The blue (red) results delay qubits' annealing subject to stronger (weaker) external fields. We observe improvement (diminishment) in the experimental results when qubits subject to stronger (weaker) final external fields are delayed in the annealing schedule, in agreement with the MBL hypothesis. The phenomena is observed across different problem sizes and hints at the possibility of a generic improvement strategy.
 
 
 %----------------------------------------------------------------------------------------
 \subsection{Simulation Results}
 %----------------------------------------------------------------------------------------
 \label{sec:results:simulation}
-In order to understand the effects of annealing offsets, we simulate the annealing process for the $G(2)$ graph embedded in chimera topography.
-In order to shorten the simulation time, we repeat the same anneal process with a total annealing time of 1 $\mu s$ and count the number of correct ground state occurances.
+To understand the effects of annealing offsets, we simulate the annealing process for the $G(2)$ graph embedded in chimera topography.
+We repeat the same anneal process with a shortend total annealing time of 1 $\mu s$, reducing the computational demands of the simulation, and count the number of correct ground state occurrences.
 The resulting ground state probability as a function of offset measured over 100,000 observations is shown in Fig.~\ref{fig:dwave1us}.
 
 \begin{figure}[b]
@@ -331,22 +332,28 @@ In this work, we consider two types of decoherence models: full-counting statist
 The full-counting statistics term models the global decoherence to all the qubits due to the classical reservoir.
 The local damping term models the decoherence of each qubit independently.
 Details of the master equation are given in Sec.~\ref{sec:methods:lindblad}.
-Implementation of the anneal schedule and annealing offsets for the simulation are discussed in Sec.~\ref{sec:methods:annealing-schedule}.
+Implementation of the annealing schedule and annealing offsets for the simulation are discussed in Sec.~\ref{sec:methods:annealing-schedule}.
 
-The graph $G(2)$ has the interesting feature of having a degenerate ground state depending on whether qubit 0 or 1 is chosen to be the MDS solution.
+The graph $G(2)$ has degenerate ground states depending on whether qubit 0 or 1 is chosen to be the MDS solution.
 This degeneracy is reflected in the experimental result and provides a non-trivial benchmark for our simulation.
-Fig.~\ref{fig:final_state_distribution} show the final state distribution of the three lowest lying state.
-The states $(0, 1, 0, 0, 0)$ and $(1, 0, 0, 1, 0)$ are the two degenerate ground states of the embedded Hamiltonian, while $(1, 1, 1, 1, 1)$ is the first excited state which yields an incorrect solution.
+Fig.~\ref{fig:final_state_distribution} show the final state distribution of the three lowest-lying state.
+The states $(0, 1, 0, 0, 0)$ and $(1, 0, 0, 1, 0)$ are the two degenerate ground states of the embedded Hamiltonian, while $(1, 1, 1, 1, 1)$ is the first excited state which yields an incorrect solution\footnote{According to Eq.~\eqref{eq:bit-vector-mapping}, the first two vector components represent the nodes of the graph while the following components represent the slack variables after embedding.}.
 All other states receive negligible probability at the end of annealing.
-The simulation (black) captures main features of the experimental result: 1) significant probability to populate both ground states (rather than populating only one), 2) asymmetry in ground state population due to systematic effects of offset lifting the final state degeneracy spanning approximately the correct range, 3) population of first excited state with systematically lower probability when the strong field is delayed. The asymmetry in the ground state distribution at non-zero offset is a result of annealing offsets lifting the ground state degeneracy.
-Within the broken symmetry, the non-degenerate ground state switches between the two states depending on which qubit group is delayed. At zero offset, a slight asymmetry exists in the simulation because the Hamiltonian is only degenerate at the last moment, while the D-Wave is also subject to sampling bias~\cite{2016PhRvA..93e2320K, 2017PhRvL.118g0502M}.
+The simulation (black) captures the main features of the experimental result:
+\begin{enumerate}
+    \item Significant probability of populating both ground states (rather than populating only one)
+    \item Asymmetry in ground state population due to offsets and spanning approximately the correct range
+    \item Population of first excited state with systematically lower probability when the strong field is delayed
+\end{enumerate}
+The asymmetry in the ground state distribution at non-zero offset results from annealing offsets lifting the ground state degeneracy.
+The non-degenerate ground state switches between the two states within the broken symmetry, depending on which qubit group is delayed. At zero offset, a slight asymmetry exists in the simulation because the Hamiltonian is only degenerate at the last moment, while the D-Wave is also subject to sampling bias~\cite{2016PhRvA..93e2320K, 2017PhRvL.118g0502M}.
 
 This result can be obtained by tuning three free parameters: the simulation temperature to the order of 10 milliKelvin, and the two coefficients of the two decoherence models at the order of 1 to 10 $ns$. These values are consistent with the reported D-Wave operating temperature~\cite{dwave_temp} and coherence times for flux qubits~\cite{2003Sci...299.1869C}.
 Additional insights of the simulation are given in Sec.~\ref{sec:discussion:time_evolution}.
 
 The resulting probability of recovering the correct solution as a function of annealing offset is given in Fig.~\ref{fig:dwave1us}.
-We confirm that scaling with respect to offset from the simulation matches what is observed from experiment, and provides evidence suggesting that the improvements are related to quantum mechanics.
-An additional study where an extended annealing schedule is employed in the simulation which removes systematic errors introduced by annealing offsets and effects of local damping are presented in Sec.~\ref{sec:discussion:idealqa}, and further supports this observation.
+We confirm that the simulation's offset-scaling follows the experiment's scaling, which suggests that the improvements are related to quantum mechanics.
+An additional study where an extended annealing schedule is employed in the simulation, which removes systematic errors introduced by annealing offsets and effects of local damping are presented in Sec.~\ref{sec:discussion:idealqa}, and further supports this observation.
 
 \begin{figure}
 	\centering
@@ -361,7 +368,7 @@ An additional study where an extended annealing schedule is employed in the simu
 \subsection{Dynamics of Time Evolution}
 \label{sec:discussion:time_evolution}
 
- The time-dependent overlap with the exact Ising ground state is shown in Fig.~\ref{fig:td_prob} from applying the simulator to $G(2)$. We observe for all cases that the system undergoes what is analogous to a magnetic phase transition around $s\sim 0.4$.
+The time-dependent overlap with the exact Ising ground state is shown in Fig.~\ref{fig:td_prob} from applying the simulator to $G(2)$. We observe for all cases that the system undergoes what is analogous to a magnetic phase transition around $s\sim 0.4$.
 After the phase transition, we are able to confirm that the system collapses to effectively a classical state in the sense that the density matrix becomes a diagonal matrix.
 The steady increase in probability after the phase transition is a sensitive balance between the competing effects between full-counting statistics and local damping.
 In our example, full-counting statistics is tuned to be slightly stronger, resulting in what amounts to a final thermal annealing step.
