@@ -444,7 +444,8 @@ For each vertex in $V$ we introduce slack variables
 \begin{equation}
     \vec s \in \left\{ \mathbb{Z}^{n_V} \, \middle| \, 0 \leq s_{v} \leq |\mathcal{N}(v)| \quad \forall v\in V \right\} \, ,
 \end{equation}
-which is related to the qubit vector $\vec \Psi_s$ by $\vec s = T_s \vec \Psi_s$, to encode the inequality constraint such that
+which is related to the qubit vector $\vec \Psi_s$ by $\vec s = T_s \vec \Psi_s$.
+The inequality constraint is encoded by
 \begin{align}
  f(\vec \Psi_x)
  =
@@ -453,28 +454,27 @@ which is related to the qubit vector $\vec \Psi_s$ by $\vec s = T_s \vec \Psi_s$
 subject to
 \begin{align}
  &
- \vec \Psi_x + J \vec \Psi_x - T_s \Psi_s  - \vec 1 = 0\,,
+ (\mathbbm{1} + J)\vec \Psi_x - T_s \Psi_s  - \vec 1 = 0\,,
  \\
  &
  (\vec \Psi_s)_\nu \in \{ 0, 1\}
 \end{align}
-where the nearest-neighbor sum is expressed by $J$ (zero diagonal and symmetric for non-directional graphs), the adjacency matrix for $G$.
+where the nearest-neighbor sum is expressed by the adjacency matrix $J$ (zero diagonal and symmetric for non-directional graphs).
 The algorithm uses
 \begin{equation}
     N_q = \overline{\overline{V}} + \sum_{v \in V} \log_2 \mathcal{N}(v)
 \end{equation}
-qubits to encode the vertices and to embed the slack variables.
+qubits to encode the vertices and slack variables before embedding.
 Therefore, the (logical) qubit vector $\vec \Psi$ at worst scales with $n_V \log_2 n_V$ qubits for fully connected graphs.
 
 The target QUBO in the notation of Eq.~\eqref{eq:matrix_form} reads
  {\small
   \begin{align}
-   Q_{xx} & = \mathbbm{1} + p\left[J^T J + J^T + J - 2 \mathrm{diag}(|J|) - \mathbbm{1} \right] \,, \\
-   Q_{sx} & = - p(\mathbbm{1}+J^T)T_s\,,                                                                     \\
-   Q_{ss} & = p\left[{T_s}^T T_s + 2\mathrm{diag}(|T_s|)\right]\,,                                  \\
-   C      & =  p \overline{\overline{V}}\,,
+   Q_{xx} & = \mathbbm{1} + p\left[J^T J + J^T + J - \mathrm{diag}\left(J^T \vec 1 + \vec 1^T J\right) - \mathbbm{1} \right] \,, \\
+   Q_{sx} & = - p(\mathbbm{1}+J)^TT_s\,,                                                                     \\
+   Q_{ss} & = p\left[{T_s}^T T_s + \mathrm{diag}\left(T_s^T \vec 1 + \vec 1^T  T_s\right)\right]\,,                                  \\
+   C      & =  p \overline{\overline{V}}\,.
   \end{align}}
-where $ |M| \equiv \sum_{\nu} M_{\nu \mu}$.
 
 %----------------------------------------------------------------------------------------
 \subsubsection{Integer quadratic optimization}
