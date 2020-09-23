@@ -97,7 +97,7 @@ where $i=1, \cdots,  N$ is the number of dependent variables and $a=1, \cdots, M
 
 ILP is a commonly tackled problem applicable to situations such as scheduling, network optimization, and graph optimization such as the Minimum Dominating Set Problem (MDS).
 In general, ILP is classically NP-complete, and as a result, heuristic methods are employed~\cite{GLOVER1986533, doi:10.1287/ijoc.1.3.190, doi:10.1287/ijoc.2.1.4}.
-Standard classical heuristic algorithms employ a greedy scheme which iteratively approximates optimal solutions--starting from a random initial guess, these algorithms apply locally optimal choices at each step.
+Standard classical heuristic algorithms follow a greedy scheme which iteratively approximates optimal solutions--starting from a random initial guess, these algorithms apply locally optimal choices at each step.
 The NP-hardness of ILP can be understood by realizing that while the solution to an $n$-dimensional linear problem can be obtained in polynomial time, the optimal integer solution in general must be found in the $2^n$ integer solutions which surround the real number solution.
 While greedy algorithms do not guarantee optimal global solutions, they find approximate solutions in polynomial time, which can be utilized in further computations.
 
@@ -130,9 +130,9 @@ As a result, the solution to the dominating set problem can not be obtained by s
 For general graphs, existing algorithms on classical computers find MDS solutions in exponential time $\sim O( 1.5^n)$ \cite{Fomin2009, vanRooij2009} or approximate solutions in polynomial time. For example, greedy algorithms locally optimize decisions about which nodes to add to the dominating set.
 Thus one is guaranteed to find a dominating set but not necessarily an MDS.
 
-We present a method to obtain optimal solutions to ILP by employing quantum annealing methods.
+In this work, we present a method to obtain optimal solutions to ILP by employing quantum annealing methods.
 
-Current implementations of quantum annealing solves the quadratic binary optimization problem (QUBO) by slowly varying a time-dependent Hamiltonian~\cite{1998PhRvE..58.5355K, 2000quant.ph..1106F, RevModPhys.80.1061}.
+Current implementations of quantum annealing solve the quadratic binary optimization problem (QUBO) by slowly varying a time-dependent Hamiltonian~\cite{1998PhRvE..58.5355K, 2000quant.ph..1106F, RevModPhys.80.1061}.
 Through the adiabatic theorem of quantum mechanics, the annealer is initially prepared in a trivial ground state while the final Hamiltonian encodes the solution to the ILP.
 Due to the explosion in research efforts towards hardware implementations of quantum annealers and future improvements to the annealing schedule~\cite{doi:10.7566/JPSJ.89.044001}, mapping ILP to QUBO provides a path forward towards obtaining optimal solutions to the class of integer optimization problems~\cite{2018Glover}.
 
@@ -140,16 +140,15 @@ In the simplest model for quantum annealing, the pure state of a quantum system 
 \begin{equation}
  H(t) = A(t) H^{\textrm{init}} + B(t) H^{\textrm{problem}}, \label{eq:tdhamiltonian}
 \end{equation}
-and $H^\textrm{init}=-\sum_i\sigma^x_i$ on the DWave, while $H^\textrm{problem}$ encodes the problem to be solved. In practice, and as discussed in Sec.~\ref{sec:methods:lindblad}, modeling dynamics that arise during quantum annealing requires a more robust description of the thermally populated mixed quantum states and the open dynamical processes that govern population of the sought-after eigenstate.
+and $H^\textrm{init}=-\sum_i\sigma^x_i$ (on the D-Wave), while $H^\textrm{problem}$ encodes the problem to be solved. In practice, and as discussed in Sec.~\ref{sec:methods:lindblad}, modeling dynamics that arise during quantum annealing requires a more robust description of the thermally populated mixed quantum states and the open dynamical processes that govern population of the sought-after eigenstate.
 
-In this paper, we propose an algorithm that maps ILP problems to QUBO.
-This is achieved by the introduction of slack variables $s_a$ which turns the inequalities Eq.~\eqref{eq:ilp-constraints} to equalities
+The mapping of ILPs to QUBOs we propose is realized by introducing slack variables $s_a$ which turn the inequalities Eq.~\eqref{eq:ilp-constraints} to equalities
 \begin{align}
   \label{eq:ilp:slack}
   & \sum_i A_{a i}x_i + s_a + b_a = 0, \\
   & x_i, s_a \in \mathbb{Z} \geq 0.
 \end{align}
-While the coefficients of the inequality constraints are not required to be integer valued, the inequalities can be trivially rescaled such that $s_i \in \mathbbm{Z}$ given fixed precision coefficients $A_{ij}$ and $b_i$.
+While, in general, the coefficients of the inequality constraints are not required to be integer valued, this real valued inequalities can be trivially rescaled such that $s_i \in \mathbbm{Z}$ given fixed precision coefficients $A_{ij}$ and $b_i$.
 Furthermore, this formalism can be generalized to constrained quadratic optimizations \ref{sec:methods:ilp:quadratic}.
 
 We improve the quantum annealer's performance by utilizing annealing offsets, which effectively delays the annealing schedule on a per-qubit basis~\cite{PhysRevA.96.042322,hsu2018quantum,10.1007/978-3-030-14082-3_14}.
@@ -173,7 +172,7 @@ To understand which phenomena are relevant for describing the proposed offset st
 \label{sec:results}
 %========================================================================================
 
-We first present the QUBO mapping for ILP (\ref{sec:results:qa1}), and demonstrate the methodology on an example implementation in case of the Minimal Dominating Set problem (\ref{sec:results:qa}) on the DWave quantum annealer. Results from quantum annealing are compared and discussed in contrast to simulations (\ref{sec:results:simulation}).
+We first present the QUBO mapping for ILP (\ref{sec:results:qa1}), and demonstrate the methodology on an example implementation in case of the Minimal Dominating Set problem (\ref{sec:results:qa}) on the D-Wave quantum annealer. Results from quantum annealing are compared and discussed in contrast to simulations (\ref{sec:results:simulation}).
 
 %----------------------------------------------------------------------------------------
 \subsection{QUBO Formulation of ILP}
@@ -282,7 +281,7 @@ The slack components of this vector $\vec \Psi_s$ can be utilized to check if th
 \label{fig:linear}
 \end{figure}
 
-We demonstrate the proposed algorithm in order to obtain the MDS on a series of linear graphs $G(n)$ as shown in Fig.~\ref{fig:linear}. This type of graph is chosen because the small number of nearest-neighbor connections is more efficiently embedded into the chimera graph allowing for scaling plots to be generated when using a DWave quantum annealer. In particular, the number of qubits required to solve MDS scales at worse as $n_V \log_2 n_V$ where $n_V$ is the number of vertices for a generic graph before minor embedding. Details of the mapping of ILP to MDS is given in Sec.~\ref{sec:methods:mds-qubo}.
+We demonstrate the proposed algorithm in order to obtain the MDS on a series of linear graphs $G(n)$ as shown in Fig.~\ref{fig:linear}. This type of graph is chosen because the small number of nearest-neighbor connections is more efficiently embedded into the chimera graph allowing for scaling plots to be generated when using a D-Wave quantum annealer. In particular, the number of qubits required to solve MDS scales at worse as $n_V \log_2 n_V$ where $n_V$ is the number of vertices for a generic graph before minor embedding. Details of the mapping of ILP to MDS is given in Sec.~\ref{sec:methods:mds-qubo}.
 
 For the graph $G(n)$ the MDS solution is known analytically, and contains both unique and degenerate solutions. In particular, the domination number for $G(n)$ is $\lceil n/3 \rceil$ while the number of MDS solutions for $n$ vertices is
 \begin{align}
@@ -294,12 +293,12 @@ and gives the probability of randomly guessing the MDS of $G(n)$.
 
 For even the smallest graph $G(2)$, the MDS problem is not native to the chimera graph and must be embedded. Following the hypothesis of MBL, we therefore, must look at the values of $h_i$ after embedding. The qubits then split into two groups depending on the value of $h_i$ relative to $(\textrm{max}|\{h\}| + \textrm{min}|\{h\}|) / 2$ given the set of external magnetic fields $\{h\}$ defined by a specific embedding. Further detail is given in Sec.~\ref{sec:methods:minor_embedding}. We study the effects of delaying the anneal schedule of one group of qubits over the other and present the results of this study is shown in Fig.~\ref{fig:baseline}.
 
-For the following studies, we perform experiments on the \texttt{DW\_2000Q\_6} solver. The annealing time is set to 500$\mu$s after performing a study on various annealing times the $G(6)$ graph. The black line (offset$=0.0$) in Fig.~\ref{fig:baseline} shows results from the baseline experiment, without modification to the DWave annealing schedule, and observe improvement over random guessing (blue).
+For the following studies, we perform experiments on the \texttt{DW\_2000Q\_6} solver. The annealing time is set to 500$\mu$s after performing a study on various annealing times the $G(6)$ graph. The black line (offset$=0.0$) in Fig.~\ref{fig:baseline} shows results from the baseline experiment, without modification to the D-Wave annealing schedule, and observe improvement over random guessing (blue).
 
 \begin{figure}
 	\centering
 	\includegraphics[width=\columnwidth]{./new_figures/DWave_scaling.pdf}
-	\caption{Baseline result of DWave (black) compared to random guessing (dashed green). The jagged nature of random guessing reflects the degeneracy of the ground state. Negative offsets with a `s' tag (blue) are results from delays of large values of $|h_i|$, while negative offsets with the `w' label (red) delay the schedule of qubits with small values of $h_i$.}
+	\caption{Baseline result of D-Wave (black) compared to random guessing (dashed green). The jagged nature of random guessing reflects the degeneracy of the ground state. Negative offsets with a `s' tag (blue) are results from delays of large values of $|h_i|$, while negative offsets with the `w' label (red) delay the schedule of qubits with small values of $h_i$.}
 	\label{fig:baseline}
 \end{figure}
 
@@ -318,7 +317,7 @@ The resulting ground state probability as a function of offset measured over 100
 \begin{figure}[b]
 	\centering
 	\includegraphics[width=\columnwidth]{./new_figures/NN2_offset_scaling.pdf}
-	\caption{The probability of finding the MDS for $G(2)$ from DWave (black) and simulation (dashed yellow) at annealing times of 1 $\mu s$.}
+	\caption{The probability of finding the MDS for $G(2)$ from D-Wave (black) and simulation (dashed yellow) at annealing times of 1 $\mu s$.}
 	\label{fig:dwave1us}
 \end{figure}
 
@@ -340,9 +339,9 @@ Fig.~\ref{fig:final_state_distribution} show the final state distribution of the
 The states $(0, 1, 0, 0, 0)$ and $(1, 0, 0, 1, 0)$ are the two degenerate ground states of the embedded Hamiltonian, while $(1, 1, 1, 1, 1)$ is the first excited state which yields an incorrect solution.
 All other states receive negligible probability at the end of annealing.
 The simulation (black) captures main features of the experimental result: 1) significant probability to populate both ground states (rather than populating only one), 2) asymmetry in ground state population due to systematic effects of offset lifting the final state degeneracy spanning approximately the correct range, 3) population of first excited state with systematically lower probability when the strong field is delayed. The asymmetry in the ground state distribution at non-zero offset is a result of annealing offsets lifting the ground state degeneracy.
-Within the broken symmetry, the non-degenerate ground state switches between the two states depending on which qubit group is delayed. At zero offset, a slight asymmetry exists in the simulation because the Hamiltonian is only degenerate at the last moment, while the DWave is also subject to sampling bias~\cite{2016PhRvA..93e2320K, 2017PhRvL.118g0502M}.
+Within the broken symmetry, the non-degenerate ground state switches between the two states depending on which qubit group is delayed. At zero offset, a slight asymmetry exists in the simulation because the Hamiltonian is only degenerate at the last moment, while the D-Wave is also subject to sampling bias~\cite{2016PhRvA..93e2320K, 2017PhRvL.118g0502M}.
 
-This result can be obtained by tuning three free parameters: the simulation temperature to the order of 10 milliKelvin, and the two coefficients of the two decoherence models at the order of 1 to 10 $ns$. These values are consistent with the reported DWave operating temperature~\cite{dwave_temp} and coherence times for flux qubits~\cite{2003Sci...299.1869C}.
+This result can be obtained by tuning three free parameters: the simulation temperature to the order of 10 milliKelvin, and the two coefficients of the two decoherence models at the order of 1 to 10 $ns$. These values are consistent with the reported D-Wave operating temperature~\cite{dwave_temp} and coherence times for flux qubits~\cite{2003Sci...299.1869C}.
 Additional insights of the simulation are given in Sec.~\ref{sec:discussion:time_evolution}.
 
 The resulting probability of recovering the correct solution as a function of annealing offset is given in Fig.~\ref{fig:dwave1us}.
@@ -352,7 +351,7 @@ An additional study where an extended annealing schedule is employed in the simu
 \begin{figure}
 	\centering
 	\includegraphics[width=\columnwidth]{./new_figures/final_state_distribution.pdf}
-	\caption{Final state distribution from DWave (solid bars) and simulation (black outline). The colors label the type of offset  The $(0, 1, 0, 0, 0)$ state is the first solution where vertex 1 is in the dominating set. The $(1, 0, 0, 1, 0)$ state is the second solution where vertex 0 is in the dominating set. The first excited state is the $(1, 1, 1, 1, 1)$ state where both vertices are in the dominating set.}
+	\caption{Final state distribution from D-Wave (solid bars) and simulation (black outline). The colors label the type of offset  The $(0, 1, 0, 0, 0)$ state is the first solution where vertex 1 is in the dominating set. The $(1, 0, 0, 1, 0)$ state is the second solution where vertex 0 is in the dominating set. The first excited state is the $(1, 1, 1, 1, 1)$ state where both vertices are in the dominating set.}
 	\label{fig:final_state_distribution}
 \end{figure}
 
@@ -367,7 +366,7 @@ After the phase transition, we are able to confirm that the system collapses to 
 The steady increase in probability after the phase transition is a sensitive balance between the competing effects between full-counting statistics and local damping.
 In our example, full-counting statistics is tuned to be slightly stronger, resulting in what amounts to a final thermal annealing step.
 If local damping is relatively stronger, then the probability after the phase transition will slowly decrease as the system decoheres into its local ground state.
-While we believe both effects are important in DWave, the experimental results are not precise enough for us to conclude which is the dominant effect.
+While we believe both effects are important in D-Wave, the experimental results are not precise enough for us to conclude which is the dominant effect.
 We emphasize however, that the simulation suggests that the ground state is recovered predominantly due to the quantum phase transition.
 
 \begin{figure}
@@ -489,8 +488,8 @@ In this case the $Q_{xx}$ component of the QUBO, Eq.~\eqref{eq:qubo:components} 
 \end{equation}
 
 %----------------------------------------------------------------------------------------
-\subsection{ILP on the DWave}
-\label{sec:methods:ILP-on-DWave}
+\subsection{ILP on the D-Wave}
+\label{sec:methods:ILP-on-D-Wave}
 %----------------------------------------------------------------------------------------
 
 %----------------------------------------------------------------------------------------
@@ -509,13 +508,13 @@ Thus, if solvers have finite precision, one must estimate reasonable values for 
 \label{sec:methods:minor_embedding}
 %----------------------------------------------------------------------------------------
 Our proposed offset strategy is motivated by the structure of the Hamiltonian being evaluated by the annealer.
-As a result, details of the embedding are important. We obtain an embedding for $G(n)$ with the \texttt{embed\_qubo} function provided by the DWave Oceans Python package~\cite{dwave_oceans} under the \texttt{dwave.embedding} module~\cite{2008arXiv0804.4884C}.
-The same embedding is used for all DWave solves of the same graph (independent of offset), and consequently the simulation solves the resulting embedded Hamiltonian for $G(2)$.
+As a result, details of the embedding are important. We obtain an embedding for $G(n)$ with the \texttt{embed\_qubo} function provided by the D-Wave Oceans Python package~\cite{dwave_oceans} under the \texttt{dwave.embedding} module~\cite{2008arXiv0804.4884C}.
+The same embedding is used for all D-Wave solves of the same graph (independent of offset), and consequently the simulation solves the resulting embedded Hamiltonian for $G(2)$.
 Additionally, solving the same graph as a function of offset on the exact same qubits removes (or at least keeps consistent) the systematic effects due to solving a problem on different physical qubits.
 We note that comparisons between different graphs in Fig.~\ref{fig:baseline} are subject to this uncontrolled systematic.
 
 After embedding the QUBO for $G(2)$ requires 5 qubits (an increase from 4), where by construction, qubits 0 and 3 form the qubit chain.
-We confirm through brute force evaluation of the eigenvalue decomposition of the 5 qubit Hamiltonian, that the embedding provided by DWave solves the expected ILP problem for $G(2)$, with degenerate ground states at $(0, 1, 0, 0, 0)$ and $(1, 0, 0, 1, 0)$ corresponding to whether vertex 0 or 1 is chosen for the MDS solution, and $(1, 1, 1, 1, 1)$ as the first (non-degenerate) excited state where both vertex 1 and 0 are in the set yielding a valid dominating set but not the minimum dominating set.
+We confirm through brute force evaluation of the eigenvalue decomposition of the 5 qubit Hamiltonian, that the embedding provided by D-Wave solves the expected ILP problem for $G(2)$, with degenerate ground states at $(0, 1, 0, 0, 0)$ and $(1, 0, 0, 1, 0)$ corresponding to whether vertex 0 or 1 is chosen for the MDS solution, and $(1, 1, 1, 1, 1)$ as the first (non-degenerate) excited state where both vertex 1 and 0 are in the set yielding a valid dominating set but not the minimum dominating set.
 
 The resulting Ising Hamiltonian has external field equal to $h = (2.75, 1.5, -1.0, -1.25, -1.0)$.
 Following the offset strategy described in Sec.~\ref{sec:results:qa}, qubit(s) 0 (1, 2, 3, 4) are placed in the set with relatively stronger (weaker) final external fields.
@@ -590,9 +589,9 @@ The coherence time for local decoherence is set to 15$ns$, and 1$ns$ for full-co
 \label{sec:methods:annealing-schedule}
 %----------------------------------------------------------------------------------------
 In this section, we discuss the details of the annealing schedule with respect to the dimensionless normalized time $s$.
-On DWave solvers, annealing offsets effectively advance or delay the annealing schedule of individual qubits ($B(s) \to B_i(s)$).
-In Fig.~\ref{fig:anneal_schedule}, the default DWave annealing schedule is shown in black, in addition to the effects of applying negative offsets (effective time delay) to $A(s)$ and $B(s)$ in blue.
-Further documentation is provided by DWave in Ref.~\cite{dwave_as, dwave_as_docu}.
+On D-Wave solvers, annealing offsets effectively advance or delay the annealing schedule of individual qubits ($B(s) \to B_i(s)$).
+In Fig.~\ref{fig:anneal_schedule}, the default D-Wave annealing schedule is shown in black, in addition to the effects of applying negative offsets (effective time delay) to $A(s)$ and $B(s)$ in blue.
+Further documentation is provided by D-Wave in Ref.~\cite{dwave_as, dwave_as_docu}.
 
 \begin{figure}[htb]
  \centering
@@ -611,7 +610,7 @@ As a result, systematic errors are introduced because the final values of $A(s)$
 Additionally, the values of the coefficients are unknown outside of $s\in [0, 1]$.
 We extrapolate their values by a linear extrapolation, and only employ negative offsets such that this effect only enters at the beginning of the annealing process rather than the end.
 
-We verify that our implementation of annealing offsets on the simulator is consistent with DWave by solving the following three qubit Hamiltonian
+We verify that our implementation of annealing offsets on the simulator is consistent with D-Wave by solving the following three qubit Hamiltonian
 \begin{align}
 	\label{eq:offset_test_hamiltonian}
 	H^{\textrm{problem}} =
@@ -623,7 +622,7 @@ We verify that our implementation of annealing offsets on the simulator is consi
 \end{align}
 which has a doubly-degenerate ground state of $(0, 1, 1)$ and $(1, 0, 1)$. An annealing offset is then applied to either qubit 0 or 1, and breaks the ground state degeneracy of the system. Because of the systematic error introduced when assigning an offset to a qubit, the final Hamiltonian given by Eq.~(\ref{eq:annealH}) will have small deviations from the input problem Hamiltonian. For example, we expect a negative offset to qubit 0 to Eq.~(\ref{eq:offset_test_hamiltonian}) will yield $(1, 0, 1)$ as the unique ground state given Eq.~(\ref{eq:annealH}).
 
-We confirm that with different combinations of annealing offsets, the degeneracy is lifted on the DWave results as expected by solving for the modified problem Hamiltonian spectrum, as well as dialing in annealing offset in the simulation of this three qubit test case.
+We confirm that with different combinations of annealing offsets, the degeneracy is lifted on the D-Wave results as expected by solving for the modified problem Hamiltonian spectrum, as well as dialing in annealing offset in the simulation of this three qubit test case.
 
 
 %----------------------------------------------------------------------------------------
