@@ -40,7 +40,7 @@
 \affiliation{Institut f\"ur Theoretische Physik II, Ruhr-Universit\"at Bochum, D-44780 Bochum, Germany}
 \affiliation{Department of Physics, University of California, Berkeley, California 94720, USA}
 \affiliation{Nuclear Science Division, Lawrence Berkeley National Laboratory, Berkeley, California 94720, USA}
-\author{Travis~Humble}
+\author{Travis~S.~Humble}
 \affiliation{Computational Sciences and Engineering, Oak Ridge National Laboratory, Oak Ridge, Tennessee, 37831, USA}
 \author{Jim~Ostrowski}
 \affiliation{Industrial and Systems Engineering, University of Tennessee, Knoxville, Tennessee 37996, USA}
@@ -62,7 +62,7 @@
  To practically benefit from quantum architecture, one has to identify problems and algorithms with favorable scaling and improve on corresponding limitations depending on available hardware.
  For this reason, we developed an algorithm that solves integer linear programming problems, a classically NP-hard problem, on a quantum annealer, and investigated problem and hardware-specific limitations.
  This work presents the formalism of how to map ILP problems to the annealing architectures, how to systematically improve computations utilizing optimized anneal schedules, and models the anneal process through a simulation.
- It illustrates the effects of decoherence and Many-Body Localization for the Minimum Dominating Set problem, and compares annealing results against numerical simulations of the quantum architecture.
+ It illustrates the effects of decoherence and many body localization for the minimum dominating set problem, and compares annealing results against numerical simulations of the quantum architecture.
  We find that the algorithm outperforms random guessing but is limited to small problems and that annealing schedules can be adjusted to reduce the effects of decoherence.
  Simulations qualitatively reproduce algorithmic improvements of the modified annealing schedule, suggesting the improvements have origins from quantum effects.
 \end{abstract}
@@ -95,22 +95,22 @@ subject to
 \end{align}
 where $i=1, \cdots,  N$ is the number of dependent variables and $a=1, \cdots, M$ the number of constraint equations.
 
-ILP is a commonly tackled problem applicable to situations such as scheduling, network optimization, and graph optimization such as the Minimum Dominating Set Problem (MDS).
+ILP is a commonly tackled problem applicable to situations such as scheduling, network optimization, and graph optimization such as the minimum dominating set problem (MDS).
 In general, ILP is classically NP-complete, and as a result, heuristic methods are employed~\cite{GLOVER1986533, doi:10.1287/ijoc.1.3.190, doi:10.1287/ijoc.2.1.4}.
 Standard classical heuristic algorithms follow a greedy scheme which iteratively approximates optimal solutions--starting from a random initial guess, these algorithms apply locally optimal choices at each step.
 The NP-hardness of ILP can be understood by realizing that while the solution to an $n$-dimensional linear problem can be obtained in polynomial time, the optimal integer solution in general must be found in the $2^n$ integer solutions which surround the real number solution.
 While greedy algorithms do not guarantee optimal global solutions, they find approximate solutions in polynomial time, which can be utilized in further computations.
 
-An important ILP application is the Minimum Dominating Set problem, which is representatively considered in this work.
+An important ILP application is the MDS problem, which is representatively considered in this work.
 For a given a graph $G(E,V)$, defined by the set of $V$ vertices and $E$ edges, a dominating set $D$ is a specific subset of vertices $D \subseteq V$.
 In particular, $D$ is a dominating set if all vertices in $V$ but not in $D$ are adjacent to at least one vertex in $D$.
 This is equivalent to requiring the set of nearest-neighbor vertices of $D$ (exclusive) and $D$ cover all vertices $N(D) \cup D = V$ (an example is given by Fig.~\ref{fig:dominating_sets}a).
 The set $D$ is a minimal dominating set if there is no proper subset of $D$ that is a dominating set, {\it{i.e.}}, the removal of any vertex in $D$ results in $N(D) \cup D  \neq V$.
 An example is given by Fig.~\ref{fig:dominating_sets}b.
 The domination number of $D$ is given by the cardinality of $|D| \equiv \overline{\overline{D}}$.
-The Minimum Dominating Set (MDS) is defined by $D$ with the smallest domination number.
-Fig.~\ref{fig:dominating_sets}c shows an example of the minimum dominating set of $G(V, E)$ and is different from the minimal dominating set.
-We emphasize that while the maximum independent set is always a minimal dominating set as exemplified by Fig.~\ref{fig:dominating_sets}b, the minimum dominating set, in general, can have a smaller domination number.
+The MDS is defined by $D$ with the smallest domination number.
+Fig.~\ref{fig:dominating_sets}c shows an example of the MDS of $G(V, E)$ and is different from the minimal dominating set.
+We emphasize that while the maximum independent set is always a minimal dominating set as exemplified by Fig.~\ref{fig:dominating_sets}b, the MDS, in general, can have a smaller domination number.
 As a result, the solution to the dominating set problem can not be obtained by solving the maximum independent set problem, a well-studied problem for quantum annealers.
 
 \begin{figure*}
@@ -123,7 +123,7 @@ As a result, the solution to the dominating set problem can not be obtained by s
 	\includegraphics[width=0.2\textwidth]{./new_figures/MDS_mds2.pdf}\\
 	\centering\textbf{a} && \centering\textbf{b} && \centering\textbf{c}
 	\end{tabular}
-	\caption{Example of different dominating sets for $G(V, E)$. Vertices in the dominating set $D$ are highlighted in blue. {\textbf{a)}} A dominating set of $G$ with domination number $\overline{\overline{D}} = 2$. {\textbf{b)}} A minimal dominating set of $G$ with domination number of $\overline{\overline{D}} = 2$. {\textbf{c)}} The minimum dominating set of $G$ with domination number of $\overline{\overline{D}} = 1$.}
+	\caption{Example of different dominating sets for $G(V, E)$. Vertices in the dominating set $D$ are highlighted in blue. {\textbf{a)}} A dominating set of $G$ with domination number $\overline{\overline{D}} = 2$. {\textbf{b)}} A minimal dominating set of $G$ with domination number of $\overline{\overline{D}} = 2$. {\textbf{c)}} The MDS of $G$ with domination number of $\overline{\overline{D}} = 1$.}
 	\label{fig:dominating_sets}
 \end{figure*}
 
@@ -159,7 +159,7 @@ Converting to the Ising representation of the the problem Hamiltonian,
 \end{equation}
 we recognize that Eq.~(\ref{eq:HIsing}) exhibits spin-glass properties. More specifically, if the $h_i$ coefficients are randomly drawn from a Bernoulli distribution, one expects spin-localization behavior to influence the outcome of the anneal.
 In the case of quantum annealing, when an algorithm is mapped to its Ising representation, the values of $h_i$ will frequently take on various values, mimicking spin-glass like behavior.
-More explicitly, the spin-glass enters a glassy state when more disorder is introduced ($|h_i|$ becomes large), and as a consequence, the wavefunction experiences Many-Body Localization (MBL) effects, the many-body analog of Anderson Localization~\cite{doi:10.1146/annurev-conmatphys-031214-014726,PhysRevE.90.022103,RevModPhys.91.021001,ALET2018498,PhysRevB.82.174411,PhysRevLett.109.017202}.
+More explicitly, the spin-glass enters a glassy state when more disorder is introduced ($|h_i|$ becomes large), and as a consequence, the wavefunction experiences many body localization (MBL) effects, the many-body analog of Anderson localization~\cite{doi:10.1146/annurev-conmatphys-031214-014726,PhysRevE.90.022103,RevModPhys.91.021001,ALET2018498,PhysRevB.82.174411,PhysRevLett.109.017202}.
 
 Our improvement strategy is motivated by the MBL hypothesis.
 As a result, we employ a modified annealing schedule that relies on partitioning the Hamiltonian into regions of relatively weak and strong external magnetic fields.
@@ -294,7 +294,7 @@ and gives the probability of randomly guessing the MDS of $G(n)$.
 
 For even the smallest graph $G(2)$, the MDS problem is not native to the chimera graph and must be embedded. Following the hypothesis of MBL, we, therefore, must look at the values of $h_i$ after embedding. The qubits split into two groups depending on the value of $h_i$ relative to $(\textrm{max}|\{h\}| + \textrm{min}|\{h\}|) / 2$ given the set of external magnetic fields $\{h\}$ defined by a specific embedding. Further detail is given in Sec.~\ref{sec:methods:minor_embedding}. We study the effects of delaying the anneal schedule of one group of qubits over the other and present the results of this study is shown in Fig.~\ref{fig:baseline}.
 
-For the following studies, we perform experiments on the \texttt{DW\_2000Q\_6} solver. The annealing time is set to 500$\mu$s after performing a study on various annealing times the $G(6)$ graph. The black line (offset$=0.0$) in Fig.~\ref{fig:baseline} shows results from the baseline experiment, without modification to the D-Wave annealing schedule, and observe improvement over random guessing (dashed green).
+Due to near-term limitations, hardware realizations of quantum annealing are unique, and possess for example, different lattice layouts (due to faulty qubits), annealing schedules, and qubit fidelity. For the following studies, we perform experiments specifically on the \texttt{DW\_2000Q\_6} solver. The annealing time is set to 500$\mu$s after performing a study on various annealing times the $G(6)$ graph. The black line (offset$=0.0$) in Fig.~\ref{fig:baseline} shows results from the baseline experiment, without modification to the D-Wave annealing schedule, and observe improvement over random guessing (dashed green).
 
 \begin{figure}
 	\centering
@@ -328,7 +328,7 @@ To solve for time evolution dynamics of quantum annealing including thermal and 
  \label{eq:sim:linblad-eq}
  \partial_t \rho (t) =  \frac{-i}{\hbar} [H(t) , \rho(t)] + \mathcal{L}(\rho(t), H(t))
 \end{align}
-where $\rho (t)$ is the density matrix at time $t$, $H(t)$ is the time-dependent Hamiltonian and $\mathcal{L}$ is the Linblad operator implementing the decoherence models.
+where $\hbar$ is the reduced Plank's constant, $\rho (t)$ is the density matrix at time $t$, $H(t)$ is the time-dependent Hamiltonian and $\mathcal{L}$ is the Linblad operator implementing the decoherence models.
 In this work, we consider two types of decoherence models: full-counting statistics~\cite{PhysRevE.90.022103,RevModPhys.81.1665} and single-qubit amplitude damping (local damping)~\cite{10.5555/1972505,preskill1998lecture}.
 The full-counting statistics term models the global decoherence to all the qubits due to the classical reservoir.
 The local damping term models the decoherence of each qubit independently.
@@ -430,7 +430,7 @@ However, the intersection of time-dependent quantum mechanics and emergent pheno
 \label{sec:methods:mds-qubo}
 %----------------------------------------------------------------------------------------
 
-The solution to the Minimum Dominating Set problem can be expressed as an integer optimization problem given by,
+The solution to the MDS problem can be expressed as an integer optimization problem given by,
 \begin{align}
  f(\vec x) = & \min\left(\sum_{v \in V} x_v\right),                    \\
 \end{align}
@@ -466,7 +466,7 @@ The algorithm uses
     N_q = \overline{\overline{V}} + \sum_{v \in V} \log_2 \mathcal{N}(v)
 \end{equation}
 qubits to encode the vertices and slack variables before embedding.
-Therefore, the (logical) qubit vector $\vec \Psi$ at worst scales with $n_V \log_2 n_V$ qubits for fully connected graphs.
+Therefore, the (logical) binary vector $\vec \Psi$ at worst scales with $n_V \log_2 n_V$ qubits for fully connected graphs.
 
 The target QUBO in the notation of Eq.~\eqref{eq:matrix_form} reads
  {\small
@@ -478,7 +478,7 @@ The target QUBO in the notation of Eq.~\eqref{eq:matrix_form} reads
   \end{align}}
 
 %----------------------------------------------------------------------------------------
-\subsubsection{Integer quadratic optimization}
+\subsubsection{Integer Quadratic Optimization}
 \label{sec:methods:ilp:quadratic}
 %----------------------------------------------------------------------------------------
 
@@ -499,7 +499,7 @@ In this case the $Q_{xx}$ component of the QUBO, Eq.~\eqref{eq:qubo:components} 
 %----------------------------------------------------------------------------------------
 
 %----------------------------------------------------------------------------------------
-\subsubsection{Comment on ILP QUBO penalty term}
+\subsubsection{Comment on ILP QUBO Penalty Term}
 \label{sec:methods:ilp-qubo-comments}
 %----------------------------------------------------------------------------------------
 
@@ -514,13 +514,13 @@ Thus, if solvers have finite precision, one must estimate reasonable values for 
 \label{sec:methods:minor_embedding}
 %----------------------------------------------------------------------------------------
 Our proposed offset strategy is motivated by the structure of the Hamiltonian being evaluated by the annealer.
-As a result, details of the embedding are important. We obtain an embedding for $G(n)$ with the \texttt{embed\_qubo} function provided by the D-Wave Oceans Python package~\cite{dwave_oceans} under the \texttt{dwave.embedding} module~\cite{2008arXiv0804.4884C}.
+As a result, details of the embedding are important. We obtain an embedding for $G(n)$ with the \texttt{embed\_qubo} function provided by the D-Wave Ocean Python package~\cite{dwave_oceans} under the \texttt{dwave.embedding} module~\cite{2008arXiv0804.4884C}.
 The same embedding is used for all D-Wave solves of the same graph (independent of offset), and consequently the simulation solves the resulting embedded Hamiltonian for $G(2)$.
 Additionally, solving the same graph as a function of offset on the exact same qubits removes (or at least keeps consistent) the systematic effects due to solving a problem on different physical qubits.
 We note that comparisons between different graphs in Fig.~\ref{fig:baseline} are subject to this uncontrolled systematic.
 
 After embedding the QUBO for $G(2)$ requires 5 qubits (an increase from 4), where by construction, qubits 0 and 3 form the qubit chain.
-We confirm through brute force evaluation of the eigenvalue decomposition of the 5 qubit Hamiltonian, that the embedding provided by D-Wave solves the expected ILP problem for $G(2)$, with degenerate ground states at $(0, 1, 0, 0, 0)$ and $(1, 0, 0, 1, 0)$ corresponding to whether vertex 0 or 1 is chosen for the MDS solution, and $(1, 1, 1, 1, 1)$ as the first (non-degenerate) excited state where both vertex 1 and 0 are in the set yielding a valid dominating set but not the minimum dominating set.
+We confirm through brute force evaluation of the eigenvalue decomposition of the 5 qubit Hamiltonian, that the embedding provided by D-Wave solves the expected ILP problem for $G(2)$, with degenerate ground states at $(0, 1, 0, 0, 0)$ and $(1, 0, 0, 1, 0)$ corresponding to whether vertex 0 or 1 is chosen for the MDS solution, and $(1, 1, 1, 1, 1)$ as the first (non-degenerate) excited state where both vertex 1 and 0 are in the set yielding a valid dominating set but not the MDS.
 
 The resulting Ising Hamiltonian has external field equal to $h = (2.75, 1.5, -1.0, -1.25, -1.0)$.
 Following the offset strategy described in Sec.~\ref{sec:results:qa}, qubit(s) 0 (1, 2, 3, 4) are placed in the set with relatively stronger (weaker) final external fields.
@@ -586,7 +586,7 @@ For the simulation results presented, we set the temperature to 22.5 milliKelvin
 The coherence time for local decoherence is set to 15$ns$, and 1$ns$ for full-counting statistics.
 
 %----------------------------------------------------------------------------------------
-\subsubsection{Annealing schedule and offsets}
+\subsubsection{Annealing Schedule and Offsets}
 \label{sec:methods:annealing-schedule}
 %----------------------------------------------------------------------------------------
 In this section, we discuss the details of the annealing schedule with respect to the dimensionless normalized time $s$.
@@ -640,7 +640,7 @@ For annealing time $T=1/A(0)$, we expect to see perfect one-period oscillation. 
 \begin{figure}
 	\centering
 	\includegraphics[width=\columnwidth]{./new_figures/vacuum_probability.pdf}
-	\caption{Time dependent vacuum probability of 5 qubits system under pure transverse field.}
+	\caption{Time-dependent vacuum probability of 5 qubits system under pure transverse field.}
 	\label{figcheck}
 \end{figure}
 
