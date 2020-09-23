@@ -265,7 +265,7 @@ where
 The function $\mathrm{diag}(\vec v)$ transforms a vector $\vec v$ into a diagonal matrix, and absorbs the linear contributions of the QUBO into the diagonal elements of the quadratic representation.
 
 The integer solution to the original ILP is computed by $\vec x^{(0)} = T_x \vec \Psi_x^{(0)}$ and the original solution to the problem is computed by shifting the annealer extracted energy $E \equiv  \chi^2(\vec \Psi^{(0)}) $ by $p \left \| \vec b \right\|^2$.
-The slack components of this vector $\vec \Psi_s$ can be utilized to check if the contraints are indeed fulfilled.
+The slack components of this vector $\vec \Psi_s$ can be utilized to check if the constraints are indeed fulfilled.
 
 %----------------------------------------------------------------------------------------
 \subsection{Application to the Dominating Set}
@@ -293,7 +293,7 @@ and gives the probability of randomly guessing the MDS of $G(n)$.
 
 For even the smallest graph $G(2)$, the MDS problem is not native to the chimera graph and must be embedded. Following the hypothesis of MBL, we therefore, must look at the values of $h_i$ after embedding. The qubits then split into two groups depending on the value of $h_i$ relative to $(\textrm{max}|\{h\}| + \textrm{min}|\{h\}|) / 2$ given the set of external magnetic fields $\{h\}$ defined by a specific embedding. Further detail is given in Sec.~\ref{sec:methods:minor_embedding}. We study the effects of delaying the anneal schedule of one group of qubits over the other and present the results of this study is shown in Fig.~\ref{fig:baseline}.
 
-For the following studies, we perform experiments on the \texttt{DW\_2000Q\_6} solver. The annealing time is set to 500$\mu$s after performing a study on various annealing times the $G(6)$ graph. The black line (offset$=0.0$) in Fig.~\ref{fig:baseline} shows results from the baseline experiment, without modification to the D-Wave annealing schedule, and observe improvement over random guessing (blue).
+For the following studies, we perform experiments on the \texttt{DW\_2000Q\_6} solver. The annealing time is set to 500$\mu$s after performing a study on various annealing times the $G(6)$ graph. The black line (offset$=0.0$) in Fig.~\ref{fig:baseline} shows results from the baseline experiment, without modification to the D-Wave annealing schedule, and observe improvement over random guessing (dashed green).
 
 \begin{figure}
 	\centering
