@@ -82,7 +82,6 @@
 \section{INTRODUCTION}
 \label{sec:introduction}
 %========================================================================================
-
 Integer Linear Programming (ILP) is an integer optimization problem subject to inequality constraints
 \begin{align}
  \label{eq:initial-ip-def}
@@ -112,7 +111,7 @@ The domination number of $D$ is given by the cardinality of $|D| \equiv \overlin
 The Minimum Dominating Set (MDS) is defined by $D$ with the smallest domination number.
 Fig.~\ref{fig:dominating_sets}c shows an example of the minimum dominating set of $G(V, E)$ and is different from the minimal dominating set.
 We emphasize that while the maximum independent set is always a minimal dominating set as exemplified by Fig.~\ref{fig:dominating_sets}b, the minimum dominating set, in general, can have a smaller domination number.
-As a result, the solution to the dominating set problem can not be obtained by solving for the maximum independent set, a well-studied problem for quantum annealers.
+As a result, the solution to the dominating set problem can not be obtained by solving the maximum independent set problem, a well-studied problem for quantum annealers.
 
 \begin{figure*}
 	\centering
@@ -164,11 +163,10 @@ In the case of quantum annealing, when an algorithm is mapped to its Ising repre
 More explicitly, the spin-glass enters a glassy state when more disorder is introduced ($|h_i|$ becomes large), and as a consequence, the wavefunction experiences Many-Body Localization (MBL) effects, the many-body analog of Anderson Localization~\cite{doi:10.1146/annurev-conmatphys-031214-014726,PhysRevE.90.022103,RevModPhys.91.021001,ALET2018498,PhysRevB.82.174411,PhysRevLett.109.017202}.
 
 Our improvement strategy is motivated by the MBL hypothesis.
-As a result, we employ a modified annealing schedule which relies on partitioning the Hamiltonian into regions of relatively weak and strong external magnetic fields.
+As a result, we employ a modified annealing schedule that relies on partitioning the Hamiltonian into regions of relatively weak and strong external magnetic fields.
 
 
-To understand which phenomena are relevant for describing the proposed offset study's scaling behavior, whether they are rooted in the quantum nature or related to hardware constraints, we simulate the anneal for a small MDS problem. This simulation solves the von Neumann equations accounting for different models of quantum decoherence, and explores whether algorithmic improvements on hardware are present in idealizes systems.
-
+To understand which phenomena are relevant for describing the proposed offset study's scaling behavior, whether they are rooted in the quantum nature or related to hardware constraints, we simulate the anneal for a small MDS problem. This simulation solves the von Neumann equations accounting for different quantum decoherence models and explores whether algorithmic improvements on hardware are present in idealized systems.
 
 %========================================================================================
 \section{RESULTS}
