@@ -364,17 +364,16 @@ An additional study where an extended annealing schedule is employed in the simu
 
 
 \section{Discussion}
-
 \subsection{Dynamics of Time Evolution}
 \label{sec:discussion:time_evolution}
 
 The time-dependent overlap with the exact Ising ground state is shown in Fig.~\ref{fig:td_prob} from applying the simulator to $G(2)$. We observe for all cases that the system undergoes what is analogous to a magnetic phase transition around $s\sim 0.4$.
-After the phase transition, we are able to confirm that the system collapses to effectively a classical state in the sense that the density matrix becomes a diagonal matrix.
+After the phase transition, we can confirm that the system collapses to effectively a classical state in the sense that the density matrix becomes a diagonal matrix.
 The steady increase in probability after the phase transition is a sensitive balance between the competing effects between full-counting statistics and local damping.
-In our example, full-counting statistics is tuned to be slightly stronger, resulting in what amounts to a final thermal annealing step.
-If local damping is relatively stronger, then the probability after the phase transition will slowly decrease as the system decoheres into its local ground state.
-While we believe both effects are important in D-Wave, the experimental results are not precise enough for us to conclude which is the dominant effect.
-We emphasize however, that the simulation suggests that the ground state is recovered predominantly due to the quantum phase transition.
+In our example, the full-counting statistics decoherance rate is tuned to be slightly stronger compared to the local dampening decoherance rate, effectively resulting in a final thermal annealing process after the phase transition.
+If local damping were relatively larger, then the probability after the phase transition will slowly decrease as the system decoheres into its local ground state.
+While we believe both effects are essential to simulate D-Wave, due to the competing effects of both decoherence models, we emphasize that a fully quantitative comparison of both decoherence models cannot be made just considering the $G(2)$ graph.
+However, we emphasize that the simulation suggests that the ground state is recovered predominantly due to the quantum phase transition happing around $s\sim 0.4$.
 
 \begin{figure}
 	\centering
@@ -383,9 +382,10 @@ We emphasize however, that the simulation suggests that the ground state is reco
 	\label{fig:td_prob}
 \end{figure}
 
-Finally, we comment that in order for the simulation to obtain the final state distribution shown in Fig.~\ref{fig:final_state_distribution}, effects of full-counting statistics are required.
-Absent some dynamical thermalization effect, the $G(2)$ problem is too small such that at a total annealing time of 1$\mu s$, the annealing offsets lift the ground state degeneracy by an amount such that diabatic transitions are absent, and the simulation is populated predominantly by the unique ground state.
-The final state distribution gives us a very sensitive observable to tune the simulation temperature, and agrees well with the experimental operating temperature.
+Finally, we comment that effects of full-counting statistics are required for the simulation to obtain the final state distribution shown in Fig.~\ref{fig:final_state_distribution}.
+Because of the smallness of the $G(2)$ problem (and the utilized total annealing time of 1$\mu s$), the annealing offsets lift the ground state degeneracy in a manor that diabatic transitions do not occur--setting a discrete, fixed groundstate probability for given offsets.
+Thus, if dynamical thermalization effects were absent, the simulation would populate predominantly one of the two unique ground states depending on the offsets.
+Once dynamical thermalization effects are present, the final state distribution  continously depends on offsets and becomes a very sensitive observable to tune the simulation temperature, which, if properly tuned, agrees well with the experimental operating temperature.
 
 
 \subsection{Idealized Quantum Annealing}
@@ -405,16 +405,16 @@ The final state distribution gives us a very sensitive observable to tune the si
 	\label{fig:anneal_schedule_ext}
 \end{figure*}
 
-In the simulation, we also reserve the ability to remove the systematic errors by extending the annealing schedule as shown by the red data points in Fig.~\ref{fig:anneal_schedule_ext}. With the extended schedule, all qubits start and end with the same values of $A$ and $B$ and faithfully preserves the initial and final Hamiltonians. The dependence on offset for $G(2)$ (Fig.~\ref{fig:dwave1us}) remains the same under the extended anneal schedule (Fig.~\ref{fig:anneal_schedule_ext}), confirming that the behavior is not a systematic artifact.
+In the simulation, we also reserve the ability to remove the systematic errors by extending the annealing schedule, as shown by the red data points in Fig.~\ref{fig:anneal_schedule_ext}. With the extended schedule, all qubits start and end with the same values of $A$ and $B$ and faithfully preserves the initial and final Hamiltonians. The dependence on offset for $G(2)$ (Fig.~\ref{fig:dwave1us}) remains the same under the extended anneal schedule (Fig.~\ref{fig:anneal_schedule_ext}), confirming that the behavior is not a systematic artifact.
 
-The quantum system can be further idealized by including only the full-counting statistics model (blue), or local decoherence (green). We observe in both cases that the overall scaling follows the story of the MBL hypothesis. Perhaps more importantly, we observe that a simulation without local decoherence, where the relaxation is dependent on precisely the instantaneous value of $|h_i|$, exhibits the same scaling as experiment. This result suggests that our strategy for setting annealing offsets is improving the algorithm beyond the simple explanation of qubits freezing due to single-particle amplitude damping. In fact, the simulation with only amplitude damping (green) does not fully capture the results of the experiment. We observe hints of a phase transition with respect to offset (which may be thought of as some measure of disorder) when dynamical thermalization effects are removed. This is a tantalizing observation, and also is strong evidence for the inclusion of the full-counting statistics model.
+The quantum system can be further idealized by including either the full-counting statistics model (blue) or the local decoherence model (green) solely. We observe in both cases that the overall scaling follows the story of the MBL hypothesis. Perhaps more importantly, we observe that a simulation without local decoherence, where the relaxation is dependent on precisely the instantaneous value of $|h_i|$, exhibits the same scaling as the experiment. This result suggests that our strategy for setting annealing offsets is improving the algorithm beyond the simple explanation of qubits freezing due to single-particle amplitude damping. The simulation with only amplitude damping (green) does not fully capture the results of the experiment. We observe hints of a phase transition depending on the offset (which may be considered some measure of disorder) when dynamical thermalization effects are removed. This dependence is a tantalizing observation and strong evidence for the inclusion of the full-counting statistics model.
 
-It unfortunately does not make much sense to remove all decoherence models for the $G(2)$ graph for an anneal time of $1\mu s$ since all probabilities go to unity.
+Unfortunately, it does not make much sense to remove all decoherence models for the $G(2)$ graph for an anneal time of $1\mu s$ since all probabilities go to unity.
 
 \subsection{Final Remarks}
 \label{sec:results:final}
-We would like to emphasize that while the annealing offsets are motivated by the MBL hypothesis, and the results also follow those expectations, we do not have definitive proof that MBL plays a crucial role.
-The reason is because observations of MBL inevitably require the study of finite-size scaling~\cite{2015PhRvB..91h1103L}, and our current simulation while being extremely thorough and explicit, is exponentially slow to evaluate making evaluations of even $G(3)$ untenable.
+We want to emphasize that while the annealing offsets are motivated by the MBL hypothesis, and the results also follow those expectations, we do not have definitive proof that MBL plays a crucial role.
+The reason is because observations of MBL inevitably require the study of finite-size scaling~\cite{2015PhRvB..91h1103L}, and our current simulation, while being extremely thorough and explicit, is exponentially slow to evaluate, making evaluations of even $G(3)$ untenable.
 However, the intersection of time-dependent quantum mechanics and emergent phenomena~\cite{Goldenfeld:1992qy} is an exciting direction that is pertinent to adiabatic quantum computing.
 
 
