@@ -151,11 +151,11 @@ The mapping of ILPs to QUBOs we propose is realized by introducing slack variabl
 While, in general, the coefficients of the inequality constraints are not required to be integer valued, this real valued inequalities can be trivially rescaled such that $s_i \in \mathbbm{Z}$ given fixed precision coefficients $A_{ij}$ and $b_i$.
 Furthermore, this formalism can be generalized to constrained quadratic optimizations \ref{sec:methods:ilp:quadratic}.
 
-We improve the quantum annealer's performance by utilizing annealing offsets, which effectively delays the annealing schedule on a per-qubit basis~\cite{PhysRevA.96.042322,hsu2018quantum,10.1007/978-3-030-14082-3_14}.
+We improve the quantum annealer's performance by utilizing annealing offsets, which effectively delay the annealing schedule on a per-qubit basis~\cite{PhysRevA.96.042322,hsu2018quantum,10.1007/978-3-030-14082-3_14}.
 Converting to the Ising representation of the the problem Hamiltonian,
 \begin{equation}
     \label{eq:HIsing}
-     H^{\textrm{Ising}} = \sum_{ij} J_{ij} \sigma^z_i \sigma^z_j + \sum_i h_i \sigma^z_i ,
+     H^{\textrm{problem}} \leftrightarrow H^{\textrm{Ising}} = \sum_{ij} J_{ij} \sigma^z_i \sigma^z_j + \sum_i h_i \sigma^z_i ,
 \end{equation}
 we recognize that Eq.~(\ref{eq:HIsing}) exhibits spin-glass properties. More specifically, if the $h_i$ coefficients are randomly drawn from a Bernoulli distribution, one expects spin-localization behavior to influence the outcome of the anneal.
 In the case of quantum annealing, when an algorithm is mapped to its Ising representation, the values of $h_i$ will frequently take on various values, mimicking spin-glass like behavior.
@@ -237,7 +237,7 @@ The integer linear optimization problem is then solved through the minimization 
  \label{eq:ilp-slack-bit-energy}
  \chi^2(\vec \Psi)
  &=
- \vec c^T T_x \vec \Psi_x + p \left\| A T_s \vec \Psi_x + T_s \vec \Psi_s + \vec b \right\|^2
+ \vec c^T T_x \vec \Psi_x + p \left\| A T_x \vec \Psi_x + T_s \vec \Psi_s + \vec b \right\|^2
 \end{align}
 where $p$ is an external parameter representing the strength of the penalty when violating constraints.
 This parameter needs to be sufficiently large, e.g., $p \geq \vec c \cdot \vec x$, to ensure the constraints are indeed fulfilled\footnote{Depending on the problem, $p$ can be smaller as well.
