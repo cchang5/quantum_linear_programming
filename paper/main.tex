@@ -1,5 +1,5 @@
-%! suppress = LineBreak
-\documentclass[prd,twocolumn,tightenlines,preprintnumbers,showpacs,superscriptaddress,notitlepage,nofootinbib,eqsecnum,floatfix,longbibliography,aps,10pt]{revtex4-2}
+\documentclass[prd,twocolumn,tightenlines,preprintnumbers,showpacs,superscriptaddress,notitlepage,nofootinbib,eqsecnum,floatfix,longbibliography,aps,10pt]{revtex4-1}
+\pdfoutput=1
 \usepackage{CJK}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -95,11 +95,10 @@ subject to
 \end{align}
 where $i=1, \cdots,  N$ is the number of dependent variables and $a=1, \cdots, M$ the number of constraint equations.
 
-ILP is a commonly tackled problem applicable to situations such as scheduling, network optimization, and graph optimization such as the minimum dominating set problem (MDS).
 In general, ILP is classically NP-complete, and as a result, heuristic methods are employed~\cite{GLOVER1986533, doi:10.1287/ijoc.1.3.190, doi:10.1287/ijoc.2.1.4}.
 Standard classical heuristic algorithms follow a greedy scheme which iteratively approximates optimal solutions--starting from a random initial guess, these algorithms apply locally optimal choices at each step.
-The NP-hardness of ILP can be understood by realizing that while the solution to an $n$-dimensional linear problem can be obtained in polynomial time, the optimal integer solution in general must be found in the $2^n$ integer solutions which surround the real number solution.
-While greedy algorithms do not guarantee optimal global solutions, they find approximate solutions in polynomial time, which can be utilized in further computations.
+The NP-hardness of ILP can be understood by realizing that while the solution to an $n$-dimensional linear problem must lie on the vertices of the feasibility region, while the optimal integer solution may in general be at any integer solution inside the feasibility region.
+While greedy algorithms do not guarantee optimal global solutions, they find approximate solutions in polynomial time, which can be utilized in further computations. ILP is a commonly tackled problem applicable to situations such as scheduling, network optimization, and graph optimization such as the minimum dominating set problem (MDS). ILP can also be used to identify reaction pathways of biological system, and has recently been explored in the context of quantum annealing~\cite{2020arXiv200713788H}.
 
 An important ILP application is the MDS problem, which is representatively considered in this work.
 For a given a graph $G(E,V)$, defined by the set of $V$ vertices and $E$ edges, a dominating set $D$ is a specific subset of vertices $D \subseteq V$.
@@ -151,7 +150,7 @@ The mapping of ILPs to QUBOs we propose is realized by introducing slack variabl
 While, in general, the coefficients of the inequality constraints are not required to be integer valued, this real valued inequalities can be trivially rescaled such that $s_i \in \mathbbm{Z}$ given fixed precision coefficients $A_{ij}$ and $b_i$.
 Furthermore, this formalism can be generalized to constrained quadratic optimizations \ref{sec:methods:ilp:quadratic}.
 
-We improve the quantum annealer's performance by utilizing annealing offsets, which effectively delay the annealing schedule on a per-qubit basis~\cite{PhysRevA.96.042322,hsu2018quantum,10.1007/978-3-030-14082-3_14}.
+We improve the quantum annealer's performance by utilizing annealing offsets, which effectively delay the annealing schedule on a per-qubit basis~\cite{PhysRevA.96.042322,hsu2018quantum,10.1007/978-3-030-14082-3_14,2020RPPh...83e4401H}.
 Converting to the Ising representation of the the problem Hamiltonian,
 \begin{equation}
     \label{eq:HIsing}
@@ -695,7 +694,7 @@ All authors contributed to writing and editing of the final manuscript.
 \textbf{Competing Interests:} The authors declare no competing interests.
 
 \bibliographystyle{apsrev4-1}
-\bibliography{qilp}
+\bibliography{main.bib}
 %========================================================================================
 
 \end{document}
