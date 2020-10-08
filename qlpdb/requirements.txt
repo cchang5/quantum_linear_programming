@@ -4,3 +4,4 @@ django-widget-tweaks
 espressodb
 plotly
 dwave-ocean-sdk
+django-picklefield

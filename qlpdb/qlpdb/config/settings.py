@@ -97,7 +97,17 @@ WSGI_APPLICATION = "qlpdb.config.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 DB_CONFIG = get_db_config(ROOT_DIR)
-DATABASES = {"default": DB_CONFIG}
+DATABASES = {
+    "default": DB_CONFIG,
+    "local": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__), os.pardir, os.pardir, "qlp-db.sqlite"
+            )
+        ),
+    },
+}
 
 
 # Password validation
