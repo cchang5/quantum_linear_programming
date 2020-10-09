@@ -76,6 +76,31 @@ sns.palplot(OFFSET_COLORS)
 ###################################
 """
 
+def copy_data_to_local(data. List[data_Data]):
+    """Copies data_Data queryset from default to local db."""
+    with transaction.atomic():
+        for Model, pk_field in {
+            User: "user__pk",
+            Graph: "experiment__graph__pk",
+            Experiment: "experiment__pk",
+            data_Data: "pk"
+        }.items():
+            print("Parsing model", Model)
+
+            pks = list(data.values_list(pk_field, flat=True).distinct())
+
+            remote = Model.objects.filter(pk__in=pks)
+            print("Remote entries:", remote.count())
+
+            local = Model.objects.using("local").filter(pk__in=pks)
+            print("Local entries:", local.count())
+
+            new_local = remote.difference(local) if local.count() > 0 else remote
+            print("New entries:", new_local.count())
+
+            Model.objects.using("local").bulk_create(new_local)
+            print("Inserted")
+
 
 class Sim:
     def __init__(self):
@@ -162,7 +187,7 @@ class Sim:
 
 
 def getallspinconfig(anneal_time=1, offset=-0.05):
-    if True:
+    if False:
         dist = {-0.05: {((1, 0, 0, 1, 0), 2.90909090909091): 0.62797, ((1, 1, 1, 1, 1), 3.27272727272727): 0.19094,
                         ((0, 1, 0, 0, 0), 2.90909090909091): 0.16842, ((1, 0, 1, 1, 0), 3.63636363636364): 0.00629,
                         ((1, 0, 0, 1, 1), 3.63636363636364): 0.00489, ((0, 1, 0, 0, 1), 3.63636363636364): 0.00049,
@@ -254,7 +279,9 @@ def getallspinconfig(anneal_time=1, offset=-0.05):
         experiment__tag=f"FixEmbedding_Single_Sided_Binary_{offset}_z3",
         experiment__settings__annealing_time=anneal_time,
         experiment__settings__num_spin_reversal_transforms=0,
-    ).to_dataframe()
+    )
+    copy_data_to_local(data)
+    data = data.to_dataframe()
 
     spin = data["spin_config"]
     energy = data["energy"]
@@ -376,7 +403,9 @@ def getallannealtime(anneal_time=1, offset_tag="FixEmbedding_Single_Sided_Binary
         experiment__tag=offset_tag,
         experiment__settings__annealing_time=anneal_time,
         experiment__settings__num_spin_reversal_transforms=0,
-    ).to_dataframe()
+    )
+    copy_data_to_local(data)
+    data = data.to_dataframe()
 
     ground_state_count = data.groupby("energy").count()["id"].sort_index().iloc[0]
     total_count = data.count()["id"]
@@ -450,30 +479,7 @@ def getall(offset=-0.05, graphsize=2):
         experiment__settings__annealing_time=500,
         experiment__settings__num_spin_reversal_transforms=0,
     )
-
-    with transaction.atomic():
-        for Model, pk_field in {
-            User: "user__pk",
-            Graph: "experiment__graph__pk",
-            Experiment: "experiment__pk",
-            data_Data: "pk"
-        }.items():
-            print("Parsing model", Model)
-
-            pks = list(data.values_list(pk_field, flat=True).distinct())
-
-            remote = Model.objects.filter(pk__in=pks)
-            print("Remote entries:", remote.count())
-
-            local = Model.objects.using("local").filter(pk__in=pks)
-            print("Local entries:", local.count())
-
-            new_local = remote.difference(local) if local.count() > 0 else remote
-            print("New entries:", new_local.count())
-
-            Model.objects.using("local").bulk_create(new_local)
-            print("Inserted")
-
+    copy_data_to_local(data)
     data = data.to_dataframe()
 
     print(data.groupby("energy").count()["id"].sort_index())
@@ -557,7 +563,7 @@ def plot_random_ratio():
 
 
 def gettdse(offset=0.0):
-    if True:
+    if False:
         prob = {-0.07: 0.70107, -0.06: 0.72948, -0.05: 0.79639, -0.04: 0.82127, -0.03: 0.84074, -0.02: 0.84374,
                 -0.01: 0.88497, 0.0: 0.90447, 0.01: 0.9189, 0.02: 0.92944, 0.03: 0.94336, 0.04: 0.94864, 0.05: 0.95251,
                 0.06: 0.93402, 0.07: 0.92907}
@@ -570,7 +576,9 @@ def gettdse(offset=0.0):
         experiment__tag=f"FixEmbedding_Single_Sided_Binary_{offset}_z3",
         experiment__settings__annealing_time=1,
         experiment__settings__num_spin_reversal_transforms=0,
-    ).to_dataframe()
+    )
+    copy_data_to_local(data)
+    data = data.to_dataframe()
     print(offset)
     energy_count = data.groupby("energy").count()["id"].sort_index().iloc[0]
     total_count = data.count()["id"]
