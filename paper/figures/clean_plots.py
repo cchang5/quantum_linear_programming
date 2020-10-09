@@ -459,13 +459,16 @@ def getall(offset=-0.05, graphsize=2):
             data_Data: "pk"
         }.items():
             print("Parsing model", Model)
-            remote = Model.objects.filter(pk__in=data.values_list(pk_field, flat=True).distinct())
+
+            pks = list(data.values_list(pk_field, flat=True).distinct())
+
+            remote = Model.objects.filter(pk__in=pks)
             print("Remote entries:", remote.count())
 
-            local = Model.objects.using("local").filter(pk__in=data.values_list(pk_field, flat=True).distinct())
-            print("Local entries:", remote.count())
+            local = Model.objects.using("local").filter(pk__in=pks)
+            print("Local entries:", local.count())
 
-            new_local = remote.difference(local)
+            new_local = remote.difference(local) if local.count() > 0 else remote
             print("New entries:", new_local.count())
 
             Model.objects.using("local").bulk_create(new_local)
