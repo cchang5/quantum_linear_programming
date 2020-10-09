@@ -1,0 +1,3 @@
+ENGINE: django.db.backends.postgresql
+NAME: qlp-publication
+USER: admin
