@@ -170,6 +170,8 @@ class Sim:
             solver__contains=self.params["solver"],
             wave__contains=self.params["wave"],
         ).first()
+        print("Saving tdse instance")
+        query.save(using="local")
         from django.db import connection
         #print(connection.queries)
         with open(f"{settings.MEDIA_ROOT}/{query.solution}", "rb") as file:
