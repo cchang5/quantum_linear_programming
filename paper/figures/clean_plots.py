@@ -3,16 +3,22 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 import seaborn as sns
 from qlpdb.data.models import Data as data_Data
+from qlpdb.experiment.models import Experiment
+from qlpdb.graph.models import Graph
+
 import pickle
 import numpy as np
 from scipy.linalg import logm
 from numpy.linalg import eigh
 
+from django.db import transaction
 from django.conf import settings
 from qlpdb.tdse.models import Tdse
 from qlp.tdse import convert_params, embed_qubo_example
 from qlp.mds import graph_tools as gt
 from qlp.mds.mds_qlpdb import graph_summary
+
+from django.contrib.auth.models import User
 
 p = dict()
 p["figsize"] = (7, 4)
@@ -83,7 +89,7 @@ class Sim:
         offset_params["offset"] = "single_sided_binary"
         offset_params["offset_min"] = 0
         offset_params["anneal_curve"] = "dwave"
-        print(offset_params)
+        #print(offset_params)
         # wave params
         wave_params = dict()
         wave_params["type"] = "mixed"
@@ -129,10 +135,10 @@ class Sim:
     def get_data(self, offset, normalized_time = [0.0, 1.0]):
         self.params["offset"]["offset_min"] = offset
         self.params["offset"]["normalized_time"] = normalized_time
-        print(self.params["graph"]["tag"])
-        print(convert_params(self.params["offset"]))
-        print(self.params["solver"])
-        print(self.params["wave"])
+        #print(self.params["graph"]["tag"])
+        #print(convert_params(self.params["offset"]))
+        #print(self.params["solver"])
+        #print(self.params["wave"])
         query = Tdse.objects.filter(
             graph__tag=self.params["graph"]["tag"],
             offset__contains=convert_params(self.params["offset"]),
@@ -140,7 +146,7 @@ class Sim:
             wave__contains=self.params["wave"],
         ).first()
         from django.db import connection
-        print(connection.queries)
+        #print(connection.queries)
         with open(f"{settings.MEDIA_ROOT}/{query.solution}", "rb") as file:
             sol = pickle.load(file)
         with open(f"{settings.MEDIA_ROOT}/{query.instance}", "rb") as file:
@@ -407,7 +413,9 @@ def getall(offset=-0.05, graphsize=2):
     z3 uses qubits with offset range from -0.05 to 0.05
     z4 uses qubits with offset range from -0.08 to 0.03
     """
-    if True:
+    print("calling get all with", offset, graphsize)
+
+    if False:
         prob = {
             0.05: [0.9730875, 0.49125, 0.7733, 0.861175, 0.4954375, 0.445675, 0.10225, 0.0489125, 0.2658125, 0.0861875,
                    0.0009875],
@@ -441,7 +449,30 @@ def getall(offset=-0.05, graphsize=2):
         experiment__tag=f"FixEmbedding_Single_Sided_Binary_{offset}_z4",
         experiment__settings__annealing_time=500,
         experiment__settings__num_spin_reversal_transforms=0,
-    ).to_dataframe()
+    )
+
+    with transaction.atomic():
+        for Model, pk_field in {
+            User: "user__pk",
+            Graph: "experiment__graph__pk",
+            Experiment: "experiment__pk",
+            data_Data: "pk"
+        }.items():
+            print("Parsing model", Model)
+            remote = Model.objects.filter(pk__in=data.values_list(pk_field, flat=True).distinct())
+            print("Remote entries:", remote.count())
+
+            local = Model.objects.using("local").filter(pk__in=data.values_list(pk_field, flat=True).distinct())
+            print("Local entries:", remote.count())
+
+            new_local = remote.difference(local)
+            print("New entries:", new_local.count())
+
+            Model.objects.using("local").bulk_create(new_local)
+            print("Inserted")
+
+    data = data.to_dataframe()
+
     print(data.groupby("energy").count()["id"].sort_index())
     ground_state_count = data.groupby("energy").count()["id"].sort_index().iloc[0]
     total_count = data.count()["id"]
@@ -1060,17 +1091,18 @@ if __name__ == "__main__":
     # plot_anneal_time() # this is not current, maybe drop this
     plot_all()
 
+
     #plot_random_ratio()
     # plot_dwave_mi()
     """
     For TDSE simulation
     """
-    plot_tdse()
-    plot_tdse_extended()
-    plot_distribution()
-    plot_annealcurve()
-    plot_annealcurve_extended()
-    plot_timedepprob()
+    #plot_tdse()
+    #plot_tdse_extended()
+    #plot_distribution()
+    #plot_annealcurve()
+    #plot_annealcurve_extended()
+    #plot_timedepprob()
 
 
     # plot_hybridization()

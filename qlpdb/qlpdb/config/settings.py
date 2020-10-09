@@ -100,12 +100,9 @@ DB_CONFIG = get_db_config(ROOT_DIR)
 DATABASES = {
     "default": DB_CONFIG,
     "local": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.abspath(
-            os.path.join(
-                os.path.dirname(__file__), os.pardir, os.pardir, "qlp-db.sqlite"
-            )
-        ),
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "qlp-dump",
+        "USER": "admin",
     },
 }
 
