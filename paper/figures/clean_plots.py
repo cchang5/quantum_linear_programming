@@ -1,3 +1,4 @@
+from typing import List
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
@@ -76,7 +77,7 @@ sns.palplot(OFFSET_COLORS)
 ###################################
 """
 
-def copy_data_to_local(data. List[data_Data]):
+def copy_data_to_local(data: List[data_Data]):
     """Copies data_Data queryset from default to local db."""
     with transaction.atomic():
         for Model, pk_field in {
@@ -171,7 +172,7 @@ class Sim:
             wave__contains=self.params["wave"],
         ).first()
         print("Saving tdse instance")
-        query.save(using="local")
+        #query.save(using="local")
         from django.db import connection
         #print(connection.queries)
         with open(f"{settings.MEDIA_ROOT}/{query.solution}", "rb") as file:
@@ -282,7 +283,7 @@ def getallspinconfig(anneal_time=1, offset=-0.05):
         experiment__settings__annealing_time=anneal_time,
         experiment__settings__num_spin_reversal_transforms=0,
     )
-    copy_data_to_local(data)
+    #copy_data_to_local(data)
     data = data.to_dataframe()
 
     spin = data["spin_config"]
@@ -406,7 +407,7 @@ def getallannealtime(anneal_time=1, offset_tag="FixEmbedding_Single_Sided_Binary
         experiment__settings__annealing_time=anneal_time,
         experiment__settings__num_spin_reversal_transforms=0,
     )
-    copy_data_to_local(data)
+    #copy_data_to_local(data)
     data = data.to_dataframe()
 
     ground_state_count = data.groupby("energy").count()["id"].sort_index().iloc[0]
@@ -481,7 +482,7 @@ def getall(offset=-0.05, graphsize=2):
         experiment__settings__annealing_time=500,
         experiment__settings__num_spin_reversal_transforms=0,
     )
-    copy_data_to_local(data)
+    #copy_data_to_local(data)
     data = data.to_dataframe()
 
     print(data.groupby("energy").count()["id"].sort_index())
@@ -579,7 +580,7 @@ def gettdse(offset=0.0):
         experiment__settings__annealing_time=1,
         experiment__settings__num_spin_reversal_transforms=0,
     )
-    copy_data_to_local(data)
+    #copy_data_to_local(data)
     data = data.to_dataframe()
     print(offset)
     energy_count = data.groupby("energy").count()["id"].sort_index().iloc[0]
@@ -1105,21 +1106,21 @@ if __name__ == "__main__":
     plot_all()
 
 
-    #plot_random_ratio()
-    # plot_dwave_mi()
+    plot_random_ratio()
+    plot_dwave_mi()
     """
     For TDSE simulation
     """
-    #plot_tdse()
-    #plot_tdse_extended()
-    #plot_distribution()
-    #plot_annealcurve()
-    #plot_annealcurve_extended()
-    #plot_timedepprob()
+    plot_tdse()
+    plot_tdse_extended()
+    plot_distribution()
+    plot_annealcurve()
+    plot_annealcurve_extended()
+    plot_timedepprob()
 
 
-    # plot_hybridization()
-    # plot_mi()
-    # plot_timedepsz()
-    #plot_levelspacing()
-    #plot_spectrum()
+    plot_hybridization()
+    plot_mi()
+    plot_timedepsz()
+    plot_levelspacing()
+    plot_spectrum()
