@@ -6,20 +6,13 @@ It contains Python code for mapping [Integer Linear Programming problems](https:
 It furthermore contains code which simulates the quantum hardware.
 
 
-## How to use this repository?
+## How to install it?
 
 This repository contains two modules
 
 1. `qlp` used for computations and
 2. `qlpdb` for accessing and storing computation data
 
-### Access publication data
-
-This repository contains all the data presented in [2009.11970]](https://arxiv.org/abs/2009.11970).
-To access this data you must host a [PostgreSQL database](https://www.postgresql.org/about/) (usage of `JSON` and `ArrayFields`).
-We provide more information in the [`qlpdb/README.md`](qlpdb/README.md).
-
-## How to install it?
 
 ### Install the computation module
 The repository source code can be installed via pip:
@@ -34,6 +27,12 @@ To interface with the publication data, you also have to install the data module
 cd qlpdb
 pip install [--user] .
 ```
+
+### Access publication data
+
+This repository contains all the data presented in [2009.11970]](https://arxiv.org/abs/2009.11970).
+To access this data you must host a [PostgreSQL database](https://www.postgresql.org/about/) (usage of `JSON` and `ArrayFields`).
+We provide more information in the [`qlpdb/README.md`](qlpdb/README.md).
 
 ## Usage
 
@@ -99,11 +98,25 @@ See also the [`notebooks`](notebooks) folder, especially the [`notebooks/runs`](
 
 ### `qlpdb`
 
+`qlpdb` is an [(ORM)](https://en.wikipedia.org/wiki/Object–relational_mapping) framework for database structures to Python objects using [EspressoDB](https://espressodb.readthedocs.io/en/latest/) / [Django](https://www.djangoproject.com).
 
-
-
-
-
+Once the database [is properly set up](qlpdb/README.md), you can launch a local web server for inspecting data and browsing the documentation (viewable in any browser)
+```bash
+cd qlpdb
+python manage.py runserver
+```
+and query data in Python code
+```python
+from qlpdb.tdse.models import Tdse
+...
+solutions = Tdse.objects.filter(
+    graph__tag=graph_params["tag"],
+    offset__contains=convert_params(offset_params),
+    ising__contains=convert_params(ising_params),
+    solver__contains=solver_params,
+    wave__contains=wave_params,
+)
+```
 
 ## Who is responsible for it?
 * [@cchang5](https://github.com/cchang5)
