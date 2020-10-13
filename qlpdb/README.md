@@ -1,7 +1,7 @@
 # qlpdb
 
 Data module for publication [2009.11970]](https://arxiv.org/abs/2009.11970).
-It allows interfacing, searching and saving database structures through Python objects.
+It allows interfacing, searching, and saving database structures through Python objects.
 
 The data itself is stored using [`git lfs`](https://git-lfs.github.com).
 To make sure you have the most recent version, run
@@ -13,7 +13,7 @@ git lfs pull
 ## Requirements
 
 The implemented data structures require a [PostgreSQL database](https://www.postgresql.org/about/) (`JSON` and `ArrayFields`).
-Thus, you first have to setup a [PostgreSQL database server](https://www.postgresql.org/docs/9.1/server-start.html).
+Thus, you first have to set up a [PostgreSQL database server](https://www.postgresql.org/docs/9.1/server-start.html).
 
 If you prefer a shortcut, we also specify a high-level [Docker setup](https://docs.docker.com/get-docker/).
 
@@ -38,14 +38,14 @@ Finally, to launch the database interface, you can run
 ```bash
 docker-compose up
 ```
-This data server can be access through any web browser at the address
+This data server can be accessed through any web browser at the address
 ```
 http://localhost:8000
 ```
 
 ## Details
-The data is stored in a `sql` dump file which is contained in the `data.tar.gz`.
-We also provide a `SHA-512` checksum for verifying the data integrity.
+The data is stored in a `.sql` dump file, which is contained in the `data.tar.gz`.
+We also provide an `SHA-512` checksum for verifying the data integrity.
 
 You can create a custom PostgreSQL database and user for loading in the dump file
 ```bash

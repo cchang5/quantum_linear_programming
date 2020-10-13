@@ -1,14 +1,14 @@
 # Integer Programming from Quantum Annealing and Open Quantum Systems
 
-This repository contains software and data associated with publication [Integer Programming from Quantum Annealing and Open Quantum Systems [2009.11970]](https://arxiv.org/abs/2009.11970).
+This repository contains software and data associated with the publication [Integer Programming from Quantum Annealing and Open Quantum Systems [2009.11970]](https://arxiv.org/abs/2009.11970).
 
-It contains Python code for mapping [Integer Linear Programming problems](https://en.wikipedia.org/wiki/Integer_programming), in particular the [Minimum Dominating Set](https://mathworld.wolfram.com/MinimumDominatingSet.html) Problem, to [QUBOs or Ising Hamiltonians utilized as input for Quantum Annealers](https://docs.dwavesys.com/docs/latest/c_gs_3.html#qubo).
-It furthermore contains code which simulates the quantum hardware.
+It contains Python code for mapping [Integer Linear Programming problems](https://en.wikipedia.org/wiki/Integer_programming), notably the [Minimum Dominating Set](https://mathworld.wolfram.com/MinimumDominatingSet.html) Problem, to [QUBOs or Ising Hamiltonians utilized as input for Quantum Annealers](https://docs.dwavesys.com/docs/latest/c_gs_3.html#qubo).
+It furthermore contains code that simulates the quantum hardware.
 
 
 ## How to install it?
 
-This repository contains two modules
+This repository contains two modules:
 
 1. `qlp` used for computations and
 2. `qlpdb` for accessing and storing computation data
@@ -31,14 +31,14 @@ pip install [--user] .
 ### Access publication data
 
 This repository contains all the data presented in [[2009.11970]](https://arxiv.org/abs/2009.11970).
-To access this data you must host a [PostgreSQL database](https://www.postgresql.org/about/) (other database formats are not sufficient because we have implemented `JSON` and `ArrayFields`).
-We provide more information in the [`qlpdb/README.md`](qlpdb/README.md).
+To access this data, you must host a [PostgreSQL database](https://www.postgresql.org/about/) (other database formats are not sufficient because we have implemented `JSON` and `ArrayFields`).
+We provide more information on the [`qlpdb/README.md`](qlpdb/README.md).
 
 ## Usage
 
 ### `qlp`
 
-The module `qlp` contains two major components
+The module `qlp` contains two major components:
 
 * The first submodule, `mds`, was used to map the Minimum Dominating Set Problem to annealing Hardware:
     ```python
@@ -54,12 +54,12 @@ The module `qlp` contains two major components
         penalty=2       # strength of penalty term
     )
     ```
-    The solution to the MDS problem is given by the bit vector `psi` which minimizes
+    The solution to the MDS problem is given by the bit vector `psi`, which minimizes
     ```python
     E = psi.T@qubo@psi
     ```
     The QUBO serves as input for the annealing hardware.
-* the second submodule, `tdse`, simulates the time dependent Schrödinger equation for given input (Ising) Hamiltonians:
+* the second submodule, `tdse`, simulates the time-dependent Schrödinger equation for given input (Ising) Hamiltonians:
     ```python
     from qlp.mds.mds_qlpdb import QUBO_to_Ising, graph_summary
     from qlp.tdse import TDSE
@@ -80,7 +80,7 @@ The module `qlp` contains two major components
         graph_params,  # Graph parameters
         ising_params,  # Ising Hamiltonian parameters
         offset_params, # how is the annealing curve implemented
-        solver_params, # numerical parameters for solving the time dependent equation
+        solver_params, # numerical parameters for solving the time-dependent equation
     )
     # Compute the starting wave density
     rho = tdse.init_densitymatrix(
@@ -90,7 +90,7 @@ The module `qlp` contains two major components
     )
     tdse.gamma = gamma              # set FC decoherence rate
     tdse.gamma_local = gamma_local  # set local decoherence rate
-    # Solve time dependent Schrödinger equation
+    # Solve time-dependent Schrödinger equation
     sol_densitymatrix = tdse.solve_mixed(rho)
     ```
 
@@ -100,7 +100,7 @@ See also the [`notebooks`](notebooks) folder, especially the [`notebooks/runs`](
 
 `qlpdb` is an [(ORM)](https://en.wikipedia.org/wiki/Object–relational_mapping) framework for mapping database structures to Python objects using [EspressoDB](https://espressodb.readthedocs.io/en/latest/) / [Django](https://www.djangoproject.com).
 
-Once the database [is properly set up](qlpdb/README.md), you can launch a local web server for inspecting data and browsing the documentation (viewable in any browser)
+Once the database [is appropriately set up](qlpdb/README.md), you can launch a local web server for inspecting data and browsing the documentation (viewable in any browser)
 ```bash
 cd qlpdb
 python manage.py runserver
