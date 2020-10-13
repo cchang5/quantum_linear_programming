@@ -1,8 +1,8 @@
-Django
+Django>=3.1
 django-bootstrap4
 django-widget-tweaks
 django-picklefield
-espressodb
+espressodb>=1.2
 plotly
 jupyter
 dwave-ocean-sdk

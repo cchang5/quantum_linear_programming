@@ -4,7 +4,7 @@
 import numpy as np
 from django.db import models
 from espressodb.base.models import Base
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 from django.contrib.postgres.fields import ArrayField
 
 
