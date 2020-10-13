@@ -11,6 +11,6 @@ jobs:
             - name: Build the stack
               run: docker-compose build
             - name: Up the service
-              run: docker-compose up
+              run: docker-compose up -d
             - name: Check DB connection
               run: docker-compose run qlpdb python manage.py migrate
