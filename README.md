@@ -15,7 +15,7 @@ This repository contains two modules
 
 
 ### Install the computation module
-The repository source code can be installed via pip:
+The `qlp` module can be installed via pip:
 ```bash
 pip install [--user] .
 ```
@@ -30,8 +30,8 @@ pip install [--user] .
 
 ### Access publication data
 
-This repository contains all the data presented in [2009.11970]](https://arxiv.org/abs/2009.11970).
-To access this data you must host a [PostgreSQL database](https://www.postgresql.org/about/) (usage of `JSON` and `ArrayFields`).
+This repository contains all the data presented in [[2009.11970]](https://arxiv.org/abs/2009.11970).
+To access this data you must host a [PostgreSQL database](https://www.postgresql.org/about/) (other database formats are not sufficient because we have implemented `JSON` and `ArrayFields`).
 We provide more information in the [`qlpdb/README.md`](qlpdb/README.md).
 
 ## Usage
@@ -94,11 +94,11 @@ The module `qlp` contains two major components
     sol_densitymatrix = tdse.solve_mixed(rho)
     ```
 
-See also the [`notebooks`](notebooks) folder, especially the [`notebooks/runs`](notebooks/runs) for reproducing computations.
+See also the [`notebooks`](notebooks) folder, especially the [`notebooks/runs`](notebooks/runs), for reproducing computations.
 
 ### `qlpdb`
 
-`qlpdb` is an [(ORM)](https://en.wikipedia.org/wiki/Object–relational_mapping) framework for database structures to Python objects using [EspressoDB](https://espressodb.readthedocs.io/en/latest/) / [Django](https://www.djangoproject.com).
+`qlpdb` is an [(ORM)](https://en.wikipedia.org/wiki/Object–relational_mapping) framework for mapping database structures to Python objects using [EspressoDB](https://espressodb.readthedocs.io/en/latest/) / [Django](https://www.djangoproject.com).
 
 Once the database [is properly set up](qlpdb/README.md), you can launch a local web server for inspecting data and browsing the documentation (viewable in any browser)
 ```bash
