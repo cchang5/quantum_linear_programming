@@ -18,7 +18,7 @@ COPY data.tar.gz $WORKDIR
 WORKDIR $WORKDIR
 
 # Extract data
-RUN tar -xvf data.tar.gz
+RUN tar -xvzf data.tar.gz
 
 # Add it to postgres image entrypoints (automatic loading of data on init)
 RUN mv data/qlp-dump.sql /docker-entrypoint-initdb.d
