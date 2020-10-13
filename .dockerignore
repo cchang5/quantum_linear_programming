@@ -1,0 +1,9 @@
+qlpdb/data/
+qlpdb/media/
+.git
+.github
+docs
+notebooks
+Notes
+paper
+*.egg-info

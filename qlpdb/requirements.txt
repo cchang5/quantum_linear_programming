@@ -1,7 +1,11 @@
 Django
 django-bootstrap4
 django-widget-tweaks
+django-picklefield
 espressodb
 plotly
 jupyter
 dwave-ocean-sdk
+psycopg2
+matplotlib
+qlp
