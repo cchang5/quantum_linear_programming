@@ -20,10 +20,14 @@ If you prefer a shortcut, we also specify a high-level [Docker setup](https://do
 ## Docker
 Once you have [started Docker](https://docs.docker.com/get-started/), you can install the repository software and initialize data structures by running
 ```bash
-docker-compose build
+docker-compose build # install dependencies
+docker compose run db # load in data and start db
 ```
 in the repository root directory.
+The data has been loaded in once you see the message `database system is ready to accept connections`.
 Note that this might take a while.
+You can now end this process (`Ctrl-c`).
+This only needs to be executed once.
 
 In case data structures have changed, you have to run once
 ```bash
