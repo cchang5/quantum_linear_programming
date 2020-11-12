@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+    db:
+        build:
+            context: qlpdb
+            dockerfile: Dockerfile.postgres
+        environment:
+            - POSTGRES_DB=qlpdb
+            - POSTGRES_USER=admin
+            - POSTGRES_PASSWORD=postgres
+        ports:
+            - "5432:5432"
+        expose:
+            - "5432"
+    qlpdb:
+        build: .
+        ports:
+            - "8000:8000"
+        depends_on:
+            - db
+        command: "python manage.py runserver 0.0.0.0:8000"

@@ -4,7 +4,7 @@ from typing import List, Dict
 
 from django.db import models
 from espressodb.base.models import Base
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 
 from django.db.models import Count, Avg
 

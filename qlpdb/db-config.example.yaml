@@ -1,0 +1,5 @@
+ENGINE: django.db.backends.postgresql
+NAME: qlpdb
+USER: admin
+PASSWORD: postgres
+HOST: db

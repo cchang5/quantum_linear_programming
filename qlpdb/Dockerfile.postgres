@@ -1,0 +1,24 @@
+# Load in python image
+FROM postgres
+
+# Who to contact
+MAINTAINER Christopher Körber
+
+# Environment variables and dirs used
+ENV WORKDIR=/work
+
+# Create dirs
+RUN mkdir -p $WORKDIR
+RUN mkdir -p /docker-entrypoint-initdb.d
+
+# Copy data file
+COPY data.tar.gz $WORKDIR
+
+# Set workdir
+WORKDIR $WORKDIR
+
+# Extract data
+RUN tar -xvzf data.tar.gz
+
+# Add it to postgres image entrypoints (automatic loading of data on init)
+RUN mv data/qlp-dump.sql /docker-entrypoint-initdb.d
