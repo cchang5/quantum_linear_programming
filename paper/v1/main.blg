@@ -1,0 +1,69 @@
+This is BibTeX, Version 0.99d (TeX Live 2020)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: main.aux
+The style file: apsrev4-1.bst
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Database file #1: mainNotes.bib
+Database file #2: main.bib
+Warning--string name "august" is undefined
+--line 191 of file main.bib
+Warning--string name "august" is undefined
+--line 198 of file main.bib
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+merlin.mbs apsrev4-1.bst 2010-07-25 4.21a (PWD, AO, DPC) hacked
+Control: key (0) 
+Control: author (72) initials jnrlst
+Control: editor formatted (1) identically to author
+Control: production of article title (-1) disabled
+Control: page (0) single
+Control: year (1) truncated
+Control: production of eprint (0) enabled
+Warning--missing publisher in Goldenfeld:1992qy
+You've used 37 entries,
+            5847 wiz_defined-function locations,
+            1896 strings with 22911 characters,
+and the built_in function-call counts, 34959 in all, are:
+= -- 2317
+> -- 852
+< -- 211
++ -- 282
+- -- 198
+* -- 5530
+:= -- 3505
+add.period$ -- 43
+call.type$ -- 37
+change.case$ -- 158
+chr.to.int$ -- 45
+cite$ -- 38
+duplicate$ -- 3309
+empty$ -- 2599
+format.name$ -- 502
+if$ -- 6837
+int.to.chr$ -- 5
+int.to.str$ -- 45
+missing$ -- 396
+newline$ -- 164
+num.names$ -- 112
+pop$ -- 1349
+preamble$ -- 1
+purify$ -- 185
+quote$ -- 0
+skip$ -- 1239
+stack$ -- 0
+substring$ -- 813
+swap$ -- 3114
+text.length$ -- 102
+text.prefix$ -- 0
+top$ -- 8
+type$ -- 505
+warning$ -- 1
+while$ -- 100
+width$ -- 0
+write$ -- 357
+(There were 3 warnings)
