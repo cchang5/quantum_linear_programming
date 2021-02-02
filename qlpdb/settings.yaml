@@ -4,5 +4,5 @@ PROJECT_APPS:
   - qlpdb.experiment
   - qlpdb.data
   - qlpdb.tdse
-ALLOWED_HOSTS: []
+ALLOWED_HOSTS: ["*"]
 DEBUG: True

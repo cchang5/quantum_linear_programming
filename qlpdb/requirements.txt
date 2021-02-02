@@ -1,6 +1,11 @@
-Django
+Django>=3.1
 django-bootstrap4
 django-widget-tweaks
-espressodb
+django-picklefield
+espressodb>=1.2
 plotly
+jupyter
 dwave-ocean-sdk
+psycopg2
+matplotlib
+qlp

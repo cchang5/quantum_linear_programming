@@ -1,0 +1,28 @@
+\BOOKMARK [0][-]{section*.2}{Integer Programming with Quantum Annealing from an Open Quantum System}{}% 2
+\BOOKMARK [1][-]{section*.1}{Abstract}{section*.2}% 1
+\BOOKMARK [1][-]{section*.3}{INTRODUCTION}{section*.2}% 3
+\BOOKMARK [1][-]{section*.4}{RESULTS}{section*.2}% 4
+\BOOKMARK [2][-]{section*.5}{QUBO Formulation of ILP}{section*.4}% 5
+\BOOKMARK [2][-]{section*.6}{Annealer Results for the Dominating Set}{section*.4}% 6
+\BOOKMARK [2][-]{section*.7}{Simulation Results}{section*.4}% 7
+\BOOKMARK [1][-]{section*.8}{Discussion}{section*.2}% 8
+\BOOKMARK [2][-]{section*.9}{Dynamics of Time Evolution}{section*.8}% 9
+\BOOKMARK [2][-]{section*.10}{Idealized Quantum Annealing}{section*.8}% 10
+\BOOKMARK [2][-]{section*.11}{Final Remarks}{section*.8}% 11
+\BOOKMARK [1][-]{section*.12}{METHODS}{section*.2}% 12
+\BOOKMARK [2][-]{section*.13}{Additional Mappings to QUBO}{section*.12}% 13
+\BOOKMARK [3][-]{section*.14}{Minimum Dominating Set QUBO}{section*.13}% 14
+\BOOKMARK [3][-]{section*.15}{Integer Quadratic Optimization}{section*.13}% 15
+\BOOKMARK [2][-]{section*.16}{ILP on the D-Wave}{section*.12}% 16
+\BOOKMARK [3][-]{section*.17}{Comment on ILP QUBO Penalty Term}{section*.16}% 17
+\BOOKMARK [3][-]{section*.18}{Minor Embedding}{section*.16}% 18
+\BOOKMARK [2][-]{section*.19}{Simulation of a Quantum Annealer}{section*.12}% 19
+\BOOKMARK [3][-]{section*.20}{The Lindblad Equation}{section*.19}% 20
+\BOOKMARK [3][-]{section*.21}{Annealing Schedule and Offsets}{section*.19}% 21
+\BOOKMARK [3][-]{section*.22}{Pure Transverse Field Simulation}{section*.19}% 22
+\BOOKMARK [1][-]{section*.23}{DATA AVAILABILITY}{section*.2}% 23
+\BOOKMARK [1][-]{section*.24}{ACKNOWLEDGEMENTS}{section*.2}% 24
+\BOOKMARK [1][-]{section*.25}{AUTHOR CONTRIBUTIONS}{section*.2}% 25
+\BOOKMARK [1][-]{section*.26}{CORRESPONDING AUTHOR}{section*.2}% 26
+\BOOKMARK [1][-]{section*.27}{ADDITIONAL INFORMATION}{section*.2}% 27
+\BOOKMARK [1][-]{section*.28}{References}{section*.2}% 28
