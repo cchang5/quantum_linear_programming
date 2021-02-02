@@ -98,7 +98,7 @@ where $i=1, \cdots,  N$ is the number of dependent variables and $a=1, \cdots, M
 In general, ILP is classically NP-complete, and as a result, heuristic methods are employed~\cite{GLOVER1986533, doi:10.1287/ijoc.1.3.190, doi:10.1287/ijoc.2.1.4}.
 Standard classical heuristic algorithms follow a greedy scheme which iteratively approximates optimal solutions--starting from a random initial guess, these algorithms apply locally optimal choices at each step.
 The NP-hardness of ILP can be understood by realizing that while the solution to an $n$-dimensional linear problem must lie on the vertices of the feasibility region, while the optimal integer solution may in general be at any integer solution inside the feasibility region.
-While greedy algorithms do not guarantee optimal global solutions, they find approximate solutions in polynomial time, which can be utilized in further computations. ILP is a commonly tackled problem applicable to situations such as scheduling, network optimization, and graph optimization such as the minimum dominating set problem (MDS). ILP can also be used to identify reaction pathways of biological system, and has recently been explored in the context of quantum annealing~\cite{2020arXiv200713788H}.
+While greedy algorithms do not guarantee optimal global solutions, they find feasible solutions in polynomial time, which can be utilized in further computations. ILP is a commonly tackled problem applicable to situations such as scheduling, network optimization, and graph optimization such as the minimum dominating set problem (MDS). ILP can also be used to identify reaction pathways of biological system, and has recently been explored in the context of quantum annealing~\cite{2020arXiv200713788H}.
 
 An important ILP application is the MDS problem, which is representatively considered in this work.
 For a given a graph $G(E,V)$, defined by the set of $V$ vertices and $E$ edges, a dominating set $D$ is a specific subset of vertices $D \subseteq V$.
@@ -147,7 +147,8 @@ The mapping of ILPs to QUBOs we propose is realized by introducing slack variabl
   & \sum_i A_{a i}x_i + s_a + b_a = 0, \\
   & x_i, s_a \in \mathbb{Z} \geq 0.
 \end{align}
-While, in general, the coefficients of the inequality constraints are not required to be integer valued, this real valued inequalities can be trivially rescaled such that $s_i \in \mathbbm{Z}$ given fixed precision coefficients $A_{ij}$ and $b_i$.
+While, in general, the coefficients of the inequality constraints are not required to be integer valued, this real valued inequalities can be rescaled such that $s_i \in \mathbbm{Z}$ given fixed precision coefficients $A_{ij}$ and $b_i$. Current hardware however, offers approximately 10 bits of precision over the control of value of the coupling and biases, limiting the usefulness of rescaling.
+
 Furthermore, this formalism can be generalized to constrained quadratic optimizations \ref{sec:methods:ilp:quadratic}.
 
 We improve the quantum annealer's performance by utilizing annealing offsets, which effectively delay the annealing schedule on a per-qubit basis~\cite{PhysRevA.96.042322,hsu2018quantum,10.1007/978-3-030-14082-3_14,2020RPPh...83e4401H}.
@@ -240,8 +241,7 @@ The integer linear optimization problem is then solved through the minimization 
  \vec c^T T_x \vec \Psi_x + p \left\| A T_x \vec \Psi_x + T_s \vec \Psi_s + \vec b \right\|^2
 \end{align}
 where $p$ is an external parameter representing the strength of the penalty when violating constraints.
-This parameter needs to be sufficiently large, e.g., $p \geq \vec c \cdot \vec x$, to ensure the constraints are indeed fulfilled\footnote{Depending on the problem, $p$ can be smaller as well.
-For example, in the case of the MDS, $p\geq 1$ suffices.}.
+This parameter needs to be sufficiently large, e.g., $p \geq \vec c \cdot \vec x$, to ensure the constraints are indeed fulfilled\footnote{Depending on the problem, $p$ can be smaller as well. For example, in the case of the MDS, $p\geq 1$ suffices.}.  The exact value of a sufficiently large penalty coefficient changes the excited-state spectrum of the time-dependent Hamiltonian, and while leaving the ground state unchanged, will impact the performance on quantum annealers due to the limited control over couplings and biases. Therefore, choosen the smallest valid penalty coefficient is observed to be optimal for quantum annealers today.
 The objective function $\chi^2$ can be represented as a QUBO Hamiltonian
 \begin{align}
  \chi^2(\vec \Psi) =    &
