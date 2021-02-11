@@ -95,14 +95,15 @@ subject to
 \end{align}
 where $i=1, \cdots,  N$ is the number of dependent variables and $a=1, \cdots, M$ the number of constraint equations.
 
-While ILP is NP-Hard, extremely large instances of ILP are solved are rutinely solved on a daily basis in a variety of industries such as transportation, energy, and online dating. The fact that instances with millions of integer variables can be solved is due to the incredible improvement in classical ILP methods. One estimate has that the speed of ILP algorithms, combined with hardware improvements, have lead to a speedup of around 200 billion\cite{bertsimas2014statistics}. Despite this fact, there are still very small problems that still require several months, or even years of computational effort to solve. For example, the Steiner Triple Covering problems can be notoriously difficult, an instance with only 135 binary variables, \mathtt{STS135}, required over 120 days of computations~\cite{ostrowski2011solving}. Another example is the football pool problem, where an instance with only 729 binary variables still remains unsolved after years of computational effort~\cite{linderoth2009improving}. In both these cases, the underlying problem is a covering problem. 
+While ILP is NP-Hard, extremely large instances of ILP are rutinely solved on a daily basis in a variety of industries such as transportation, energy, online dating, network optimization, graph optimization and has recently been explored in the context of quantum annealing~\cite{2020arXiv200713788H}.
+The fact that instances with millions of integer variables can be solved is due to the incredible improvement in classical ILP methods.
+One estimate has that the speed of ILP algorithms, combined with hardware improvements, have lead to a speedup of around 200 billion\cite{bertsimas2014statistics}.
+Despite this fact, there are still very small problems that still require several months, or even years, of computational effort to solve. For example, the Steiner Triple Covering problems can be notoriously difficult; an instance with only 135 binary variables, \texttt{STS135}, required over 120 days of computations~\cite{ostrowski2011solving}. Another example is the football pool problem, where an instance with only 729 binary variables still remains unsolved after years of computational effort~\cite{linderoth2009improving}.
+In both these cases, the underlying problem is a covering problem.
 
-
-
-{\color{red} In general, ILP is classically NP-hard, and as a result, heuristic methods are employed~\cite{GLOVER1986533, doi:10.1287/ijoc.1.3.190, doi:10.1287/ijoc.2.1.4}.
+In general, heuristic methods are employed~\cite{GLOVER1986533, doi:10.1287/ijoc.1.3.190, doi:10.1287/ijoc.2.1.4} to solve ILP problems.
 Standard classical heuristic algorithms follow a greedy scheme which iteratively approximates optimal solutions--starting from a random initial guess, these algorithms apply locally optimal choices at each step.
-The NP-hardness of ILP can be understood by realizing that while the solution to an $n$-dimensional linear problem must lie on the vertices of the feasibility region, while the optimal integer solution may in general be at any integer solution inside the feasibility region.
-While greedy algorithms do not guarantee optimal global solutions, they find feasible solutions in polynomial time, which can be utilized in further computations. ILP is a commonly tackled problem applicable to situations such as scheduling, network optimization, and graph optimization such as the minimum dominating set problem (MDS). ILP can also be used to identify reaction pathways of biological system, and has recently been explored in the context of quantum annealing~\cite{2020arXiv200713788H}.}
+While greedy algorithms do not guarantee optimal global solutions, they find feasible solutions in polynomial time, which can be utilized in further computations.
 
 In this paper we will consider instances of the minimum dominating set (MDS) problem.  For a given a graph $G(E,V)$, defined by the set of $V$ vertices and $E$ edges, a dominating set $D$ is a specific subset of vertices $D \subseteq V$.
 In particular, $D$ is a dominating set if all vertices in $V$ but not in $D$ are adjacent to at least one vertex in $D$.
@@ -118,11 +119,11 @@ As a result, the solution to the dominating set problem can not be obtained by s
 \begin{figure*}
 	\centering
 	\begin{tabular}{p{0.2\textwidth}p{0.1\textwidth}p{0.2\textwidth}p{0.1\textwidth}p{0.2\textwidth}}
-	\includegraphics[width=0.2\textwidth]{./MDS_mds0.pdf}
+	\includegraphics[width=0.2\textwidth]{./new_figures/MDS_mds0.pdf}
 &&
-	\includegraphics[width=0.2\textwidth]{./MDS_mds1.pdf}
+	\includegraphics[width=0.2\textwidth]{./new_figures/MDS_mds1.pdf}
 &&
-	\includegraphics[width=0.2\textwidth]{./MDS_mds2.pdf}\\
+	\includegraphics[width=0.2\textwidth]{./new_figures/MDS_mds2.pdf}\\
 	\centering\textbf{a} && \centering\textbf{b} && \centering\textbf{c}
 	\end{tabular}
 	\caption{Example of different dominating sets for $G(V, E)$. Vertices in the dominating set $D$ are highlighted in blue. {\textbf{a)}} A dominating set of $G$ with domination number $\overline{\overline{D}} = 2$. {\textbf{b)}} A minimal dominating set of $G$ with domination number of $\overline{\overline{D}} = 2$. {\textbf{c)}} The MDS of $G$ with domination number of $\overline{\overline{D}} = 1$.}
@@ -278,7 +279,7 @@ The slack components of this vector $\vec \Psi_s$ can be utilized to check if th
 	\centering
 	\begin{tabular}{cc}
 	$G(n):$ &
-	\raisebox{-.4\height}{\includegraphics[width=0.8\columnwidth]{./linear_graph.pdf}}
+	\raisebox{-.4\height}{\includegraphics[width=0.8\columnwidth]{./new_figures/linear_graph.pdf}}
 	\end{tabular}
 	\caption{Linear graphs $G(n)$ used in this study. Nodes denote vertices of the graphs and lines are undirected edges.}
 \label{fig:linear}
@@ -300,7 +301,7 @@ Due to near-term limitations, hardware realizations of quantum annealing are uni
 
 \begin{figure}
 	\centering
-	\includegraphics[width=\columnwidth]{./DWave_scaling.pdf}
+	\includegraphics[width=\columnwidth]{./new_figures/DWave_scaling.pdf}
 	\caption{Baseline result of D-Wave (black) compared to random guessing (dashed green). The jagged nature of random guessing reflects the degeneracy of the ground state. Negative offsets with a `s' tag (blue) are results from delays of large values of $|h_i|$, while negative offsets with the `w' label (red) delay the schedule of qubits with small values of $h_i$.}
 	\label{fig:baseline}
 \end{figure}
@@ -319,7 +320,7 @@ The resulting ground state probability as a function of offset measured over 100
 
 \begin{figure}[b]
 	\centering
-	\includegraphics[width=\columnwidth]{./NN2_offset_scaling.pdf}
+	\includegraphics[width=\columnwidth]{./new_figures/NN2_offset_scaling.pdf}
 	\caption{The probability of finding the MDS for $G(2)$ from D-Wave (black) and simulation (dashed yellow) at annealing times of 1 $\mu s$.}
 	\label{fig:dwave1us}
 \end{figure}
@@ -360,7 +361,7 @@ An additional study where an extended annealing schedule is employed in the simu
 
 \begin{figure}
 	\centering
-	\includegraphics[width=\columnwidth]{./final_state_distribution.pdf}
+	\includegraphics[width=\columnwidth]{./new_figures/final_state_distribution.pdf}
 	\caption{Final state distribution from D-Wave (solid bars) and simulation (black outline). The colors label the type of offset  The $(0, 1, 0, 0, 0)$ state is the first solution where vertex 1 is in the dominating set. The $(1, 0, 0, 1, 0)$ state is the second solution where vertex 0 is in the dominating set. The first excited state is the $(1, 1, 1, 1, 1)$ state where both vertices are in the dominating set.}
 	\label{fig:final_state_distribution}
 \end{figure}
@@ -380,7 +381,7 @@ However, we emphasize that the simulation suggests that the ground state is reco
 
 \begin{figure}
 	\centering
-	\includegraphics[width=\columnwidth]{./time_dependent_probability.pdf}
+	\includegraphics[width=\columnwidth]{./new_figures/time_dependent_probability.pdf}
 	\caption{Time-dependent probability for resolving the ground state for simulation results presented in Sec.~\ref{sec:results:simulation}. Different offsets are labeled in the same way as Fig.~\ref{fig:baseline}.}
 	\label{fig:td_prob}
 \end{figure}
@@ -397,9 +398,9 @@ Once dynamical thermalization effects are present, the final state distribution 
 \begin{figure*}
     \centering
 	\begin{tabular}{p{0.5\textwidth}p{0.5\textwidth}}
-	\includegraphics[width=0.5\textwidth]{./anneal_schedule_extended.pdf}
+	\includegraphics[width=0.5\textwidth]{./new_figures/anneal_schedule_extended.pdf}
     &
-	\includegraphics[width=0.5\textwidth]{./NN2_offset_scaling_extended.pdf}\\
+	\includegraphics[width=0.5\textwidth]{./new_figures/NN2_offset_scaling_extended.pdf}\\
 	\centering \textbf{a} & \centering \textbf{b}
 	\end{tabular}
 	\centering
@@ -597,7 +598,7 @@ Further documentation is provided by D-Wave in Ref.~\cite{dwave_as, dwave_as_doc
 
 \begin{figure}[htb]
  \centering
-  \includegraphics[width=\columnwidth]{./anneal_schedule.pdf}
+  \includegraphics[width=\columnwidth]{./new_figures/anneal_schedule.pdf}
   \caption{
   Anneal schedules for amplitudes of initial Hamiltonian (dashed) and final Hamiltonian (solid).
   Offset 0.0 (black) and -0.05 (purple) are displayed.
@@ -640,7 +641,7 @@ For annealing time $T=1/A(0)$, we expect to see perfect one-period oscillation. 
 
 \begin{figure}
 	\centering
-	\includegraphics[width=\columnwidth]{./vacuum_probability.pdf}
+	\includegraphics[width=\columnwidth]{./new_figures/vacuum_probability.pdf}
 	\caption{Time-dependent vacuum probability of 5 qubits system under pure transverse field.}
 	\label{figcheck}
 \end{figure}
