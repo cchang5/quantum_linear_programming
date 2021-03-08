@@ -1,8 +1,11 @@
-\documentclass[prd,twocolumn,tightenlines,preprintnumbers,showpacs,superscriptaddress,notitlepage,nofootinbib,eqsecnum,floatfix,longbibliography,aps,10pt]{revtex4-1}
+\documentclass[10pt]{iopart}
 \pdfoutput=1
 \usepackage{CJK}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage{iopams}
+\expandafter\let\csname equation*\endcsname\relax
+\expandafter\let\csname endequation*\endcsname\relax
 \usepackage{amsmath}
 \usepackage{mathtools}
 \usepackage{amsfonts,dsfont}
@@ -29,21 +32,14 @@
 \begin{document}
 \title{Integer Programming with Quantum Annealing from an Open Quantum System}
 
-\author{Chia~Cheng~Chang}
-\affiliation{RIKEN iTHEMS, Wako, Saitama 351-0198, Japan}
-\affiliation{Department of Physics, University of California, Berkeley, California 94720, USA}
-\affiliation{Nuclear Science Division, Lawrence Berkeley National Laboratory, Berkeley, California 94720, USA}
-	\author{Chih-Chieh~Chen }
-\affiliation{R\&D Group, Grid Inc., Tokyo 107-0061, Japan}
-\affiliation{Nuclear Science Division, Lawrence Berkeley National Laboratory, Berkeley, California 94720, USA}
-\author{Christopher K\"orber}
-\affiliation{Institut f\"ur Theoretische Physik II, Ruhr-Universit\"at Bochum, D-44780 Bochum, Germany}
-\affiliation{Department of Physics, University of California, Berkeley, California 94720, USA}
-\affiliation{Nuclear Science Division, Lawrence Berkeley National Laboratory, Berkeley, California 94720, USA}
-\author{Travis~S.~Humble}
-\affiliation{Computational Sciences and Engineering, Oak Ridge National Laboratory, Oak Ridge, Tennessee, 37831, USA}
-\author{Jim~Ostrowski}
-\affiliation{Industrial and Systems Engineering, University of Tennessee, Knoxville, Tennessee 37996, USA}
+\author{Chia~Cheng~Chang $^{1, 2, 3}$, Chih-Chieh~Chen$^{4, 3}$, Christopher K\"orber $^{5, 2, 3}$, Travis~S.~Humble $^6$, Jim~Ostrowski $^7$}
+\address{$^1$ RIKEN iTHEMS, Wako, Saitama 351-0198, Japan}
+\address{$^2$ Department of Physics, University of California, Berkeley, California 94720, USA}
+\address{$^3$ Nuclear Science Division, Lawrence Berkeley National Laboratory, Berkeley, California 94720, USA}
+\address{$^4$ R\&D Group, Grid Inc., Tokyo 107-0061, Japan}
+\address{$^5$ Institut f\"ur Theoretische Physik II, Ruhr-Universit\"at Bochum, D-44780 Bochum, Germany}
+\address{$^6$ Computational Sciences and Engineering, Oak Ridge National Laboratory, Oak Ridge, Tennessee, 37831, USA}
+\address{$^7$ Industrial and Systems Engineering, University of Tennessee, Knoxville, Tennessee 37996, USA}
 
 \newcommand{\alert}[1]{\textbf{\color{red}{#1}}}
 \renewcommand{\vec}[1]{\boldsymbol{#1}}
@@ -67,7 +63,7 @@
  Simulations qualitatively reproduce algorithmic improvements of the modified annealing schedule, suggesting the improvements have origins from quantum effects.
 \end{abstract}
 
-\preprint{RIKEN-iTHEMS-Report-20}
+%\preprint{RIKEN-iTHEMS-Report-20}
 
 \maketitle
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -701,7 +697,8 @@ Correspondence to chiachang@berkeley.edu.
 
 \textbf{Competing Interests:} The authors declare no competing interests.
 
-\bibliographystyle{apsrev4-1}
+%\bibliographystyle{apsrev4-1}
+\bibliographystyle{iopart-num}
 \bibliography{main.bib}
 %========================================================================================
 \end{document}
