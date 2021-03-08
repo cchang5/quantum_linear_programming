@@ -1,3 +1,4 @@
+
 \documentclass[10pt]{iopart}
 \pdfoutput=1
 \usepackage{CJK}
@@ -91,17 +92,17 @@ subject to
 \end{align}
 where $i=1, \cdots,  N$ is the number of dependent variables and $a=1, \cdots, M$ the number of constraint equations.
 
-While ILP is NP-Hard, extremely large instances of ILP are rutinely solved on a daily basis in a variety of industries such as transportation, energy, online dating, network optimization, graph optimization and has recently been explored in the context of quantum annealing~\cite{2020arXiv200713788H}.
+While ILP is NP-Hard, extremely large instances of ILP are solved on a daily basis in a variety of industries such as transportation, energy, online dating, network optimization, graph optimization and has recently been explored in the context of quantum annealing~\cite{2020arXiv200713788H}.
 The fact that instances with millions of integer variables can be solved is due to the incredible improvement in classical ILP methods.
-One estimate has that the speed of ILP algorithms, combined with hardware improvements, have lead to a speedup of around 200 billion\cite{bertsimas2014statistics}.
-Despite this fact, there are still very small problems that still require several months, or even years, of computational effort to solve. For example, the Steiner Triple Covering problems can be notoriously difficult; an instance with only 135 binary variables, \texttt{STS135}, required over 120 days of computations~\cite{ostrowski2011solving}. Another example is the football pool problem, where an instance with only 729 binary variables still remains unsolved after years of computational effort~\cite{linderoth2009improving}.
+One estimate has that the speed of ILP algorithms, combined with hardware improvements, have lead to a speedup of around 200 billion~\cite{bertsimas2014statistics}.
+Despite this fact, there are still very small problems that require several months, or even years, of computational effort to solve. For example, the Steiner Triple Covering problems can be notoriously difficult; an instance with only 135 binary variables, \texttt{STS135}, required over 120 days of computations~\cite{ostrowski2011solving}. Another example is the football pool problem, where an instance with only 729 binary variables still remains unsolved after years of computational effort~\cite{linderoth2009improving}.
 In both these cases, the underlying problem is a covering problem.
 
 In general, heuristic methods are employed~\cite{GLOVER1986533, doi:10.1287/ijoc.1.3.190, doi:10.1287/ijoc.2.1.4} to solve ILP problems.
 Standard classical heuristic algorithms follow a greedy scheme which iteratively approximates optimal solutions--starting from a random initial guess, these algorithms apply locally optimal choices at each step.
 While greedy algorithms do not guarantee optimal global solutions, they find feasible solutions in polynomial time, which can be utilized in further computations.
 
-In this paper we will consider instances of the minimum dominating set (MDS) problem.  For a given a graph $G(E,V)$, defined by the set of $V$ vertices and $E$ edges, a dominating set $D$ is a specific subset of vertices $D \subseteq V$.
+In this paper we will consider instances of an particular ILP problem: the minimum dominating set (MDS) problem.  For a given a graph $G(E,V)$, defined by the set of $V$ vertices and $E$ edges, a dominating set $D$ is a specific subset of vertices $D \subseteq V$.
 In particular, $D$ is a dominating set if all vertices in $V$ but not in $D$ are adjacent to at least one vertex in $D$.
 This is equivalent to requiring the set of nearest-neighbor vertices of $D$ (exclusive) and $D$ cover all vertices $N(D) \cup D = V$ (an example is given by Fig.~\ref{fig:dominating_sets}a).
 The set $D$ is a minimal dominating set if there is no proper subset of $D$ that is a dominating set, {\it{i.e.}}, the removal of any vertex in $D$ results in $N(D) \cup D  \neq V$.
