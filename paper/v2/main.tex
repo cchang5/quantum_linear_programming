@@ -1,6 +1,6 @@
 
 \documentclass[10pt]{iopart}
-\pdfoutput=1
+%\pdfoutput=1
 \usepackage{CJK}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -100,7 +100,7 @@ In both these cases, the underlying problem is a covering problem.
 
 In general, heuristic methods are employed~\cite{GLOVER1986533, doi:10.1287/ijoc.1.3.190, doi:10.1287/ijoc.2.1.4} to solve ILP problems.
 Standard classical heuristic algorithms follow a greedy scheme which iteratively approximates optimal solutions--starting from a random initial guess, these algorithms apply locally optimal choices at each step.
-While greedy algorithms do not guarantee optimal global solutions, they find feasible solutions in polynomial time, which can be utilized in further computations.
+While greedy algorithms do not guarantee optimal global solutions, they find feasible solutions--satisfying all constraints--in polynomial time, which can be utilized in further computations.
 
 In this paper we will consider instances of an particular ILP problem: the minimum dominating set (MDS) problem.  For a given a graph $G(E,V)$, defined by the set of $V$ vertices and $E$ edges, a dominating set $D$ is a specific subset of vertices $D \subseteq V$.
 In particular, $D$ is a dominating set if all vertices in $V$ but not in $D$ are adjacent to at least one vertex in $D$.
@@ -127,7 +127,7 @@ As a result, the solution to the dominating set problem can not be obtained by s
 	\label{fig:dominating_sets}
 \end{figure*}
 
-For general graphs, existing algorithms on classical computers find MDS solutions in exponential time $\sim O( 1.5^n)$ \cite{Fomin2009, vanRooij2009} or approximate solutions in polynomial time. For example, greedy algorithms locally optimize decisions about which nodes to add to the dominating set.
+For general graphs, existing algorithms on classical computers find MDS solutions in exponential time $\sim O( 1.5^n)$ \cite{Fomin2009, vanRooij2009} or feasible solutions in polynomial time. For example, greedy algorithms locally optimize decisions about which nodes to add to the dominating set.
 Thus one is guaranteed to find a dominating set but not necessarily an MDS.
 
 Current implementations of quantum annealing solve the quadratic binary optimization problem (QUBO) by slowly varying a time-dependent Hamiltonian~\cite{1998PhRvE..58.5355K, 2000quant.ph..1106F, RevModPhys.80.1061}.
@@ -139,9 +139,7 @@ In the simplest model for quantum annealing, the pure state of a quantum system 
 \begin{equation}
  H(t) = A(t) H^{\textrm{init}} + B(t) H^{\textrm{problem}}, \label{eq:tdhamiltonian}
 \end{equation}
-and $H^\textrm{init}=-\sum_i\sigma^x_i$ (on the D-Wave), while $H^\textrm{problem}$ encodes the problem to be solved. In practice, and as discussed in Sec.~\ref{sec:methods:lindblad}, modeling dynamics that arise during quantum annealing requires a more robust description of the thermally populated mixed quantum states and the open dynamical processes that govern population of the sought-after eigenstate.
-
-We improve the quantum annealer's performance by utilizing annealing offsets, which effectively delay the annealing schedule on a per-qubit basis~\cite{PhysRevA.96.042322,hsu2018quantum,10.1007/978-3-030-14082-3_14,2020RPPh...83e4401H}.
+and $H^\textrm{init}=-\sum_i\sigma^x_i$ (on the D-Wave), while $H^\textrm{problem}$ encodes the problem to be solved. In practice, modeling dynamics that arise during quantum annealing requires a more robust description of the thermally populated mixed quantum states and the open dynamical processes that govern population of the sought-after eigenstate.
 Converting to the Ising representation of the the problem Hamiltonian,
 \begin{equation}
     \label{eq:HIsing}
@@ -151,26 +149,14 @@ we recognize that Eq.~(\ref{eq:HIsing}) exhibits spin-glass properties. More spe
 In the case of quantum annealing, when an algorithm is mapped to its Ising representation, the values of $h_i$ will frequently take on various values, mimicking spin-glass like behavior.
 More explicitly, the spin-glass enters a glassy state when more disorder is introduced ($|h_i|$ becomes large), and as a consequence, the wavefunction experiences many body localization (MBL) effects, the many-body analog of Anderson localization~\cite{doi:10.1146/annurev-conmatphys-031214-014726,PhysRevE.90.022103,RevModPhys.91.021001,ALET2018498,PhysRevB.82.174411,PhysRevLett.109.017202}.
 
+In this paper, we present the mapping of ILPs to QUBOs and solve specific realizations, MDS problems for specific graphs, on a quantum annealer.
+We improve the quantum annealer's performance by utilizing annealing offsets, which effectively delay the annealing schedule on a per-qubit basis~\cite{PhysRevA.96.042322,hsu2018quantum,10.1007/978-3-030-14082-3_14,2020RPPh...83e4401H}.
 Our improvement strategy is motivated by the MBL hypothesis.
 As a result, we employ a modified annealing schedule that relies on partitioning the Hamiltonian into regions of relatively weak and strong external magnetic fields.
 
-
 To understand which phenomena are relevant for describing the proposed offset study's scaling behavior, whether they are rooted in the quantum nature or related to hardware constraints, we simulate the anneal for a small MDS problem. This simulation solves the von Neumann equations accounting for different quantum decoherence models and explores whether algorithmic improvements on hardware are present in idealized systems.
 
-\textbf{What do we do and where do you find it...}
-
-
-We provide access to all the software utilized and data presented in this publication in the associated GitHub repository~\cite{github:cchang5/quantum_linear_programming}.
-The utilized software is contained in two installable Python modules:
-\begin{itemize}[leftmargin=*]
-    \itemsep0em
-    \item[] \texttt{qlp} for mapping MDS problems to QUBOs and performing simulations,
-    \item[] \texttt{qlpdb} for interfacing and documenting simulation and experiment data through EspressoDB~\cite{Chang:2019khk}.
-\end{itemize}
-The data itself is stored in a SQLite file and associated repository subdirectories.
-We provide further documentation in the repository \texttt{readme} file.
-
-
+In Sec.~\ref{sec:methods}, we display how a general ILP is mapped onto QUBOs (Sec.~\ref{sec:results:qa1}), provide an explicit example in case of the MDS problem (Sec.~\ref{sec:methods:mds-qubo}), specify how the QUBO is embedded on the annealer (Sec.~\ref{sec:methods:MDS-on-D-Wave}), how the annealing schedules are realized (Sec.~\ref{sec:methods:anneal-schedule}), and how we have simulated the annealer (Sec.~\ref{sec:methods:simulation}). In Sec.~\ref{sec:results} we present our results and discuss them in Sec.~\ref{sec:discussion}. All data and software utilized in this paper can be found online (see also Sec.~\ref{sec:data}).
 
 %========================================================================================
 \section{METHODS}
@@ -188,8 +174,6 @@ The mapping of ILPs to QUBOs we propose is realized by introducing slack variabl
   & x_i, s_a \in \mathbb{Z} \geq 0.
 \end{align}
 While, in general, the coefficients of the inequality constraints are not required to be integer valued, this real valued inequalities can be rescaled such that $s_i \in \mathbbm{Z}$ given fixed precision coefficients $A_{ij}$ and $b_i$. Current hardware however, offers approximately 10 bits of precision over the control of value of the coupling and biases, limiting the usefulness of rescaling.
-
-Furthermore, this formalism can be generalized to constrained quadratic optimizations \ref{sec:methods:ilp:quadratic}.
 
 Following Eq.~(\ref{eq:ilp:slack}), the ILP problems simplifies to solving a system of linear equations on integer valued variables. We map the integer variables $\vec z = \vec x, \vec s$ appearing in Eq.~\eqref{eq:ilp:slack} to qubits under the following transformation~\cite{Chang:2018uoc}
 \begin{align}
@@ -364,7 +348,7 @@ The target QUBO in the notation of Eq.~\eqref{eq:matrix_form} reads
 \label{fig:linear}
 \end{figure}
 
-We demonstrate the proposed algorithm in order to obtain the MDS on a series of linear graphs $G(n)$, as shown in Fig.~\ref{fig:linear}. This type of graph is chosen because the small number of nearest-neighbor connections is more efficiently embedded into the chimera graph, allowing scaling plots to be generated when using a D-Wave quantum annealer. In particular, the number of qubits required to solve MDS scales at worse as $n_V \log_2 n_V$ where $n_V$ is the number of vertices for a generic graph before minor embedding. Details of the mapping of ILP to MDS is given in Sec.~\ref{sec:methods:mds-qubo}.
+We demonstrate the proposed algorithm in order to obtain the MDS on a series of linear graphs $G(n)$, as shown in Fig.~\ref{fig:linear}. This type of graph is chosen because the small number of nearest-neighbor connections is more efficiently embedded into the chimera graph, allowing scaling plots to be generated when using a D-Wave quantum annealer. In particular, the number of qubits required to solve MDS scales at worse as $n_V \log_2 n_V$ where $n_V$ is the number of vertices for a generic graph before minor embedding.
 
 For the graph $G(n)$ the MDS solution is known analytically, and contains both unique and degenerate solutions. In particular, the domination number for $G(n)$ is $\lceil n/3 \rceil$ while the number of MDS solutions for $n$ vertices is
 \begin{align}
@@ -377,7 +361,6 @@ and gives the probability of randomly guessing the MDS of $G(n)$.
 
 For even the smallest graph $G(2)$, the MDS problem is not native to the chimera graph and must be embedded. Following the hypothesis of MBL, we, therefore, must look at the values of $h_i$ after embedding. The qubits split into two groups depending on the value of $h_i$ relative to $(\textrm{max}|\{h\}| + \textrm{min}|\{h\}|) / 2$ given the set of external magnetic fields $\{h\}$ defined by a specific embedding.
 
-Our proposed offset strategy is motivated by the structure of the Hamiltonian being evaluated by the annealer.
 As a result, details of the embedding are important. We obtain an embedding for $G(n)$ with the \texttt{embed\_qubo} function provided by the D-Wave Ocean Python package~\cite{dwave_oceans} under the \texttt{dwave.embedding} module~\cite{2008arXiv0804.4884C}.
 The same embedding is used for all D-Wave solves of the same graph (independent of offset), and consequently the simulation solves the resulting embedded Hamiltonian for $G(2)$.
 Additionally, solving the same graph as a function of offset on the exact same qubits removes (or at least keeps consistent) the systematic effects due to solving a problem on different physical qubits.
@@ -387,9 +370,35 @@ After embedding the QUBO for $G(2)$ requires 5 qubits (an increase from 4), wher
 We confirm through brute force evaluation of the eigenvalue decomposition of the 5 qubit Hamiltonian, that the embedding provided by D-Wave solves the expected ILP problem for $G(2)$, with degenerate ground states at $(0, 1, 0, 0, 0)$ and $(1, 0, 0, 1, 0)$ corresponding to whether vertex 0 or 1 is chosen for the MDS solution, and $(1, 1, 1, 1, 1)$ as the first (non-degenerate) excited state where both vertex 1 and 0 are in the set yielding a valid dominating set but not the MDS.
 
 The resulting Ising Hamiltonian has external field equal to $h = (2.75, 1.5, -1.0, -1.25, -1.0)$.
-Following the offset strategy described in Sec.~\ref{sec:results:qa}, qubit(s) 0 (1, 2, 3, 4) are placed in the set with relatively stronger (weaker) final external fields.
+Following the MBL inspired offset strategy, qubit(s) 0 (1, 2, 3, 4) are placed in the set with relatively stronger (weaker) final external fields.
 This imbalance in the two groups may perhaps explain the reason why effects of delaying the weaker fields are more pronounced, since delaying the strong fields only differs from the baseline by a single qubit.
 
+%----------------------------------------------------------------------------------------
+\subsection{Annealing schedules}
+\label{sec:methods:anneal-schedule}
+%----------------------------------------------------------------------------------------
+
+Our proposed offset strategy is motivated by the structure of the Hamiltonian being evaluated by the annealer.
+On D-Wave solvers, annealing offsets effectively advance or delay the annealing schedule of individual qubits.
+In Fig.~\ref{fig:anneal_schedule}, the default D-Wave annealing schedule is shown in black, in addition to the effects of applying negative offsets (effective time delay) to $A(s)$ and $B(s)$ in blue.
+Further documentation is provided by D-Wave in Ref.~\cite{dwave_as, dwave_as_docu}.
+
+\begin{figure}[htb]
+ \centering
+  \includegraphics[width=\columnwidth]{./new_figures/anneal_schedule.pdf}
+  \caption{
+  Anneal schedules for amplitudes of initial Hamiltonian (dashed) and final Hamiltonian (solid).
+  Offset 0.0 (black) and -0.05 (purple) are displayed.
+  Intermediate values lie between and are suppressed for clarity.
+ }
+ \label{fig:anneal_schedule}
+\end{figure}
+
+The coefficients $A(s)$ and $B(s)$ follow the underlying control variable $c(s)$, which is designed to grow the persistent current $I_p(s)$ linearly in time.
+The effective time delay is implemented by introducing an offset as $c(s) + \delta$.
+Because annealing schedules are finite, systematic errors are introduced because the final values of $A(s)$ and $B(s)$ will differ for qubits with different offsets.
+Additionally, the values of the coefficients are unknown outside of $s\in [0, 1]$.
+We only employ negative offsets such that this unkonwn coefficient range, approximated by a linear extrapolation, only enters at the beginning of the annealing process.
 
 
 %----------------------------------------------------------------------------------------
@@ -412,10 +421,6 @@ where $\hbar$ is the reduced Plank's constant, $\rho (t)$ is the density matrix 
 In this work, we consider two types of decoherence models: full-counting statistics~\cite{PhysRevE.90.022103,RevModPhys.81.1665} and single-qubit amplitude damping (local damping)~\cite{10.5555/1972505,preskill1998lecture}.
 The full-counting statistics term models the global decoherence to all the qubits due to the classical reservoir.
 The local damping term models the decoherence of each qubit independently.
-Details of the master equation are given in Sec.~\ref{sec:methods:lindblad}.
-Implementation of the annealing schedule and annealing offsets for the simulation are discussed in Sec.~\ref{sec:methods:annealing-schedule}.
-
-
 
 To solve for time evolution dynamics of quantum annealing including thermal and the decoherence effects, we evaluate the master equation Eq.~\eqref{eq:sim:linblad-eq} in Lindblad form.
 The explicit time-dependence of the Hamiltonian is given by
@@ -468,27 +473,7 @@ The coherence time for local decoherence is set to 15$ns$, and 1$ns$ for full-co
 %\subsubsection{Annealing Schedule and Offsets}
 %\label{sec:methods:annealing-schedule}
 %----------------------------------------------------------------------------------------
-In this section, we discuss the details of the annealing schedule with respect to the dimensionless normalized time $s$.
-On D-Wave solvers, annealing offsets effectively advance or delay the annealing schedule of individual qubits (see E.~\eqref{eq:annealH}).
-In Fig.~\ref{fig:anneal_schedule}, the default D-Wave annealing schedule is shown in black, in addition to the effects of applying negative offsets (effective time delay) to $A(s)$ and $B(s)$ in blue.
-Further documentation is provided by D-Wave in Ref.~\cite{dwave_as, dwave_as_docu}.
-
-\begin{figure}[htb]
- \centering
-  \includegraphics[width=\columnwidth]{./new_figures/anneal_schedule.pdf}
-  \caption{
-  Anneal schedules for amplitudes of initial Hamiltonian (dashed) and final Hamiltonian (solid).
-  Offset 0.0 (black) and -0.05 (purple) are displayed.
-  Intermediate values lie between and are suppressed for clarity.
- }
- \label{fig:anneal_schedule}
-\end{figure}
-
-The coefficients $A(s)$ and $B(s)$ follow the underlying control variable $c(s)$, which is designed to grow the persistent current $I_p(s)$ linearly in time.
-The effective time delay is implemented by introducing an offset as $c(s) + \delta$.
-Because annealing schedules are finite, systematic errors are introduced because the final values of $A(s)$ and $B(s)$ will differ for qubits with different offsets.
-Additionally, the values of the coefficients are unknown outside of $s\in [0, 1]$.
-We only employ negative offsets such that this unkonwn coefficient range, approximated by a linear extrapolation, only enters at the beginning of the annealing process.
+%In this section, we discuss the details of the annealing schedule with respect to the dimensionless normalized time $s$.
 
 We verify that our implementation of annealing offsets on the simulator is consistent with D-Wave by solving the following three qubit Hamiltonian
 \begin{align}
@@ -585,6 +570,8 @@ An additional study where an extended annealing schedule is employed in the simu
 
 
 \section{Discussion}
+\label{sec:discussion}
+
 \subsection{Dynamics of Time Evolution}
 \label{sec:discussion:time_evolution}
 
@@ -599,7 +586,7 @@ However, we emphasize that the simulation suggests that the ground state is reco
 \begin{figure}
 	\centering
 	\includegraphics[width=\columnwidth]{./new_figures/time_dependent_probability.pdf}
-	\caption{Time-dependent probability for resolving the ground state for simulation results presented in Sec.~\ref{sec:results:simulation}. Different offsets are labeled in the same way as Fig.~\ref{fig:baseline}.}
+	\caption{Time-dependent probability for resolving the ground state for simulation results presented in Sec.~\ref{sec:methods:simulation}. Different offsets are labeled in the same way as Fig.~\ref{fig:baseline}.}
 	\label{fig:td_prob}
 \end{figure}
 
@@ -688,6 +675,23 @@ The United States Government retains and the publisher, by accepting the article
 \appendix
 \section{Appendix}
 %========================================================================================
+
+%========================================================================================
+\section{Data availability}
+\label{sec:data}
+%========================================================================================
+
+We provide access to all the software utilized and data presented in this publication in the associated GitHub repository~\cite{github:cchang5/quantum_linear_programming}.
+The utilized software is contained in two installable Python modules:
+\begin{itemize}[leftmargin=*]
+    \itemsep0em
+    \item[] \texttt{qlp} for mapping MDS problems to QUBOs and performing simulations,
+    \item[] \texttt{qlpdb} for interfacing and documenting simulation and experiment data through EspressoDB~\cite{Chang:2019khk}.
+\end{itemize}
+The data itself is stored in a SQLite file and associated repository subdirectories.
+We provide further documentation in the repository \texttt{readme} file.
+
+
 
 %========================================================================================
 \end{document}
