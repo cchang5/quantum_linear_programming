@@ -129,27 +129,16 @@ As a result, the solution to the dominating set problem can not be obtained by s
 For general graphs, existing algorithms on classical computers find MDS solutions in exponential time $\sim O( 1.5^n)$ \cite{Fomin2009, vanRooij2009} or approximate solutions in polynomial time. For example, greedy algorithms locally optimize decisions about which nodes to add to the dominating set.
 Thus one is guaranteed to find a dominating set but not necessarily an MDS.
 
-In this work, we present a method to obtain optimal solutions to ILP by employing quantum annealing methods.
-
 Current implementations of quantum annealing solve the quadratic binary optimization problem (QUBO) by slowly varying a time-dependent Hamiltonian~\cite{1998PhRvE..58.5355K, 2000quant.ph..1106F, RevModPhys.80.1061}.
 Through the adiabatic theorem of quantum mechanics, the annealer is initially prepared in a trivial ground state while the final Hamiltonian encodes the solution to the ILP.
 Due to the explosion in research efforts towards hardware implementations of quantum annealers and future improvements to the annealing schedule~\cite{doi:10.7566/JPSJ.89.044001}, mapping ILP to QUBO provides a path forward towards obtaining optimal solutions to the class of integer optimization problems~\cite{2018Glover}.
+
 
 In the simplest model for quantum annealing, the pure state of a quantum system evolves adiabatically to prepare an eigenstate of the encoded problem Hamiltonian. The time-dependent Hamiltonian is given as
 \begin{equation}
  H(t) = A(t) H^{\textrm{init}} + B(t) H^{\textrm{problem}}, \label{eq:tdhamiltonian}
 \end{equation}
 and $H^\textrm{init}=-\sum_i\sigma^x_i$ (on the D-Wave), while $H^\textrm{problem}$ encodes the problem to be solved. In practice, and as discussed in Sec.~\ref{sec:methods:lindblad}, modeling dynamics that arise during quantum annealing requires a more robust description of the thermally populated mixed quantum states and the open dynamical processes that govern population of the sought-after eigenstate.
-
-The mapping of ILPs to QUBOs we propose is realized by introducing slack variables $s_a$ which turn the inequalities Eq.~\eqref{eq:ilp-constraints} to equalities
-\begin{align}
-  \label{eq:ilp:slack}
-  & \sum_i A_{a i}x_i + s_a + b_a = 0, \\
-  & x_i, s_a \in \mathbb{Z} \geq 0.
-\end{align}
-While, in general, the coefficients of the inequality constraints are not required to be integer valued, this real valued inequalities can be rescaled such that $s_i \in \mathbbm{Z}$ given fixed precision coefficients $A_{ij}$ and $b_i$. Current hardware however, offers approximately 10 bits of precision over the control of value of the coupling and biases, limiting the usefulness of rescaling.
-
-Furthermore, this formalism can be generalized to constrained quadratic optimizations \ref{sec:methods:ilp:quadratic}.
 
 We improve the quantum annealer's performance by utilizing annealing offsets, which effectively delay the annealing schedule on a per-qubit basis~\cite{PhysRevA.96.042322,hsu2018quantum,10.1007/978-3-030-14082-3_14,2020RPPh...83e4401H}.
 Converting to the Ising representation of the the problem Hamiltonian,
@@ -167,246 +156,40 @@ As a result, we employ a modified annealing schedule that relies on partitioning
 
 To understand which phenomena are relevant for describing the proposed offset study's scaling behavior, whether they are rooted in the quantum nature or related to hardware constraints, we simulate the anneal for a small MDS problem. This simulation solves the von Neumann equations accounting for different quantum decoherence models and explores whether algorithmic improvements on hardware are present in idealized systems.
 
+\textbf{What do we do and where do you find it...}
+
+
+We provide access to all the software utilized and data presented in this publication in the associated GitHub repository~\cite{github:cchang5/quantum_linear_programming}.
+The utilized software is contained in two installable Python modules:
+\begin{itemize}[leftmargin=*]
+    \itemsep0em
+    \item[] \texttt{qlp} for mapping MDS problems to QUBOs and performing simulations,
+    \item[] \texttt{qlpdb} for interfacing and documenting simulation and experiment data through EspressoDB~\cite{Chang:2019khk}.
+\end{itemize}
+The data itself is stored in a SQLite file and associated repository subdirectories.
+We provide further documentation in the repository \texttt{readme} file.
+
+
 
 %========================================================================================
 \section{METHODS}
 \label{sec:methods}
 %========================================================================================
-%----------------------------------------------------------------------------------------
-\subsection{Additional Mappings to QUBO}
-\label{sec:methods:ILP-to-QUBO}
-%----------------------------------------------------------------------------------------
-%----------------------------------------------------------------------------------------
-\subsubsection{Minimum Dominating Set QUBO}
-\label{sec:methods:mds-qubo}
-%----------------------------------------------------------------------------------------
 
-The solution to the MDS problem can be expressed as an integer optimization problem given by,
-\begin{align}
- f(\vec x) = & \min\left(\sum_{v \in V} x_v\right),                    \\
-\end{align}
-subject to
-\begin{align}
- & x_v + \sum_{j \in \mathcal{N}(v)} x_j \geq 1, \\
- & x_v \in \{0, 1\}
-\end{align}
-where $\mathcal{N}(v)$ represents the set of all direct neighbors of vertex $v$ and the dimension of the dependent variable $x$ is the number of vertices $n_V \equiv \overline{\overline{V}}$.
-The problem minimizes the number of vertices in $D$ with a binary variable $\vec x = \vec \Psi_x$ encoded by single qubit, subject to the constraint that at least one vertex in $\mathcal{N}(\nu)$ is in $D$.
-For each vertex in $V$ we introduce slack variables
-\begin{equation}
-    \vec s \in \left\{ \mathbb{Z}^{n_V} \, \middle| \, 0 \leq s_{v} \leq |\mathcal{N}(v)| \quad \forall v\in V \right\} \, ,
-\end{equation}
-which is related to the qubit vector $\vec \Psi_s$ by $\vec s = T_s \vec \Psi_s$.
-The inequality constraint is encoded by
-\begin{align}
- f(\vec \Psi_x)
- =
- & \min\left(\vec 1 \cdot \vec \Psi_x \right) \, ,
-\end{align}
-subject to
-\begin{align}
- &
- (\mathbbm{1} + J)\vec \Psi_x - T_s \Psi_s  - \vec 1 = 0\,,
- \\
- &
- (\vec \Psi_s)_\nu \in \{ 0, 1\}
-\end{align}
-where the nearest-neighbor sum is expressed by the adjacency matrix $J$ (zero diagonal and symmetric for non-directional graphs).
-The algorithm uses
-\begin{equation}
-    N_q = \overline{\overline{V}} + \sum_{v \in V} \log_2 \mathcal{N}(v)
-\end{equation}
-qubits to encode the vertices and slack variables before embedding.
-Therefore, the (logical) binary vector $\vec \Psi$ at worst scales with $n_V \log_2 n_V$ qubits for fully connected graphs.
-
-The target QUBO in the notation of Eq.~\eqref{eq:matrix_form} reads
- {\small
-  \begin{align}
-   Q_{xx} & = \mathbbm{1} + p\left[J^T J + J^T + J - \mathrm{diag}\left(J^T \vec 1 + \vec 1^T J\right) - \mathbbm{1} \right] \,, \\
-   Q_{sx} & = - p(\mathbbm{1}+J)^TT_s\,,                                                                     \\
-   Q_{ss} & = p\left[{T_s}^T T_s + \mathrm{diag}\left(T_s^T \vec 1 + \vec 1^T  T_s\right)\right]\,,                                  \\
-   C      & =  p \overline{\overline{V}}\,.
-  \end{align}}
-
-%----------------------------------------------------------------------------------------
-\subsubsection{Integer Quadratic Optimization}
-\label{sec:methods:ilp:quadratic}
-%----------------------------------------------------------------------------------------
-
-Because quantum annealing is capable of solving quadratic problems, we extend the proposed algorithm to solve integer quadratic optimization problems as well such that
-\begin{align}
- \vec x_0 = \mathrm{arg}\min\limits_{x}\left(\sum_{ij} x_i d_{ij} x_j + \sum_i c_i x_i\right)
-\end{align}
-without the introduction of auxiliary qubits.
-
-In this case the $Q_{xx}$ component of the QUBO, Eq.~\eqref{eq:qubo:components} obtains a new term
-\begin{equation}
-    Q_{xx} \to Q_{xx} + T_x^T d T_x \, .
-\end{equation}
-
-%----------------------------------------------------------------------------------------
-\subsection{ILP on the D-Wave}
-\label{sec:methods:ILP-on-D-Wave}
-%----------------------------------------------------------------------------------------
-
-%----------------------------------------------------------------------------------------
-\subsubsection{Comment on ILP QUBO Penalty Term}
-\label{sec:methods:ilp-qubo-comments}
-%----------------------------------------------------------------------------------------
-
-The minimal energy solution to Eq.~\eqref{eq:initial-ip-def} and Eq.~\eqref{eq:ilp-slack-bit-energy} are exactly the same if the penalty term is greater or equal to the energy gap of the first excited solution: $p \geq E_1 - E_0$.
-Thus some knowledge of the problem is required.
-In principle, it is possible to set the penalty term arbitrarily large, at the cost of problem resolution: large values for $p$ increase the highest available energy of the system by multiples of $p$.
-After normalization of the QUBO, this corresponds to decreasing the energy gap between the ground state and the first excited state.
-Thus, if solvers have finite precision, one must estimate reasonable values for $p$: for large $p$ more solutions fulfill the constraints, while for small $p$, more solutions minimize the objective function.
-
-%----------------------------------------------------------------------------------------
-\subsubsection{Minor Embedding}
-\label{sec:methods:minor_embedding}
-%----------------------------------------------------------------------------------------
-Our proposed offset strategy is motivated by the structure of the Hamiltonian being evaluated by the annealer.
-As a result, details of the embedding are important. We obtain an embedding for $G(n)$ with the \texttt{embed\_qubo} function provided by the D-Wave Ocean Python package~\cite{dwave_oceans} under the \texttt{dwave.embedding} module~\cite{2008arXiv0804.4884C}.
-The same embedding is used for all D-Wave solves of the same graph (independent of offset), and consequently the simulation solves the resulting embedded Hamiltonian for $G(2)$.
-Additionally, solving the same graph as a function of offset on the exact same qubits removes (or at least keeps consistent) the systematic effects due to solving a problem on different physical qubits.
-We note that comparisons between different graphs in Fig.~\ref{fig:baseline} are subject to this uncontrolled systematic.
-
-After embedding the QUBO for $G(2)$ requires 5 qubits (an increase from 4), where by construction, qubits 0 and 3 form the qubit chain.
-We confirm through brute force evaluation of the eigenvalue decomposition of the 5 qubit Hamiltonian, that the embedding provided by D-Wave solves the expected ILP problem for $G(2)$, with degenerate ground states at $(0, 1, 0, 0, 0)$ and $(1, 0, 0, 1, 0)$ corresponding to whether vertex 0 or 1 is chosen for the MDS solution, and $(1, 1, 1, 1, 1)$ as the first (non-degenerate) excited state where both vertex 1 and 0 are in the set yielding a valid dominating set but not the MDS.
-
-The resulting Ising Hamiltonian has external field equal to $h = (2.75, 1.5, -1.0, -1.25, -1.0)$.
-Following the offset strategy described in Sec.~\ref{sec:results:qa}, qubit(s) 0 (1, 2, 3, 4) are placed in the set with relatively stronger (weaker) final external fields.
-This imbalance in the two groups may perhaps explain the reason why effects of delaying the weaker fields are more pronounced, since delaying the strong fields only differs from the baseline by a single qubit.
-
-
-
-%----------------------------------------------------------------------------------------
-\subsection{Simulation of a Quantum Annealer}
-\label{sec:methods:simulation}
-%----------------------------------------------------------------------------------------
-
-%----------------------------------------------------------------------------------------
-\subsubsection{The Lindblad Equation}
-\label{sec:methods:lindblad}
-%----------------------------------------------------------------------------------------
-
-To solve for time evolution dynamics of quantum annealing including thermal and the decoherence effects, we evaluate the master equation Eq.~\eqref{eq:sim:linblad-eq} in Lindblad form.
-The explicit time-dependence of the Hamiltonian is given by
-\begin{align}
- \label{eq:annealH}
- H(t)  = & - \sum_i  A_i(t)\sigma^x_i +\sum_i B_{i}(t) h_i \sigma^z_i \notag \\
- & + \sum_{i>j} \sqrt{B_{i}(t)B_{j}(t)} J_{ij} \sigma^z_i \sigma^z_j  ,
-\end{align}
-where $A_i(t)$ and $B_{i}(t)$ are site-dependent annealing schedule functions.
-The site dependency takes into account of the annealing offsets.
-The simulation takes two decoherance models into account.
-Full-counting statistics and local decoherence.
-
-For full-counting statistics, the Lindblad operator is
-\begin{align}
-\mathcal{L}_{\textrm{fc}}(\rho (t), H(t)) = & \Gamma_{\textrm{fc}} \sum_{j, i<j} \left[  \left(2 S_{ij} \rho(t) S_{ij}^\dagger - \{ S^\dagger_{ij} S_{ij}, \rho(t) \}\right) \notag \right.
-\\
-& \left. + e^{-\beta \Delta E_{ij}} \left(2 S_{ij}^\dagger \rho(t) S_{ij} - \{ S_{ij} S^\dagger_{ij}, \rho(t) \} \right)\right]
-\end{align}
-where $\{, \}$ denotes the anti-commutator, $(ij)$ is the index for the inter-level spacing $\Delta E_{ij}=E_j-E_i>0$,  $S_{ij}=|E_i \rangle \langle E_j|$ denotes the many-body lowering operator and $\Gamma_{fc} = 1/T_{fc}$ is the full-counting decoherence rate for coherence time $T_{fc}$.
-That is, due to the interaction with the classical thermal bath, there is a probability that the system hops from each higher-energy many-body state to a lower-energy many-body state.
-The probability of the inverse process is given by a Boltzmann factor.
-
-To model the local decoherence of each qubits in the non-interacting limit, we also consider the amplitude damping for non-interacting qubits.
-For the local decoherance model, the Lindblad operator is
-\begin{align}
-\mathcal{L}_{\textrm{loc}}(\rho (t), H(t)) = &  \Gamma_{\textrm{loc}} \sum_j \left(2L_j \rho(t) L_j^\dagger - \{ L^\dagger_j L_j, \rho(t) \} \right)\notag \\
-& + e^{- 2 \beta |h_j| }  \left(2L_j^\dagger \rho(t) L_j - \{ L_j L_j^\dagger, \rho(t) \} \right) ,
-\end{align}
-where $j$ is the index for qubit.
-$L_j= \sigma^{+}_j=|1\rangle \langle 0|$ for $h_j>0$ and $L_j= \sigma^{-}_j=|0\rangle \langle 1|$ for $h_j<0$.
-That is, each qubit is damped toward its local ground state if we ignore all the interactions.
-
-The initial condition is the Gibbs canonical ensemble
-\begin{equation}
-\rho (0) =  \frac{e^{-\beta H(0)}}{\mbox{Tr}\left(e^{-\beta H(0)}\right)} ,
-\end{equation}
-where $\beta$ is the inverse temperature.
-The probability to get the ground state at measurement is
-\begin{align}
-P =  \mbox{Tr} \left( \rho (t) \pi_{\mbox{gnd}} \right)  ,
-\end{align}
-where the projection operator onto the degenerated ground states subspace is defined as $\pi_{\mbox{gnd}}=\sum_{i\in G} |\mbox{gnd}_i\rangle \langle \mbox{gnd}_i| $.
-Here $\{ | \mbox{gnd}_i \rangle | i \in G \}$ forms an orthonormal basis for the degenerated ground states subspace, i.e., $\langle \mbox{gnd}_j | \mbox{gnd}_i \rangle = \delta_{ij}$.
-
-For the simulation results presented, we set the temperature to 22.5 milliKelvin.
-The coherence time for local decoherence is set to 15$ns$, and 1$ns$ for full-counting statistics.
-
-%----------------------------------------------------------------------------------------
-\subsubsection{Annealing Schedule and Offsets}
-\label{sec:methods:annealing-schedule}
-%----------------------------------------------------------------------------------------
-In this section, we discuss the details of the annealing schedule with respect to the dimensionless normalized time $s$.
-On D-Wave solvers, annealing offsets effectively advance or delay the annealing schedule of individual qubits (see E.~\eqref{eq:annealH}).
-In Fig.~\ref{fig:anneal_schedule}, the default D-Wave annealing schedule is shown in black, in addition to the effects of applying negative offsets (effective time delay) to $A(s)$ and $B(s)$ in blue.
-Further documentation is provided by D-Wave in Ref.~\cite{dwave_as, dwave_as_docu}.
-
-\begin{figure}[htb]
- \centering
-  \includegraphics[width=\columnwidth]{./new_figures/anneal_schedule.pdf}
-  \caption{
-  Anneal schedules for amplitudes of initial Hamiltonian (dashed) and final Hamiltonian (solid).
-  Offset 0.0 (black) and -0.05 (purple) are displayed.
-  Intermediate values lie between and are suppressed for clarity.
- }
- \label{fig:anneal_schedule}
-\end{figure}
-
-The coefficients $A(s)$ and $B(s)$ follow the underlying control variable $c(s)$, which is designed to grow the persistent current $I_p(s)$ linearly in time.
-The effective time delay is implemented by introducing an offset as $c(s) + \delta$.
-Because annealing schedules are finite, systematic errors are introduced because the final values of $A(s)$ and $B(s)$ will differ for qubits with different offsets.
-Additionally, the values of the coefficients are unknown outside of $s\in [0, 1]$.
-We only employ negative offsets such that this unkonwn coefficient range, approximated by a linear extrapolation, only enters at the beginning of the annealing process.
-
-We verify that our implementation of annealing offsets on the simulator is consistent with D-Wave by solving the following three qubit Hamiltonian
-\begin{align}
-	\label{eq:offset_test_hamiltonian}
-	H^{\textrm{problem}} =
-	\begin{pmatrix}
-		-0.25 & 1 & 0 \\
-		0 & -0.25 & 0 \\
-		0 & 0 & -0.25
-	\end{pmatrix}
-\end{align}
-which has a doubly-degenerate ground state of $(0, 1, 1)$ and $(1, 0, 1)$. An annealing offset is then applied to either qubit 0 or 1, and thus breaks the ground state degeneracy of the system. Because of the systematic error introduced when assigning an offset to a qubit, the final Hamiltonian given by Eq.~(\ref{eq:annealH}) will have small deviations from the input problem Hamiltonian. For example, we expect a negative offset to qubit 0 to Eq.~(\ref{eq:offset_test_hamiltonian}) will yield $(1, 0, 1)$ as the unique ground state given Eq.~(\ref{eq:annealH}).
-
-We confirm that with different combinations of annealing offsets, the degeneracy is lifted on the D-Wave results as expected by solving for the modified problem Hamiltonian spectrum, as well as dialing in annealing offset in the simulation of this three qubit test case.
-
-
-%----------------------------------------------------------------------------------------
-\subsubsection{Pure Transverse Field Simulation}
-\label{sec:methods:simulation_details}
-%----------------------------------------------------------------------------------------
-To check the correctness of simulator and unit conversion, we tested a simple annealing schedule for pure transverse field, i.e. $A(s)=A(0)$ and $B(s)=0$.
-The initial state is pure zero state $\rho=|00...0\rangle \langle 00...0|$.
-In this case the analytical solution can be obtained for the wave function oscillation.
-The time-dependent probability is $P_{0}=\cos^{2n}(s)=\cos^{2n}(t/T)$ where $n$ is the number of qubits and $T$ is the annealing time.
-For annealing time $T=1/A(0)$, we expect to see perfect one-period oscillation. The energy spectrum for this system can be analytically obtained, so we also checked the Boltzmann distribution in the initial density matrix construction. The oscillation is depicted in Fig.~\ref{figcheck}, where the simulation matches the expected theoretical behavior.
-
-
-\begin{figure}
-	\centering
-	\includegraphics[width=\columnwidth]{./new_figures/vacuum_probability.pdf}
-	\caption{Time-dependent vacuum probability of 5 qubits system under pure transverse field.}
-	\label{figcheck}
-\end{figure}
-
-
-%========================================================================================
-\section{RESULTS}
-\label{sec:results}
-%========================================================================================
-
-We first present the QUBO mapping for ILP (\ref{sec:results:qa1}), and demonstrate the methodology on an example implementation in case of the Minimal Dominating Set problem (\ref{sec:results:qa}) on the D-Wave quantum annealer. Results from quantum annealing are compared and discussed in contrast to simulations (\ref{sec:results:simulation}).
-
-%----------------------------------------------------------------------------------------
 \subsection{QUBO Formulation of ILP}
 \label{sec:results:qa1}
 %----------------------------------------------------------------------------------------
+
+The mapping of ILPs to QUBOs we propose is realized by introducing slack variables $s_a$ which turn the inequalities Eq.~\eqref{eq:ilp-constraints} to equalities
+\begin{align}
+  \label{eq:ilp:slack}
+  & \sum_i A_{a i}x_i + s_a + b_a = 0, \\
+  & x_i, s_a \in \mathbb{Z} \geq 0.
+\end{align}
+While, in general, the coefficients of the inequality constraints are not required to be integer valued, this real valued inequalities can be rescaled such that $s_i \in \mathbbm{Z}$ given fixed precision coefficients $A_{ij}$ and $b_i$. Current hardware however, offers approximately 10 bits of precision over the control of value of the coupling and biases, limiting the usefulness of rescaling.
+
+Furthermore, this formalism can be generalized to constrained quadratic optimizations \ref{sec:methods:ilp:quadratic}.
+
 Following Eq.~(\ref{eq:ilp:slack}), the ILP problems simplifies to solving a system of linear equations on integer valued variables. We map the integer variables $\vec z = \vec x, \vec s$ appearing in Eq.~\eqref{eq:ilp:slack} to qubits under the following transformation~\cite{Chang:2018uoc}
 \begin{align}
  z_i = & \sum_{r=0}^{R_i-1} 2^r \psi_{ri}
@@ -496,10 +279,80 @@ The function $\mathrm{diag}(\vec v)$ transforms a vector $\vec v$ into a diagona
 The integer solution to the original ILP is computed by $\vec x^{(0)} = T_x \vec \Psi_x^{(0)}$ and the original solution to the problem is computed by shifting the annealer extracted energy $E \equiv  \chi^2(\vec \Psi^{(0)}) $ by $p \left \| \vec b \right\|^2$.
 The slack components of this vector $\vec \Psi_s$ can be utilized to check if the constraints are indeed fulfilled.
 
+The minimal energy solution to Eq.~\eqref{eq:initial-ip-def} and Eq.~\eqref{eq:ilp-slack-bit-energy} are exactly the same if the penalty term is greater or equal to the energy gap of the first excited solution: $p \geq E_1 - E_0$.
+Thus some knowledge of the problem is required.
+In principle, it is possible to set the penalty term arbitrarily large, at the cost of problem resolution: large values for $p$ increase the highest available energy of the system by multiples of $p$.
+After normalization of the QUBO, this corresponds to decreasing the energy gap between the ground state and the first excited state.
+Thus, if solvers have finite precision, one must estimate reasonable values for $p$: for large $p$ more solutions fulfill the constraints, while for small $p$, more solutions minimize the objective function.
+
+Because quantum annealing is capable of solving quadratic problems, the proposed algorithm can be extended to also solve integer quadratic optimization problems as well such that
+\begin{align}
+ \vec x_0 = \mathrm{arg}\min\limits_{x}\left(\sum_{ij} x_i d_{ij} x_j + \sum_i c_i x_i\right)
+\end{align}
+without the introduction of auxiliary qubits.
+
+In this case the $Q_{xx}$ component of the QUBO, Eq.~\eqref{eq:qubo:components} obtains a new term
+\begin{equation}
+    Q_{xx} \to Q_{xx} + T_x^T d T_x \, .
+\end{equation}
+
+
 %----------------------------------------------------------------------------------------
-\subsection{Annealer Results for the Dominating Set}
-\label{sec:results:qa}
+\subsection{Minimum Dominating Set QUBO}
+\label{sec:methods:mds-qubo}
 %----------------------------------------------------------------------------------------
+
+The solution to the MDS problem can be expressed as an integer optimization problem given by,
+\begin{align}
+ f(\vec x) = & \min\left(\sum_{v \in V} x_v\right),                    \\
+\end{align}
+subject to
+\begin{align}
+ & x_v + \sum_{j \in \mathcal{N}(v)} x_j \geq 1, \\
+ & x_v \in \{0, 1\}
+\end{align}
+where $\mathcal{N}(v)$ represents the set of all direct neighbors of vertex $v$ and the dimension of the dependent variable $x$ is the number of vertices $n_V \equiv \overline{\overline{V}}$.
+The problem minimizes the number of vertices in $D$ with a binary variable $\vec x = \vec \Psi_x$ encoded by single qubit, subject to the constraint that at least one vertex in $\mathcal{N}(\nu)$ is in $D$.
+For each vertex in $V$ we introduce slack variables
+\begin{equation}
+    \vec s \in \left\{ \mathbb{Z}^{n_V} \, \middle| \, 0 \leq s_{v} \leq |\mathcal{N}(v)| \quad \forall v\in V \right\} \, ,
+\end{equation}
+which is related to the qubit vector $\vec \Psi_s$ by $\vec s = T_s \vec \Psi_s$.
+The inequality constraint is encoded by
+\begin{align}
+ f(\vec \Psi_x)
+ =
+ & \min\left(\vec 1 \cdot \vec \Psi_x \right) \, ,
+\end{align}
+subject to
+\begin{align}
+ &
+ (\mathbbm{1} + J)\vec \Psi_x - T_s \Psi_s  - \vec 1 = 0\,,
+ \\
+ &
+ (\vec \Psi_s)_\nu \in \{ 0, 1\}
+\end{align}
+where the nearest-neighbor sum is expressed by the adjacency matrix $J$ (zero diagonal and symmetric for non-directional graphs).
+The algorithm uses
+\begin{equation}
+    N_q = \overline{\overline{V}} + \sum_{v \in V} \log_2 \mathcal{N}(v)
+\end{equation}
+qubits to encode the vertices and slack variables before embedding.
+Therefore, the (logical) binary vector $\vec \Psi$ at worst scales with $n_V \log_2 n_V$ qubits for fully connected graphs.
+
+The target QUBO in the notation of Eq.~\eqref{eq:matrix_form} reads
+ {\small
+  \begin{align}
+   Q_{xx} & = \mathbbm{1} + p\left[J^T J + J^T + J - \mathrm{diag}\left(J^T \vec 1 + \vec 1^T J\right) - \mathbbm{1} \right] \,, \\
+   Q_{sx} & = - p(\mathbbm{1}+J)^TT_s\,,                                                                     \\
+   Q_{ss} & = p\left[{T_s}^T T_s + \mathrm{diag}\left(T_s^T \vec 1 + \vec 1^T  T_s\right)\right]\,,                                  \\
+   C      & =  p \overline{\overline{V}}\,.
+  \end{align}}
+
+%==========================================
+\subsection{MDS on the D-Wave}
+\label{sec:methods:MDS-on-D-Wave}
+
 \begin{figure}[b]
 	\centering
 	\begin{tabular}{cc}
@@ -520,35 +373,33 @@ For the graph $G(n)$ the MDS solution is known analytically, and contains both u
 \end{align}
 and gives the probability of randomly guessing the MDS of $G(n)$.
 
-For even the smallest graph $G(2)$, the MDS problem is not native to the chimera graph and must be embedded. Following the hypothesis of MBL, we, therefore, must look at the values of $h_i$ after embedding. The qubits split into two groups depending on the value of $h_i$ relative to $(\textrm{max}|\{h\}| + \textrm{min}|\{h\}|) / 2$ given the set of external magnetic fields $\{h\}$ defined by a specific embedding. Further detail is given in Sec.~\ref{sec:methods:minor_embedding}. We study the effects of delaying the anneal schedule of one group of qubits over the other and present the results of this study is shown in Fig.~\ref{fig:baseline}.
 
-Due to near-term limitations, hardware realizations of quantum annealing are unique, and possess for example, different lattice layouts (due to faulty qubits), annealing schedules, and qubit fidelity. For the following studies, we perform experiments specifically on the \texttt{DW\_2000Q\_6} solver. The annealing time is set to 500$\mu$s after performing a study on various annealing times the $G(6)$ graph. The black line (offset$=0.0$) in Fig.~\ref{fig:baseline} shows results from the baseline experiment, without modification to the D-Wave annealing schedule, and observe improvement over random guessing (dashed green).
+For even the smallest graph $G(2)$, the MDS problem is not native to the chimera graph and must be embedded. Following the hypothesis of MBL, we, therefore, must look at the values of $h_i$ after embedding. The qubits split into two groups depending on the value of $h_i$ relative to $(\textrm{max}|\{h\}| + \textrm{min}|\{h\}|) / 2$ given the set of external magnetic fields $\{h\}$ defined by a specific embedding.
 
-\begin{figure}
-	\centering
-	\includegraphics[width=\columnwidth]{./new_figures/DWave_scaling.pdf}
-	\caption{Baseline result of D-Wave (black) compared to random guessing (dashed green). The jagged nature of random guessing reflects the degeneracy of the ground state. Negative offsets with a `s' tag (blue) are results from delays of large values of $|h_i|$, while negative offsets with the `w' label (red) delay the schedule of qubits with small values of $h_i$.}
-	\label{fig:baseline}
-\end{figure}
+Our proposed offset strategy is motivated by the structure of the Hamiltonian being evaluated by the annealer.
+As a result, details of the embedding are important. We obtain an embedding for $G(n)$ with the \texttt{embed\_qubo} function provided by the D-Wave Ocean Python package~\cite{dwave_oceans} under the \texttt{dwave.embedding} module~\cite{2008arXiv0804.4884C}.
+The same embedding is used for all D-Wave solves of the same graph (independent of offset), and consequently the simulation solves the resulting embedded Hamiltonian for $G(2)$.
+Additionally, solving the same graph as a function of offset on the exact same qubits removes (or at least keeps consistent) the systematic effects due to solving a problem on different physical qubits.
+We note that comparisons between different graphs in Fig.~\ref{fig:baseline} are subject to this uncontrolled systematic.
 
-We explore one avenue towards improving the experiment results by introducing per-qubit annealing offsets into the time evolution.
-The blue (red) results delay qubits' annealing subject to stronger (weaker) external fields. We observe improvement (diminishment) in the experimental results when qubits subject to stronger (weaker) final external fields are delayed in the annealing schedule, in agreement with the MBL hypothesis. The phenomena is observed across different problem sizes and hints at the possibility of a generic improvement strategy.
+After embedding the QUBO for $G(2)$ requires 5 qubits (an increase from 4), where by construction, qubits 0 and 3 form the qubit chain.
+We confirm through brute force evaluation of the eigenvalue decomposition of the 5 qubit Hamiltonian, that the embedding provided by D-Wave solves the expected ILP problem for $G(2)$, with degenerate ground states at $(0, 1, 0, 0, 0)$ and $(1, 0, 0, 1, 0)$ corresponding to whether vertex 0 or 1 is chosen for the MDS solution, and $(1, 1, 1, 1, 1)$ as the first (non-degenerate) excited state where both vertex 1 and 0 are in the set yielding a valid dominating set but not the MDS.
+
+The resulting Ising Hamiltonian has external field equal to $h = (2.75, 1.5, -1.0, -1.25, -1.0)$.
+Following the offset strategy described in Sec.~\ref{sec:results:qa}, qubit(s) 0 (1, 2, 3, 4) are placed in the set with relatively stronger (weaker) final external fields.
+This imbalance in the two groups may perhaps explain the reason why effects of delaying the weaker fields are more pronounced, since delaying the strong fields only differs from the baseline by a single qubit.
+
 
 
 %----------------------------------------------------------------------------------------
-\subsection{Simulation Results}
+\subsection{Simulation of a Quantum Annealer}
+\label{sec:methods:simulation}
 %----------------------------------------------------------------------------------------
-\label{sec:results:simulation}
-To understand the effects of annealing offsets, we simulate the annealing process for the $G(2)$ graph embedded in chimera topography.
-We repeat the same anneal process with a shortend total annealing time of 1 $\mu s$, reducing the computational demands of the simulation, and count the number of correct ground state occurrences.
-The resulting ground state probability as a function of offset measured over 100,000 observations is shown in Fig.~\ref{fig:dwave1us}.
 
-\begin{figure}[b]
-	\centering
-	\includegraphics[width=\columnwidth]{./new_figures/NN2_offset_scaling.pdf}
-	\caption{The probability of finding the MDS for $G(2)$ from D-Wave (black) and simulation (dashed yellow) at annealing times of 1 $\mu s$.}
-	\label{fig:dwave1us}
-\end{figure}
+%----------------------------------------------------------------------------------------
+%\subsubsection{The Lindblad Equation}
+%\label{sec:methods:lindblad}
+%----------------------------------------------------------------------------------------
 
 
 To solve for time evolution dynamics of quantum annealing including thermal and the decoherence effects, we solve for the master equation in Lindblad form
@@ -562,6 +413,146 @@ The full-counting statistics term models the global decoherence to all the qubit
 The local damping term models the decoherence of each qubit independently.
 Details of the master equation are given in Sec.~\ref{sec:methods:lindblad}.
 Implementation of the annealing schedule and annealing offsets for the simulation are discussed in Sec.~\ref{sec:methods:annealing-schedule}.
+
+
+
+To solve for time evolution dynamics of quantum annealing including thermal and the decoherence effects, we evaluate the master equation Eq.~\eqref{eq:sim:linblad-eq} in Lindblad form.
+The explicit time-dependence of the Hamiltonian is given by
+\begin{align}
+ \label{eq:annealH}
+ H(t)  = & - \sum_i  A_i(t)\sigma^x_i +\sum_i B_{i}(t) h_i \sigma^z_i \notag \\
+ & + \sum_{i>j} \sqrt{B_{i}(t)B_{j}(t)} J_{ij} \sigma^z_i \sigma^z_j  ,
+\end{align}
+where $A_i(t)$ and $B_{i}(t)$ are site-dependent annealing schedule functions.
+The site dependency takes into account of the annealing offsets.
+The simulation takes two decoherance models into account.
+Full-counting statistics and local decoherence.
+
+For full-counting statistics, the Lindblad operator is
+\begin{align}
+\mathcal{L}_{\textrm{fc}}(\rho (t), H(t)) = & \Gamma_{\textrm{fc}} \sum_{j, i<j} \left[  \left(2 S_{ij} \rho(t) S_{ij}^\dagger - \{ S^\dagger_{ij} S_{ij}, \rho(t) \}\right) \notag \right.
+\\
+& \left. + e^{-\beta \Delta E_{ij}} \left(2 S_{ij}^\dagger \rho(t) S_{ij} - \{ S_{ij} S^\dagger_{ij}, \rho(t) \} \right)\right]
+\end{align}
+where $\{, \}$ denotes the anti-commutator, $(ij)$ is the index for the inter-level spacing $\Delta E_{ij}=E_j-E_i>0$,  $S_{ij}=|E_i \rangle \langle E_j|$ denotes the many-body lowering operator and $\Gamma_{fc} = 1/T_{fc}$ is the full-counting decoherence rate for coherence time $T_{fc}$.
+That is, due to the interaction with the classical thermal bath, there is a probability that the system hops from each higher-energy many-body state to a lower-energy many-body state.
+The probability of the inverse process is given by a Boltzmann factor.
+
+To model the local decoherence of each qubits in the non-interacting limit, we also consider the amplitude damping for non-interacting qubits.
+For the local decoherance model, the Lindblad operator is
+\begin{align}
+\mathcal{L}_{\textrm{loc}}(\rho (t), H(t)) = &  \Gamma_{\textrm{loc}} \sum_j \left(2L_j \rho(t) L_j^\dagger - \{ L^\dagger_j L_j, \rho(t) \} \right)\notag \\
+& + e^{- 2 \beta |h_j| }  \left(2L_j^\dagger \rho(t) L_j - \{ L_j L_j^\dagger, \rho(t) \} \right) ,
+\end{align}
+where $j$ is the index for qubit.
+$L_j= \sigma^{+}_j=|1\rangle \langle 0|$ for $h_j>0$ and $L_j= \sigma^{-}_j=|0\rangle \langle 1|$ for $h_j<0$.
+That is, each qubit is damped toward its local ground state if we ignore all the interactions.
+
+The initial condition is the Gibbs canonical ensemble
+\begin{equation}
+\rho (0) =  \frac{e^{-\beta H(0)}}{\mbox{Tr}\left(e^{-\beta H(0)}\right)} ,
+\end{equation}
+where $\beta$ is the inverse temperature.
+The probability to get the ground state at measurement is
+\begin{align}
+P =  \mbox{Tr} \left( \rho (t) \pi_{\mbox{gnd}} \right)  ,
+\end{align}
+where the projection operator onto the degenerated ground states subspace is defined as $\pi_{\mbox{gnd}}=\sum_{i\in G} |\mbox{gnd}_i\rangle \langle \mbox{gnd}_i| $.
+Here $\{ | \mbox{gnd}_i \rangle | i \in G \}$ forms an orthonormal basis for the degenerated ground states subspace, i.e., $\langle \mbox{gnd}_j | \mbox{gnd}_i \rangle = \delta_{ij}$.
+
+For the simulation results presented, we set the temperature to 22.5 milliKelvin.
+The coherence time for local decoherence is set to 15$ns$, and 1$ns$ for full-counting statistics.
+
+%----------------------------------------------------------------------------------------
+%\subsubsection{Annealing Schedule and Offsets}
+%\label{sec:methods:annealing-schedule}
+%----------------------------------------------------------------------------------------
+In this section, we discuss the details of the annealing schedule with respect to the dimensionless normalized time $s$.
+On D-Wave solvers, annealing offsets effectively advance or delay the annealing schedule of individual qubits (see E.~\eqref{eq:annealH}).
+In Fig.~\ref{fig:anneal_schedule}, the default D-Wave annealing schedule is shown in black, in addition to the effects of applying negative offsets (effective time delay) to $A(s)$ and $B(s)$ in blue.
+Further documentation is provided by D-Wave in Ref.~\cite{dwave_as, dwave_as_docu}.
+
+\begin{figure}[htb]
+ \centering
+  \includegraphics[width=\columnwidth]{./new_figures/anneal_schedule.pdf}
+  \caption{
+  Anneal schedules for amplitudes of initial Hamiltonian (dashed) and final Hamiltonian (solid).
+  Offset 0.0 (black) and -0.05 (purple) are displayed.
+  Intermediate values lie between and are suppressed for clarity.
+ }
+ \label{fig:anneal_schedule}
+\end{figure}
+
+The coefficients $A(s)$ and $B(s)$ follow the underlying control variable $c(s)$, which is designed to grow the persistent current $I_p(s)$ linearly in time.
+The effective time delay is implemented by introducing an offset as $c(s) + \delta$.
+Because annealing schedules are finite, systematic errors are introduced because the final values of $A(s)$ and $B(s)$ will differ for qubits with different offsets.
+Additionally, the values of the coefficients are unknown outside of $s\in [0, 1]$.
+We only employ negative offsets such that this unkonwn coefficient range, approximated by a linear extrapolation, only enters at the beginning of the annealing process.
+
+We verify that our implementation of annealing offsets on the simulator is consistent with D-Wave by solving the following three qubit Hamiltonian
+\begin{align}
+	\label{eq:offset_test_hamiltonian}
+	H^{\textrm{problem}} =
+	\begin{pmatrix}
+		-0.25 & 1 & 0 \\
+		0 & -0.25 & 0 \\
+		0 & 0 & -0.25
+	\end{pmatrix}
+\end{align}
+which has a doubly-degenerate ground state of $(0, 1, 1)$ and $(1, 0, 1)$. An annealing offset is then applied to either qubit 0 or 1, and thus breaks the ground state degeneracy of the system. Because of the systematic error introduced when assigning an offset to a qubit, the final Hamiltonian given by Eq.~(\ref{eq:annealH}) will have small deviations from the input problem Hamiltonian. For example, we expect a negative offset to qubit 0 to Eq.~(\ref{eq:offset_test_hamiltonian}) will yield $(1, 0, 1)$ as the unique ground state given Eq.~(\ref{eq:annealH}).
+
+We confirm that with different combinations of annealing offsets, the degeneracy is lifted on the D-Wave results as expected by solving for the modified problem Hamiltonian spectrum, as well as dialing in annealing offset in the simulation of this three qubit test case.
+
+
+%----------------------------------------------------------------------------------------
+%\subsubsection{Pure Transverse Field Simulation}
+%\label{sec:methods:simulation_details}
+%----------------------------------------------------------------------------------------
+To check the correctness of simulator and unit conversion, we tested a simple annealing schedule for pure transverse field, i.e. $A(s)=A(0)$ and $B(s)=0$.
+The initial state is pure zero state $\rho=|00...0\rangle \langle 00...0|$.
+In this case the analytical solution can be obtained for the wave function oscillation.
+The time-dependent probability is $P_{0}=\cos^{2n}(s)=\cos^{2n}(t/T)$ where $n$ is the number of qubits and $T$ is the annealing time.
+For annealing time $T=1/A(0)$, we expect to see perfect one-period oscillation. The energy spectrum for this system can be analytically obtained, so we also checked the Boltzmann distribution in the initial density matrix construction. The oscillation is depicted in Fig.~\ref{figcheck}, where the simulation matches the expected theoretical behavior.
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\columnwidth]{./new_figures/vacuum_probability.pdf}
+	\caption{Time-dependent vacuum probability of 5 qubits system under pure transverse field.}
+	\label{figcheck}
+\end{figure}
+
+
+%========================================================================================
+\section{RESULTS}
+\label{sec:results}
+%========================================================================================
+
+We study the effects of delaying the anneal schedule of one group of qubits over the other and present the results of this study is shown in Fig.~\ref{fig:baseline}.
+
+Due to near-term limitations, hardware realizations of quantum annealing are unique, and possess for example, different lattice layouts (due to faulty qubits), annealing schedules, and qubit fidelity.
+For the following studies, we perform experiments specifically on the \texttt{DW\_2000Q\_6} solver. The annealing time is set to 500$\mu$s after performing a study on various annealing times the $G(6)$ graph. The black line (offset$=0.0$) in Fig.~\ref{fig:baseline} shows results from the baseline experiment, without modification to the D-Wave annealing schedule, and observe improvement over random guessing (dashed green).
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\columnwidth]{./new_figures/DWave_scaling.pdf}
+	\caption{Baseline result of D-Wave (black) compared to random guessing (dashed green). The jagged nature of random guessing reflects the degeneracy of the ground state. Negative offsets with a `s' tag (blue) are results from delays of large values of $|h_i|$, while negative offsets with the `w' label (red) delay the schedule of qubits with small values of $h_i$.}
+	\label{fig:baseline}
+\end{figure}
+
+We explore one avenue towards improving the experiment results by introducing per-qubit annealing offsets into the time evolution.
+The blue (red) results delay qubits' annealing subject to stronger (weaker) external fields. We observe improvement (diminishment) in the experimental results when qubits subject to stronger (weaker) final external fields are delayed in the annealing schedule, in agreement with the MBL hypothesis. The phenomena is observed across different problem sizes and hints at the possibility of a generic improvement strategy.
+
+To understand the effects of annealing offsets, we simulate the annealing process for the $G(2)$ graph embedded in chimera topography.
+We repeat the same anneal process with a shortend total annealing time of 1 $\mu s$, reducing the computational demands of the simulation, and count the number of correct ground state occurrences.
+The resulting ground state probability as a function of offset measured over 100,000 observations is shown in Fig.~\ref{fig:dwave1us}.
+
+\begin{figure}[b]
+	\centering
+	\includegraphics[width=\columnwidth]{./new_figures/NN2_offset_scaling.pdf}
+	\caption{The probability of finding the MDS for $G(2)$ from D-Wave (black) and simulation (dashed yellow) at annealing times of 1 $\mu s$.}
+	\label{fig:dwave1us}
+\end{figure}
 
 The graph $G(2)$ has degenerate ground states depending on whether qubit 0 or 1 is chosen to be the MDS solution.
 This degeneracy is reflected in the experimental result and provides a non-trivial benchmark for our simulation.
@@ -644,23 +635,6 @@ We want to emphasize that while the annealing offsets are motivated by the MBL h
 Observations of MBL inevitably require the study of finite-size scaling~\cite{2015PhRvB..91h1103L}, and our current simulation, while being extremely thorough and explicit, is exponentially slow to evaluate, making evaluations of even $G(3)$ unfeasible.
 However, the intersection of time-dependent quantum mechanics and emergent phenomena~\cite{Goldenfeld:1992qy} is an exciting direction that is pertinent to adiabatic quantum computing.
 
-
-
-%========================================================================================
-\section{DATA AVAILABILITY}
-\label{sec:open-source}
-%========================================================================================
-We provide access to all the software utilized and data presented in this publication in the associated GitHub repository~\cite{github:cchang5/quantum_linear_programming}.
-The utilized software is contained in two installable Python modules:
-\begin{itemize}[leftmargin=*]
-    \itemsep0em
-    \item[] \texttt{qlp} for mapping MDS problems to QUBOs and performing simulations,
-    \item[] \texttt{qlpdb} for interfacing and documenting simulation and experiment data through EspressoDB~\cite{Chang:2019khk}.
-\end{itemize}
-The data itself is stored in a SQLite file and associated repository subdirectories.
-We provide further documentation in the repository \texttt{readme} file.
-
-
 %========================================================================================
 \section{ACKNOWLEDGEMENTS}
 %========================================================================================
@@ -676,32 +650,43 @@ This manuscript has been authored by UT-Battelle, LLC under Contract No. DE-AC05
 The United States Government retains and the publisher, by accepting the article for publication, acknowledges that the United States Government retains a non-exclusive, paid-up, irrevocable, world-wide license to publish or reproduce the published form of this manuscript, or allow others to do so, for United States Government purposes. The Department of Energy will provide public access to these results of federally sponsored research in accordance with the DOE Public Access Plan. (http://energy.gov/downloads/doe-public-access-plan).
 
 
-%========================================================================================
-\section{AUTHOR CONTRIBUTIONS}
-%========================================================================================
-
-Initial idea was proposed by Chang.
-Ostrowski guided the ILP problem selection.
-All authors contributed to the design of test cases.
-Calculations and code development for the D-Wave were performed by Chang and K\"orber.
-Code for numerical simulations was developed by Chen and K\"orber, and cross-checked by Chang.
-Simulations were performed by Chang and Chen.
-Chang, Chen, K\"orber, and Humble interpreted the results.
-All authors contributed to writing and editing of the final manuscript.
-
-%========================================================================================
-\section{CORRESPONDING AUTHOR}
-%========================================================================================
-Correspondence to chiachang@berkeley.edu.
-
-%========================================================================================
-\section{ADDITIONAL INFORMATION}
-%========================================================================================
-
-\textbf{Competing Interests:} The authors declare no competing interests.
+% %========================================================================================
+% \section{AUTHOR CONTRIBUTIONS}
+% %========================================================================================
+%
+% Initial idea was proposed by Chang.
+% Ostrowski guided the ILP problem selection.
+% All authors contributed to the design of test cases.
+% Calculations and code development for the D-Wave were performed by Chang and K\"orber.
+% Code for numerical simulations was developed by Chen and K\"orber, and cross-checked by Chang.
+% Simulations were performed by Chang and Chen.
+% Chang, Chen, K\"orber, and Humble interpreted the results.
+% All authors contributed to writing and editing of the final manuscript.
+%
+% %========================================================================================
+% \section{CORRESPONDING AUTHOR}
+% %========================================================================================
+% Correspondence to chiachang@berkeley.edu.
+%
+% %========================================================================================
+% \section{ADDITIONAL INFORMATION}
+% %========================================================================================
+%
+% \textbf{Competing Interests:} The authors declare no competing interests.
 
 %\bibliographystyle{apsrev4-1}
+
+%========================================================================================
+\section{Bibliography}
+%========================================================================================
+
 \bibliographystyle{iopart-num}
 \bibliography{main.bib}
+
+%========================================================================================
+\appendix
+\section{Appendix}
+%========================================================================================
+
 %========================================================================================
 \end{document}
