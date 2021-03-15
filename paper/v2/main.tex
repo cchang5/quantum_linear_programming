@@ -31,7 +31,7 @@
 
 
 \begin{document}
-\title{Integer Programming with Quantum Annealing from an Open Quantum System}
+\title[QA and Open Quantum Systems for MDS]{A Study of Quantum Annealing and Open Quantum Systems for the Minimum Dominating Set}
 
 \author{Chia~Cheng~Chang $^{1, 2, 3}$, Chih-Chieh~Chen$^{4, 3}$, Christopher K\"orber $^{5, 2, 3}$, Travis~S.~Humble $^6$, Jim~Ostrowski $^7$}
 \address{$^1$ RIKEN iTHEMS, Wako, Saitama 351-0198, Japan}
@@ -57,7 +57,7 @@
 \begin{abstract}
  While quantum computing proposes promising solutions to computational problems not accessible with classical approaches, due to current hardware constraints, most quantum algorithms are not yet capable of computing systems of practical relevance, and classical counterparts outperform them.
  To practically benefit from quantum architecture, one has to identify problems and algorithms with favorable scaling and improve on corresponding limitations depending on available hardware.
- For this reason, we developed an algorithm that solves integer linear programming problems, a classically NP-hard problem, on a quantum annealer, and investigated problem and hardware-specific limitations.
+ For this reason, we developed an algorithm that solves integer linear programming problems and its application to the minimum dominating set, a classically NP-hard problem, on a quantum annealer, and investigated problem and hardware-specific limitations.
  This work presents the formalism of how to map ILP problems to the annealing architectures, how to systematically improve computations utilizing optimized anneal schedules, and models the anneal process through a simulation.
  It illustrates the effects of decoherence and many body localization for the minimum dominating set problem, and compares annealing results against numerical simulations of the quantum architecture.
  We find that the algorithm outperforms random guessing but is limited to small problems and that annealing schedules can be adjusted to reduce the effects of decoherence.
@@ -97,10 +97,6 @@ The fact that instances with millions of integer variables can be solved is due 
 One estimate has that the speed of ILP algorithms, combined with hardware improvements, have lead to a speedup of around 200 billion~\cite{bertsimas2014statistics}.
 Despite this fact, there are still very small problems that require several months, or even years, of computational effort to solve. For example, the Steiner Triple Covering problems can be notoriously difficult; an instance with only 135 binary variables, \texttt{STS135}, required over 120 days of computations~\cite{ostrowski2011solving}. Another example is the football pool problem, where an instance with only 729 binary variables still remains unsolved after years of computational effort~\cite{linderoth2009improving}.
 In both these cases, the underlying problem is a covering problem.
-
-In general, heuristic methods are employed~\cite{GLOVER1986533, doi:10.1287/ijoc.1.3.190, doi:10.1287/ijoc.2.1.4} to solve ILP problems.
-Standard classical heuristic algorithms follow a greedy scheme which iteratively approximates optimal solutions--starting from a random initial guess, these algorithms apply locally optimal choices at each step.
-While greedy algorithms do not guarantee optimal global solutions, they find feasible solutions--satisfying all constraints--in polynomial time, which can be utilized in further computations.
 
 In this paper we will consider instances of an particular ILP problem: the minimum dominating set (MDS) problem.  For a given a graph $G(E,V)$, defined by the set of $V$ vertices and $E$ edges, a dominating set $D$ is a specific subset of vertices $D \subseteq V$.
 In particular, $D$ is a dominating set if all vertices in $V$ but not in $D$ are adjacent to at least one vertex in $D$.
